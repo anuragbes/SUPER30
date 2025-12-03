@@ -1,7 +1,7 @@
 import Student from "../models/student.models.js";
 import Counter from "../models/counter.models.js";
 import Settings from "../models/settings.models.js";
-import { updateSheetWithAllStudents, updateSheetWithStreamSeparation } from "../utils/googleSheets.js";
+import { updatePCMAndPCB } from "../utils/googleSheets.js";
 
 export const generateRollNumbers = async (req, res) => {
   try {
