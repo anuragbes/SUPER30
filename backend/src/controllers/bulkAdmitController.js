@@ -143,11 +143,11 @@ export const bulkSendAdmitCards = async (req, res) => {
           await student.save();
           
           sentList.push(student.studentId);
-          console.log(`✅ Email sent to ${student.studentName} (${student.email})`);
+          console.log(`Email sent to ${student.studentName} (${student.email})`);
           
           return { success: true, studentId: student.studentId };
         } catch (mailError) {
-          console.error(`❌ Failed to send email to ${student.studentName}:`, mailError.message);
+          console.error(`Failed to send email to ${student.studentName}:`, mailError.message);
           skippedList.push({ 
             id: student.studentId, 
             name: student.studentName,
@@ -163,7 +163,7 @@ export const bulkSendAdmitCards = async (req, res) => {
 
       // Add delay between batches (except for the last batch)
       if (i + BATCH_SIZE < students.length) {
-        console.log(`⏳ Waiting ${DELAY_BETWEEN_BATCHES}ms before next batch...`);
+        console.log(`Waiting ${DELAY_BETWEEN_BATCHES}ms before next batch...`);
         await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES));
       }
     }
