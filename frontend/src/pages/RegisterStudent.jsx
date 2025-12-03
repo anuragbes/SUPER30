@@ -374,23 +374,124 @@ export default function RegisterStudent() {
 
               <Field>
                 <FieldLabel className="text-sm font-medium text-foreground mb-2">
-                  Previous School Name<span className="text-red-500"> *</span>
+                  Previous School Name<span className="text-red-500"> *</span> <span className="text-xs text-gray-500 ml-1">(Select Other if not in the List)</span>
                 </FieldLabel>
-                <Input
-                  name="previousSchool"
-                  placeholder="Enter Previous School Name"
-                  onChange={handleChange}
-                  className="border border-slate-200 rounded-lg bg-white w-full"
-                  required
-                />
+
+                <Select
+                  value={formData.previousSchool || ""}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, previousSchool: value })
+                  }
+                >
+                  <SelectTrigger className="border border-slate-200 rounded-lg bg-white w-full">
+                    <SelectValue placeholder="Select Previous School" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    <SelectItem value="Al-Momin International School, Gaya, Bihar">
+                      Al-Momin International School, Gaya, Bihar
+                    </SelectItem>
+
+                    <SelectItem value="British English School, Gaya, Bihar">
+                      British English School, Gaya, Bihar
+                    </SelectItem>
+
+                    <SelectItem value="British Public School, Gaya, Bihar">
+                      British Public School, Gaya, Bihar
+                    </SelectItem>
+
+                    <SelectItem value="City Public School, Gaya, Bihar">
+                      City Public School, Gaya, Bihar
+                    </SelectItem>
+
+                    <SelectItem value="Co-operative Public School, Dubhal, Gaya, Bihar">
+                      Co-operative Public School, Dubhal, Gaya, Bihar
+                    </SelectItem>
+
+                    <SelectItem value="Co-operative Public School, Gaya, Bihar">
+                      Co-operative Public School, Gaya, Bihar
+                    </SelectItem>
+
+                    <SelectItem value="DAV Public School, Cantt Area, Gaya, Bihar">
+                      DAV Public School, Cantt Area, Gaya, Bihar
+                    </SelectItem>
+
+                    <SelectItem value="DAV Public School, Rotary Campus, Gaya, Bihar">
+                      DAV Public School, Rotary Campus, Gaya, Bihar
+                    </SelectItem>
+
+                    <SelectItem value="DPS Dubhal, Gaya, Bihar">
+                      DPS Dubhal, Gaya, Bihar
+                    </SelectItem>
+
+                    <SelectItem value="G.D. Goenka Public School, Gaya, Bihar">
+                      G.D. Goenka Public School, Gaya, Bihar
+                    </SelectItem>
+
+                    <SelectItem value="Gyan Bharti Global School, Gaya, Bihar">
+                      Gyan Bharti Global School, Gaya, Bihar
+                    </SelectItem>
+
+                    <SelectItem value="Gyan Bharti Residential Complex, Gaya, Bihar">
+                      Gyan Bharti Residential Complex, Gaya, Bihar
+                    </SelectItem>
+
+                    <SelectItem value="Indus Vision Academy, Gaya, Bihar">
+                      Indus Vision Academy, Gaya, Bihar
+                    </SelectItem>
+
+                    <SelectItem value="Manav Bharti National School, Gaya, Bihar">
+                      Manav Bharti National School, Gaya, Bihar
+                    </SelectItem>
+
+                    <SelectItem value="Modern Academy, Gaya, Bihar">
+                      Modern Academy, Gaya, Bihar
+                    </SelectItem>
+
+                    <SelectItem value="National Public School, Gaya, Bihar">
+                      National Public School, Gaya, Bihar
+                    </SelectItem>
+
+                    <SelectItem value="Open Minds – A Birla School, Gaya, Bihar">
+                      Open Minds – A Birla School, Gaya, Bihar
+                    </SelectItem>
+
+                    <SelectItem value="Polytechnic English School, Gaya, Bihar">
+                      Polytechnic English School, Gaya, Bihar
+                    </SelectItem>
+
+                    <SelectItem value="Pragati Path Academy, Gaya, Bihar">
+                      Pragati Path Academy, Gaya, Bihar
+                    </SelectItem>
+
+                    <SelectItem value="Secondary Delhi Public School, Gaya, Bihar">
+                      Secondary Delhi Public School, Gaya, Bihar
+                    </SelectItem>
+
+                    <SelectItem value="St. Louise Academy, Gaya, Bihar">
+                      St. Louise Academy, Gaya, Bihar
+                    </SelectItem>
+
+                    <SelectItem value="Unique English School, Gaya, Bihar">
+                      Unique English School, Gaya, Bihar
+                    </SelectItem>
+
+                    <SelectItem value="Vidya Bharti English School, Gaya, Bihar">
+                      Vidya Bharti English School, Gaya, Bihar
+                    </SelectItem>
+
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
               </Field>
+
 
               <Field>
                 <FieldLabel className="text-sm font-medium text-foreground mb-2">
                   Test Centre<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <Select value="British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)" disabled>
-                  <SelectTrigger className="bg-gray-100 cursor-not-allowed text-slate-700 border border-slate-200 rounded-lg opacity-70 w-full">
+                  <SelectTrigger className="bg-gray-100 cursor-not-allowed text-slate-700 border border-slate-200 rounded-lg opacity-70 w-full text-left" style={{ whiteSpace: "normal", lineHeight: "1.3" }} >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

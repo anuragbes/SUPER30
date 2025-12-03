@@ -7,13 +7,7 @@ const SHEET_ID = process.env.GOOGLE_SHEET_ID;
 
 
 export const registerStudent = async (req, res) => {
-  try {
-    // 🔐 OTP Verification Check
-    if (!req.body.verified) {
-      return res.status(400).json({
-        error: "Mobile number not verified",
-      });
-    }
+  try {    
     
     // STEP 1: Create student object from body (but don't save yet)
     const newStudent = new Student(req.body);
