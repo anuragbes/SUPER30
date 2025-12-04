@@ -9,10 +9,14 @@ const SHEET_ID = process.env.GOOGLE_SHEET_ID;
 export const registerStudent = async (req, res) => {
   try {    
     
-    // STEP 1: Create student object from body (but don't save yet)
+    // Create student object from body (but don't save yet)
     const newStudent = new Student(req.body);
 
-    // STEP 2: Assign Cloudinary URLs BEFORE saving
+    if (req.body.previousSchool === "Other" && req.body.customSchool) {
+      newStudent.previousSchool = req.body.customSchool;
+    }
+
+    // Assign Cloudinary URLs BEFORE saving
     if (req.files?.passportPhoto && req.files.passportPhoto[0]?.path) {
       newStudent.passportPhotoURL = req.files.passportPhoto[0].path;
     }
@@ -21,13 +25,13 @@ export const registerStudent = async (req, res) => {
       newStudent.identityPhotoURL = req.files.identityPhoto[0].path;
     }
 
-    // STEP 3: Save student (all required fields now exist)
+    // Save student (all required fields now exist)
     await newStudent.save();
 
-    // STEP 4: Append to Google Sheet
+    // Append to Google Sheet
     await appendToGoogleSheet(newStudent);
 
-    // STEP 5: Respond success
+    // Respond success
     res.status(201).json({
       message: "✅ Registration successful",
       studentId: newStudent.studentId,

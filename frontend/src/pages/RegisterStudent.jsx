@@ -52,39 +52,54 @@ export default function RegisterStudent() {
     if (name === "identityPhoto") setIdentityPhoto(file);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setIsSubmitting(true);
 
-    try {
-      const form = new FormData();
-      Object.keys(formData).forEach((key) => form.append(key, formData[key]));
+  try {
+  
+    const finalPreviousSchool =
+      formData.previousSchool === "Other"
+        ? customSchool
+        : formData.previousSchool;
 
-      if (passportPhoto) form.append("passportPhoto", passportPhoto);
-      if (identityPhoto) form.append("identityPhoto", identityPhoto);
+    const form = new FormData();
 
-      const res = await axios.post(
-        `${backendURL}/api/students/register`,
-        form,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
+    form.append("previousSchool", finalPreviousSchool);
 
-      toast.success("Registration Successful!", {
-        description: `Student ID: ${res.data.studentId}`,
-      });
+    Object.keys(formData).forEach((key) => {
+      if (key !== "previousSchool") {
+        form.append(key, formData[key]);
+      }
+    });
 
-      navigate(`/success/${res.data.studentId}`, {
-        state: { studentName: formData.studentName }
-      });
+    form.append("customSchool", customSchool);
 
-    } catch (error) {
-      toast.error("Registration Failed", {
-        description: error.response?.data?.error || error.message,
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    if (passportPhoto) form.append("passportPhoto", passportPhoto);
+    if (identityPhoto) form.append("identityPhoto", identityPhoto);
+
+    const res = await axios.post(
+      `${backendURL}/api/students/register`,
+      form,
+      { headers: { "Content-Type": "multipart/form-data" } }
+    );
+
+    toast.success("Registration Successful!", {
+      description: `Student ID: ${res.data.studentId}`,
+    });
+
+    navigate(`/success/${res.data.studentId}`, {
+      state: { studentName: formData.studentName }
+    });
+
+  } catch (error) {
+    toast.error("Registration Failed", {
+      description: error.response?.data?.error || error.message,
+    });
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
 
   return (
