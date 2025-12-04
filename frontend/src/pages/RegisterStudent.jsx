@@ -14,6 +14,8 @@ import { FileUpload } from "@/components/FileUpload";
 export default function RegisterStudent() {
   const navigate = useNavigate();
 
+  const [customSchool, setCustomSchool] = useState("");
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     permanentAddress: "",
@@ -24,6 +26,8 @@ export default function RegisterStudent() {
   const [identityPhoto, setIdentityPhoto] = useState(null);
 
   const backendURL = import.meta.env.VITE_BACKEND_URL;
+
+  
 
   useEffect(() => {
     setFormData((prev) => ({ ...prev, classMoving: "10th to 11th" }));
@@ -379,9 +383,10 @@ export default function RegisterStudent() {
 
                 <Select
                   value={formData.previousSchool || ""}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, previousSchool: value })
-                  }
+                  onValueChange={(value) => {
+                    setFormData({ ...formData, previousSchool: value });
+                    if (value !== "Other") setCustomSchool(""); // clear custom input
+                  }}
                 >
                   <SelectTrigger className="border border-slate-200 rounded-lg bg-white w-full">
                     <SelectValue placeholder="Select Previous School" />
@@ -483,6 +488,16 @@ export default function RegisterStudent() {
                     <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
+                {formData.previousSchool === "Other" && (
+                  <Input
+                    className="mt-3 border border-slate-300 rounded-lg bg-white"
+                    placeholder="Enter Your School Name"
+                    value={customSchool}
+                    onChange={(e) => {
+                      setCustomSchool(e.target.value);  // ONLY update customSchool
+                    }}
+                  />
+                )}
               </Field>
 
 

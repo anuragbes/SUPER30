@@ -101,6 +101,16 @@ export const bulkSendAdmitCards = async (req, res) => {
           return null;
         }
 
+        if (student.admitCardSent) {
+          skippedList.push({
+            id: student.studentId,
+            name: student.studentName,
+            email: student.email,
+            reason: "Admit card already sent"
+          });
+          return null;
+        }
+
         try {
           // Generate PDF buffer
           const pdfBuffer = await createAdmitCardBuffer(student, examDate);
@@ -131,12 +141,6 @@ export const bulkSendAdmitCards = async (req, res) => {
             ],
           });
 
-          // Add timeout (30 seconds per email)
-          // const timeoutPromise = new Promise((_, reject) =>
-          //   setTimeout(() => reject(new Error("Email send timeout")), 30000)
-          // );
-
-          // await Promise.race([emailPromise, timeoutPromise]);
 
           // Mark as sent in database
           student.admitCardSent = true;
