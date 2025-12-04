@@ -95,7 +95,7 @@ export default function Home() {
         <img
           src="/images/logo.jpg"
           alt="British School – Gurukul Logo"
-          className="h-12 object-contain cursor-pointer"
+          className="h-8 sm:h-10 md:h-12 object-contain cursor-pointer"
           onClick={() => navigate("/")}
         />
 

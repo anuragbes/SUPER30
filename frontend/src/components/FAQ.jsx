@@ -35,25 +35,33 @@ const faqItems = [
 
 export default function FAQ() {
   return (
-    <section className="py-10 bg-gray-50">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="text-3xl font-bold text-gray-900 text-center mb-10">
+    <section className="py-6 sm:py-12 bg-gray-50">
+      <div className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8">
+
+        {/* Title */}
+        <h2 className="text-xl sm:text-3xl md:text-4xl font-bold text-gray-900 text-center mb-6 sm:mb-10">
           Frequently Asked Questions
         </h2>
 
-        <Accordion type="single" collapsible className="w-full">
+        <Accordion type="single" collapsible className="w-full space-y-3 sm:space-y-4">
           {faqItems.map((item) => (
-            <AccordionItem key={item.id} value={item.id} className="border-b border-gray-300">
-              <AccordionTrigger className="text-lg font-semibold text-gray-900 hover:no-underline">
+            <AccordionItem
+              key={item.id}
+              value={item.id}
+              className="bg-white border border-gray-200 rounded-lg px-3 sm:px-6 py-1.5 sm:py-2 shadow-sm"
+            >
+              <AccordionTrigger className="text-sm sm:text-lg font-semibold text-gray-900 hover:no-underline">
                 {item.question}
               </AccordionTrigger>
-            <AccordionContent className="whitespace-pre-line text-base text-gray-700 pt-2">
+
+              <AccordionContent className="whitespace-pre-line text-xs sm:text-base text-gray-700 pt-1.5 pb-3 sm:pt-2 sm:pb-4">
                 {item.answer}
-            </AccordionContent>
+              </AccordionContent>
             </AccordionItem>
           ))}
         </Accordion>
       </div>
     </section>
-  )
+  );
 }
+

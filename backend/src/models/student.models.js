@@ -1,6 +1,15 @@
 import mongoose from "mongoose";
 import Counter from "./counter.models.js";
 
+function toTitleCase(str) {
+  if (!str) return str;
+  return str
+    .toLowerCase()
+    .split(" ")
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
 const studentSchema = new mongoose.Schema({
     studentId: {
         type: String,
@@ -124,6 +133,26 @@ const studentSchema = new mongoose.Schema({
     }
 }, {timestamps: true})
 
+
+studentSchema.pre("save", function(next) {
+  const fieldsToTitleCase = [
+    "studentName",
+    "fatherName",
+    "motherName",
+    "permanentAddress",
+    "presentAddress",
+    "previousSchool",
+    "scholarshipDetails"
+  ];
+
+  fieldsToTitleCase.forEach(field => {
+    if (this[field]) {
+      this[field] = toTitleCase(this[field]);
+    }
+  });
+
+  next();
+});
 
 // Auto-increment studentID before saving (using Counter collection for unique IDs)
 studentSchema.pre("save", async function(next) {
