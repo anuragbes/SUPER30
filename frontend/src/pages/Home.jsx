@@ -208,7 +208,7 @@ export default function Home() {
             className="h-12 sm:h-10 md:h-12 object-contain"
           />
 
-          <span className="text-xs sm:text-xl md:text-2xl font-bold text-blue-700">
+          <span className="text-xs sm:text-xl md:text-2xl font-bold text-[#00afd0]">
             British School – Gurukul
           </span>
         </div>
@@ -330,19 +330,19 @@ export default function Home() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <DetailsCard
-              icon={<Users className="w-10 h-10 text-blue-700" />}
+              icon={<Users className="w-10 h-10 text-[#00afd0]" />}
               title="Eligibility"
               text="Class 10th to 11th Moving Students"
             />
 
             <DetailsCard
-              icon={<Target className="w-10 h-10 text-blue-700" />}
+              icon={<Target className="w-10 h-10 text-[#00afd0]" />}
               title="Target"
               text="JEE Main/Advanced, NEET (UG) - 2028"
             />
 
             <DetailsCard
-              icon={<CalendarDays className="w-10 h-10 text-blue-700" />}
+              icon={<CalendarDays className="w-10 h-10 text-[#00afd0]" />}
               title="Exam Date"
               text={
                 formatDateForDisplay(settings?.examDate) || "To Be Announced"
@@ -350,13 +350,13 @@ export default function Home() {
             />
 
             <DetailsCard
-              icon={<Clock className="w-10 h-10 text-blue-700" />}
+              icon={<Clock className="w-10 h-10 text-[#00afd0]" />}
               title="Exam Time & Mode"
               text="9:00 AM – 12:00 PM • Offline (At Center)"
             />
 
             <DetailsCard
-              icon={<TrendingUp className="w-10 h-10 text-blue-700" />}
+              icon={<TrendingUp className="w-10 h-10 text-[#00afd0]" />}
               title="Last Date to Register"
               text={
                 formatDateForDisplay(settings?.lastDateToRegister) ||
@@ -365,7 +365,7 @@ export default function Home() {
             />
 
             <DetailsCard
-              icon={<FileCheck className="w-10 h-10 text-blue-700" />}
+              icon={<FileCheck className="w-10 h-10 text-[#00afd0]" />}
               title="Result Date"
               text={
                 formatDateForDisplay(settings?.resultDate) ||

@@ -42,7 +42,7 @@ export default function Navbar() {
             className="h-8 sm:h-10 md:h-12 object-contain"
           />
 
-          <span className="text-lg sm:text-xl md:text-2xl font-bold text-blue-700">
+          <span className="text-lg sm:text-xl md:text-2xl font-bold text-[#00afd0]">
             British School – Gurukul
           </span>
         </div>
@@ -97,7 +97,7 @@ export default function Navbar() {
                 onClick={() => setIsOpen(false)}
                 className={`block px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
                   location.pathname === link.path
-                    ? "bg-blue-100 text-blue-700"
+                    ? "bg-blue-100 text-[#00afd0]"
                     : "text-gray-700 hover:bg-gray-100"
                 }`}
               >

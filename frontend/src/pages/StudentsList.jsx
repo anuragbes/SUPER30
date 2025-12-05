@@ -460,7 +460,7 @@ export default function StudentsList() {
                               Generated
                             </Badge>
                           ) : (
-                            <Badge className="bg-blue-50 text-blue-700 hover:bg-blue-100">
+                            <Badge className="bg-blue-50 text-[#00afd0] hover:bg-blue-100">
                               Pending
                             </Badge>
                           )}
