@@ -32,12 +32,20 @@ export default function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex justify-between items-center">
         {/* Logo / Title */}
-        <img
-  src="/images/logo.jpg"
-  alt="British School - Gurukul Logo"
-  className="h-10 sm:h-12 cursor-pointer object-contain select-none"
-  onClick={() => navigate("/admin/dashboard")}
-/>
+        <div
+          className="flex items-center gap-2 cursor-pointer"
+          onClick={() => navigate("/")}>
+          
+          <img
+            src="/images/logo.jpg"
+            alt="British School – Gurukul Logo"
+            className="h-8 sm:h-10 md:h-12 object-contain"
+          />
+
+          <span className="text-lg sm:text-xl md:text-2xl font-bold text-blue-700">
+            British School – Gurukul
+          </span>
+        </div>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6">

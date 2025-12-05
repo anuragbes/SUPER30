@@ -16,15 +16,15 @@ import RegisterIcon from "@/assets/register.svg";
 import FAQ from "@/components/FAQ";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
+import Footer from "@/components/Footer";
 
 const images = [
-  "/images/adv_2023.jpg",
-  "/images/adv2_2023.jpg",
-  "/images/poster_a4.jpg",
-  "/images/Untitled.png",
-  "/images/Untitled_2.png",
-  "/images/poster1_2025.jpeg",
-  "/images/poster2025.jpeg",
+  "/images/poster1.jpeg",
+  "/images/poster2.jpeg",
+  "/images/poster3.png",
+  "/images/poster4.jpg",
+  "/images/poster5.jpg",
+  "/images/poster6.jpg",
 ];
 
 export function AutoSlider() {
@@ -82,24 +82,36 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      
       {/* ---- Navbar ---- */}
       <header
-        className="fixed top-0 left-0 w-full z-50 transition-all duration-300 px-15 py-4 flex justify-between items-center"
+        className="fixed top-0 left-0 w-full z-50 transition-all duration-300 px-2 sm:px-15 py-3 flex justify-between items-center"
         style={{
           background: "oklch(0.98 0.001 70 / 0.35)",
           backdropFilter: "blur(20px) saturate(180%)",
           WebkitBackdropFilter: "blur(20px) saturate(180%)",
-          // boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
         }}
       >
-        <img
-          src="/images/logo.jpg"
-          alt="British School – Gurukul Logo"
-          className="h-8 sm:h-10 md:h-12 object-contain cursor-pointer"
-          onClick={() => navigate("/")}
-        />
+        <div
+          className="flex items-center gap-2 cursor-pointer"
+          onClick={() => navigate("/")}>
+          
+          <img
+            src="/images/logo.jpg"
+            alt="British School – Gurukul Logo"
+            className="h-12 sm:h-10 md:h-12 object-contain"
+          />
 
-        <Button variant="glass" onClick={() => navigate("/admin/dashboard")}>
+          <span className="text-xs sm:text-xl md:text-2xl font-bold text-blue-700">
+            British School – Gurukul
+          </span>
+        </div>
+
+        <Button
+          variant="glass"
+          className="hidden sm:flex"
+          onClick={() => navigate("/admin/dashboard")}
+        >
           Admin Login
         </Button>
       </header>
@@ -107,7 +119,7 @@ export default function Home() {
       {/* ---- Hero Section ---- */}
       <section className="min-h-[70vh] flex items-center pt-20 bg-blue-50">
   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:pr-8 lg:pl-0 py-8 w-full">
-    <div className="grid grid-cols-1 lg:grid-cols-[7fr_3fr] gap-8 lg:gap-6 items-center">
+    <div className="grid grid-cols-1 lg:grid-cols-[7fr_3fr] gap-0 lg:gap-6 items-center">
 
       {/* Left Image */}
       <div className="flex justify-center lg:justify-start">
@@ -119,7 +131,7 @@ export default function Home() {
       </div>
 
       {/* Registration Card */}
-      <div className="flex justify-center lg:justify-end">
+      <div className="flex justify-center lg:justify-end mt-8 mb-1 lg:mt-0 lg:mb-0">
         <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-sm border border-slate-300 shadow-md">
 
           {/* Icon */}
@@ -156,7 +168,15 @@ export default function Home() {
           )}
         </div>
       </div>
-
+        {/* Mobile Admin Login Text */}
+          <div className="block sm:hidden text-right text-sm">
+            <button
+              onClick={() => navigate("/admin/dashboard")}
+              className="text-blue-600 font-semibold underline"
+            >
+              Admin? Login Here
+            </button>
+          </div>
     </div>
   </div>
 </section>
@@ -225,10 +245,7 @@ export default function Home() {
       <FAQ />
 
       {/* ---- Footer ---- */}
-      <footer className="py-4 text-center bg-black text-gray-500 text-sm">
-        © {new Date().getFullYear()} British School – Gurukul. All rights
-        reserved.
-      </footer>
+      <Footer/>
     </div>
   );
 }
