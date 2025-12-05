@@ -17,7 +17,8 @@ app.use(
     origin: [
       "http://localhost:5173",
       "https://super-30.vercel.app",
-      "https://www.bsgurukul.com"
+      "https://www.bsgurukul.com",
+      process.env.RENDER_BACKEND_URL
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
