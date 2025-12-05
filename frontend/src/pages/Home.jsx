@@ -17,6 +17,10 @@ import FAQ from "@/components/FAQ";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import Footer from "@/components/Footer";
+import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+import { auth } from "../firebase";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 
 const images = [
   "/images/poster1.jpeg",
@@ -66,6 +70,13 @@ export default function Home() {
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Login State
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [otp, setOtp] = useState("");
+  const [step, setStep] = useState("PHONE"); // PHONE or OTP
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [confirmationResult, setConfirmationResult] = useState(null);
+
   useEffect(() => {
     const fetchSettings = async () => {
       try {
@@ -79,6 +90,74 @@ export default function Home() {
     };
     fetchSettings();
   }, [backendURL]);
+
+  useEffect(() => {
+    // Initialize Recaptcha
+    if (!window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+        size: "invisible",
+        callback: () => {
+          // reCAPTCHA solved
+        },
+      });
+    }
+  }, []);
+
+  const handleSendOtp = async (e) => {
+    e.preventDefault();
+    setLoginLoading(true);
+
+    const formattedPhone = phoneNumber.startsWith("+91") ? phoneNumber : `+91${phoneNumber}`;
+
+    try {
+      const appVerifier = window.recaptchaVerifier;
+      const confirmation = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
+      setConfirmationResult(confirmation);
+      setStep("OTP");
+      toast.success("OTP sent successfully!");
+    } catch (error) {
+      console.error("Error sending OTP:", error);
+      toast.error("Failed to send OTP. Try again.");
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.render().then(widgetId => {
+          window.grecaptcha.reset(widgetId);
+        });
+      }
+    }
+    setLoginLoading(false);
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    setLoginLoading(true);
+
+    try {
+      const result = await confirmationResult.confirm(otp);
+      const user = result.user;
+      const token = await user.getIdToken();
+
+      // Check if user is already registered in our DB
+      const checkRes = await axios.post(`${backendURL}/api/students/check-phone`, {
+        phoneNumber: phoneNumber.replace("+91", "") // Send without country code for consistency
+      });
+
+      if (checkRes.data.exists) {
+        toast.info("You are already registered.");
+        // Optional: Redirect to dashboard if implemented
+      } else {
+        toast.success("Phone verified! Proceeding to registration.");
+        navigate("/register");
+      }
+
+      // Store token for subsequent requests
+      localStorage.setItem("studentToken", token);
+
+    } catch (error) {
+      console.error("Error verifying OTP:", error);
+      toast.error("Invalid OTP");
+    }
+    setLoginLoading(false);
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -149,6 +228,8 @@ export default function Home() {
                   Register for SUPER30
                 </h3>
 
+                <div id="recaptcha-container"></div>
+
                 {loading ? (
                   <p className="text-center text-gray-500">Loading...</p>
                 ) : !settings?.registrationOpen ? (
@@ -159,12 +240,56 @@ export default function Home() {
                     Registration Closed
                   </Button>
                 ) : (
-                  <Button
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold"
-                    onClick={() => navigate("/register")}
-                  >
-                    Register Now
-                  </Button>
+                  // Embedded Login Flow
+                  <div className="w-full">
+                    {step === "PHONE" ? (
+                      <form onSubmit={handleSendOtp} className="flex flex-col gap-3">
+                        <Input
+                          type="tel"
+                          placeholder="Enter Mobile Number"
+                          value={phoneNumber}
+                          onChange={(e) => setPhoneNumber(e.target.value)}
+                          required
+                          className="rounded-lg p-3 border-slate-200"
+                          maxLength={10}
+                        />
+                        <Button
+                          disabled={loginLoading || phoneNumber.length < 10}
+                          type="submit"
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+                        >
+                          {loginLoading ? <Spinner /> : "Verify & Register"}
+                        </Button>
+                      </form>
+                    ) : (
+                      <form onSubmit={handleVerifyOtp} className="flex flex-col gap-3">
+                        <Input
+                          type="text"
+                          placeholder="Enter OTP"
+                          value={otp}
+                          onChange={(e) => setOtp(e.target.value)}
+                          required
+                          className="rounded-lg p-3 text-center tracking-widest text-lg border-slate-200"
+                          maxLength={6}
+                        />
+                        <Button
+                          disabled={loginLoading || otp.length < 6}
+                          type="submit"
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+                        >
+                          {loginLoading ? <Spinner /> : "Verify OTP"}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          type="button"
+                          onClick={() => setStep("PHONE")}
+                          className="w-full text-sm text-gray-500 hover:text-gray-700"
+                        >
+                          Change Phone Number
+                        </Button>
+                      </form>
+                    )}
+                  </div>
                 )}
               </div>
             </div>

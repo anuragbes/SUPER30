@@ -43,7 +43,7 @@ export default function Footer() {
                     rel="noopener noreferrer"
                     className="text-white hover:underline"
                   >
-                    Near Gandhi maidan, Beside Chopra Agencies, Gaya (Bihar)
+                    Near Gandhi Maidan, Beside Chopra Agencies, Gaya (Bihar)
                   </a>
                 </div>
               </div>
