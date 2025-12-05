@@ -18,7 +18,7 @@ app.use(
       "http://localhost:5173",
       "https://super-30.vercel.app",
       "https://www.bsgurukul.com",
-      process.env.RENDER_BACKEND_URL
+      "https://super30.onrender.com"
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
