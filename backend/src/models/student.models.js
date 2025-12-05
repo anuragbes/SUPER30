@@ -2,18 +2,23 @@ import mongoose from "mongoose";
 import Counter from "./counter.models.js";
 
 function toTitleCase(str) {
-  if (!str) return str;
-  return str
-    .toLowerCase()
-    .split(" ")
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
+    if (!str) return str;
+    return str
+        .toLowerCase()
+        .split(" ")
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
 }
 
 const studentSchema = new mongoose.Schema({
     studentId: {
         type: String,
         unique: true,
+    },
+    firebaseUid: {
+        type: String,
+        unique: true,
+        sparse: true // Allows null/undefined values to not conflict
     },
     studentName: {
         type: String,
@@ -54,8 +59,8 @@ const studentSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
-    email: { 
-        type: String, 
+    email: {
+        type: String,
         required: true,
         match: /.+\@.+\..+/
     },
@@ -104,7 +109,7 @@ const studentSchema = new mongoose.Schema({
     scholarshipDetails: {
         type: String,
         required: function () {
-        return this.scholarshipOffered === true;
+            return this.scholarshipOffered === true;
         }
     },
     passportPhotoURL: {
@@ -119,52 +124,52 @@ const studentSchema = new mongoose.Schema({
         type: Number,
         default: null
     },
-    admitCardGenerated: { 
-        type: Boolean, 
-        default: false 
+    admitCardGenerated: {
+        type: Boolean,
+        default: false
     },
-    admitCardSent: { 
-        type: Boolean, 
-        default: false 
+    admitCardSent: {
+        type: Boolean,
+        default: false
     },
     submittedAt: {
         type: Date,
         default: Date.now
     }
-}, {timestamps: true})
+}, { timestamps: true })
 
 
-studentSchema.pre("save", function(next) {
-  const fieldsToTitleCase = [
-    "studentName",
-    "fatherName",
-    "motherName",
-    "permanentAddress",
-    "presentAddress",
-    "previousSchool",
-    "scholarshipDetails"
-  ];
+studentSchema.pre("save", function (next) {
+    const fieldsToTitleCase = [
+        "studentName",
+        "fatherName",
+        "motherName",
+        "permanentAddress",
+        "presentAddress",
+        "previousSchool",
+        "scholarshipDetails"
+    ];
 
-  fieldsToTitleCase.forEach(field => {
-    if (this[field]) {
-      this[field] = toTitleCase(this[field]);
-    }
-  });
+    fieldsToTitleCase.forEach(field => {
+        if (this[field]) {
+            this[field] = toTitleCase(this[field]);
+        }
+    });
 
-  next();
+    next();
 });
 
 // Auto-increment studentID before saving (using Counter collection for unique IDs)
-studentSchema.pre("save", async function(next) {
-  if (this.isNew) {                                     // checks if the student is new
-    const counter = await Counter.findOneAndUpdate(
-      { id: "studentId" },
-      { $inc: { seq: 1 } },
-      { new: true, upsert: true }
-    );
-    this.studentId = "STU" + counter.seq.toString().padStart(4, "0");
-  }
-  next();
+studentSchema.pre("save", async function (next) {
+    if (this.isNew) {                                     // checks if the student is new
+        const counter = await Counter.findOneAndUpdate(
+            { id: "studentId" },
+            { $inc: { seq: 1 } },
+            { new: true, upsert: true }
+        );
+        this.studentId = "STU" + counter.seq.toString().padStart(4, "0");
+    }
+    next();
 });
 
 

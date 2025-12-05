@@ -82,7 +82,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      
+
       {/* ---- Navbar ---- */}
       <header
         className="fixed top-0 left-0 w-full z-50 transition-all duration-300 px-2 sm:px-15 py-3 flex justify-between items-center"
@@ -95,7 +95,7 @@ export default function Home() {
         <div
           className="flex items-center gap-2 cursor-pointer"
           onClick={() => navigate("/")}>
-          
+
           <img
             src="/images/logo.jpg"
             alt="British School – Gurukul Logo"
@@ -110,81 +110,81 @@ export default function Home() {
         <Button
           variant="glass"
           className="hidden sm:flex"
-          onClick={() => navigate("/admin/dashboard")}
+          onClick={() => navigate("/login")}
         >
-          Admin Login
+          Student Login
         </Button>
       </header>
 
       {/* ---- Hero Section ---- */}
       <section className="min-h-[70vh] flex items-center pt-20 bg-blue-50">
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:pr-8 lg:pl-0 py-8 w-full">
-    <div className="grid grid-cols-1 lg:grid-cols-[7fr_3fr] gap-0 lg:gap-6 items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:pr-8 lg:pl-0 py-8 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-[7fr_3fr] gap-0 lg:gap-6 items-center">
 
-      {/* Left Image */}
-      <div className="flex justify-center lg:justify-start">
-        <img
-          src="/images/hero.png"
-          alt="SUPER30 Poster"
-          className="w-full max-w-xl sm:max-w-xl lg:max-w-xl object-contain"
-        />
-      </div>
-
-      {/* Registration Card */}
-      <div className="flex justify-center lg:justify-end mt-8 mb-1 lg:mt-0 lg:mb-0">
-        <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-sm border border-slate-300 shadow-md">
-
-          {/* Icon */}
-          <div className="flex justify-center mb-4 sm:mb-6">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center">
+            {/* Left Image */}
+            <div className="flex justify-center lg:justify-start">
               <img
-                src={RegisterIcon}
-                alt="Register Icon"
-                className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
+                src="/images/hero.png"
+                alt="SUPER30 Poster"
+                className="w-full max-w-xl sm:max-w-xl lg:max-w-xl object-contain"
               />
             </div>
+
+            {/* Registration Card */}
+            <div className="flex justify-center lg:justify-end mt-8 mb-1 lg:mt-0 lg:mb-0">
+              <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-sm border border-slate-300 shadow-md">
+
+                {/* Icon */}
+                <div className="flex justify-center mb-4 sm:mb-6">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center">
+                    <img
+                      src={RegisterIcon}
+                      alt="Register Icon"
+                      className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
+                    />
+                  </div>
+                </div>
+
+                <h3 className="text-xl sm:text-xl font-bold text-gray-700 text-center mb-2 sm:mb-3">
+                  Register for SUPER30
+                </h3>
+
+                {loading ? (
+                  <p className="text-center text-gray-500">Loading...</p>
+                ) : !settings?.registrationOpen ? (
+                  <Button
+                    disabled
+                    className="w-full bg-gray-200 text-gray-700 cursor-not-allowed"
+                  >
+                    Registration Closed
+                  </Button>
+                ) : (
+                  <Button
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+                    onClick={() => navigate("/register")}
+                  >
+                    Register Now
+                  </Button>
+                )}
+              </div>
+            </div>
+            {/* Mobile Student Login Text */}
+            <div className="block sm:hidden text-right text-sm">
+              <button
+                onClick={() => navigate("/login")}
+                className="text-blue-600 font-semibold underline"
+              >
+                Already Registered? Login
+              </button>
+            </div>
           </div>
-
-          <h3 className="text-xl sm:text-xl font-bold text-gray-700 text-center mb-2 sm:mb-3">
-            Register for SUPER30
-          </h3>
-
-          {loading ? (
-            <p className="text-center text-gray-500">Loading...</p>
-          ) : !settings?.registrationOpen ? (
-            <Button
-              disabled
-              className="w-full bg-gray-200 text-gray-700 cursor-not-allowed"
-            >
-              Registration Closed
-            </Button>
-          ) : (
-            <Button
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold"
-              onClick={() => navigate("/register")}
-            >
-              Register Now
-            </Button>
-          )}
         </div>
-      </div>
-        {/* Mobile Admin Login Text */}
-          <div className="block sm:hidden text-right text-sm">
-            <button
-              onClick={() => navigate("/admin/dashboard")}
-              className="text-blue-600 font-semibold underline"
-            >
-              Admin? Login Here
-            </button>
-          </div>
-    </div>
-  </div>
-</section>
+      </section>
 
-          <div className="mt-10">
-            <AutoSlider />
-          </div>
-      
+      <div className="mt-10">
+        <AutoSlider />
+      </div>
+
 
       {/* ---- Exam Details Section ---- */}
       <section className="min-h-screen flex items-center py-10 bg-white">
@@ -245,7 +245,7 @@ export default function Home() {
       <FAQ />
 
       {/* ---- Footer ---- */}
-      <Footer/>
+      <Footer />
     </div>
   );
 }

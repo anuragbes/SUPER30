@@ -11,6 +11,9 @@ import FormSection from "@/components/FormSection";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileUpload } from "@/components/FileUpload";
 
+import { auth } from "../firebase";
+import { signOut } from "firebase/auth";
+
 export default function RegisterStudent() {
   const navigate = useNavigate();
 
@@ -20,6 +23,7 @@ export default function RegisterStudent() {
   const [formData, setFormData] = useState({
     permanentAddress: "",
     presentAddress: "",
+    studentMobile: "", // Initialize
   });
   const [scholarship, setScholarship] = useState(false);
   const [passportPhoto, setPassportPhoto] = useState(null);
@@ -27,13 +31,32 @@ export default function RegisterStudent() {
 
   const backendURL = import.meta.env.VITE_BACKEND_URL;
 
-  
-
   useEffect(() => {
-    setFormData((prev) => ({ ...prev, classMoving: "10th to 11th" }));
+    const user = auth.currentUser;
+    if (user && user.phoneNumber) {
+      // Remove +91 prefix if present for display/storage consistency
+      const phone = user.phoneNumber.replace("+91", "");
+      setFormData((prev) => ({
+        ...prev,
+        classMoving: "10th to 11th",
+        studentMobile: phone
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, classMoving: "10th to 11th" }));
+    }
   }, []);
 
-    const handleChange = (e) => {
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate("/login");
+      toast.success("Logged out successfully");
+    } catch (error) {
+      toast.error("Failed to logout");
+    }
+  };
+
+  const handleChange = (e) => {
     const { name, value } = e.target;
 
     // Character limit validation for address fields only
@@ -52,64 +75,84 @@ export default function RegisterStudent() {
     if (name === "identityPhoto") setIdentityPhoto(file);
   };
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
-  setIsSubmitting(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
 
-  try {
-  
-    const finalPreviousSchool =
-      formData.previousSchool === "Other"
-        ? customSchool
-        : formData.previousSchool;
+    try {
 
-    const form = new FormData();
+      const finalPreviousSchool =
+        formData.previousSchool === "Other"
+          ? customSchool
+          : formData.previousSchool;
 
-    form.append("previousSchool", finalPreviousSchool);
+      const form = new FormData();
 
-    Object.keys(formData).forEach((key) => {
-      if (key !== "previousSchool") {
-        form.append(key, formData[key]);
+      form.append("previousSchool", finalPreviousSchool);
+
+      Object.keys(formData).forEach((key) => {
+        if (key !== "previousSchool") {
+          form.append(key, formData[key]);
+        }
+      });
+
+      form.append("customSchool", customSchool);
+
+      if (passportPhoto) form.append("passportPhoto", passportPhoto);
+      if (identityPhoto) form.append("identityPhoto", identityPhoto);
+
+      const user = auth.currentUser;
+      let token = "";
+      if (user) {
+        token = await user.getIdToken();
       }
-    });
 
-    form.append("customSchool", customSchool);
+      const res = await axios.post(
+        `${backendURL}/api/students/register`,
+        form,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            "Authorization": `Bearer ${token}`
+          }
+        }
+      );
 
-    if (passportPhoto) form.append("passportPhoto", passportPhoto);
-    if (identityPhoto) form.append("identityPhoto", identityPhoto);
+      toast.success("Registration Successful!", {
+        description: `Student ID: ${res.data.studentId}`,
+      });
 
-    const res = await axios.post(
-      `${backendURL}/api/students/register`,
-      form,
-      { headers: { "Content-Type": "multipart/form-data" } }
-    );
+      navigate(`/success/${res.data.studentId}`, {
+        state: { studentName: formData.studentName }
+      });
 
-    toast.success("Registration Successful!", {
-      description: `Student ID: ${res.data.studentId}`,
-    });
-
-    navigate(`/success/${res.data.studentId}`, {
-      state: { studentName: formData.studentName }
-    });
-
-  } catch (error) {
-    toast.error("Registration Failed", {
-      description: error.response?.data?.error || error.message,
-    });
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+    } catch (error) {
+      toast.error("Registration Failed", {
+        description: error.response?.data?.error || error.message,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
 
   return (
     <main className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-2">Student Registration</h1>
-          <p className="text-base sm:text-lg text-muted-foreground">
-            Complete the form below to enroll in our institution
-          </p>
+        <div className="mb-6 sm:mb-8 flex justify-between items-start">
+          <div>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-2">Student Registration</h1>
+            <p className="text-base sm:text-lg text-muted-foreground">
+              Complete the form below to enroll in our institution
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            onClick={handleLogout}
+            className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+          >
+            Logout
+          </Button>
         </div>
 
         <form
@@ -120,7 +163,7 @@ export default function RegisterStudent() {
           {/* PERSONAL INFORMATION */}
           <FormSection title="Personal Information" description="Enter your basic personal details">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              
+
               <Field>
                 <FieldLabel className="block text-sm font-medium text-foreground mb-2">
                   Student Name<span className="text-red-500"> *</span>
@@ -181,7 +224,7 @@ export default function RegisterStudent() {
           {/* FAMILY INFORMATION */}
           <FormSection title="Family Information" description="Enter your parent's details">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              
+
               {/* Father Name */}
               <Field>
                 <FieldLabel className="text-sm font-medium text-foreground mb-2">
@@ -261,12 +304,13 @@ export default function RegisterStudent() {
                     +91
                   </span>
                   <Input
-                    className="h-10 bg-white border border-slate-200/60 border-l-0 rounded-l-none rounded-r-lg shadow-sm w-full"
+                    className="h-10 bg-slate-100 border border-slate-200/60 border-l-0 rounded-l-none rounded-r-lg shadow-sm w-full cursor-not-allowed"
                     type="tel"
                     name="studentMobile"
                     placeholder="Enter Mobile Number"
                     maxLength="10"
-                    onChange={handleChange}
+                    value={formData.studentMobile || ""}
+                    readOnly
                     required
                   />
                 </div>
@@ -277,7 +321,7 @@ export default function RegisterStudent() {
           {/* ADDRESS INFORMATION */}
           <FormSection title="Address Information" description="Provide your residential details">
             <div className="space-y-4">
-              
+
               <Field className="col-span-2">
                 <FieldLabel className="text-sm font-medium text-foreground mb-2">
                   Permanent Address<span className="text-red-500"> *</span>
@@ -537,7 +581,7 @@ export default function RegisterStudent() {
           {/* SCHOLARSHIP SECTION */}
           <FormSection title="Scholarship Details" description="Provide scholarship information if applicable">
             <div className="space-y-4">
-              
+
               <Field>
                 <FieldLabel className="text-sm font-medium text-foreground mb-2">
                   Scholarship Offered?<span className="text-red-500"> *</span>
@@ -568,9 +612,8 @@ export default function RegisterStudent() {
                   placeholder="Specify Scholarship details"
                   onChange={handleChange}
                   disabled={!scholarship}
-                  className={`border rounded-lg p-3 min-h-20 w-full ${
-                    !scholarship ? "bg-slate-100 cursor-not-allowed" : "bg-white"
-                  }`}
+                  className={`border rounded-lg p-3 min-h-20 w-full ${!scholarship ? "bg-slate-100 cursor-not-allowed" : "bg-white"
+                    }`}
                 />
               </Field>
             </div>

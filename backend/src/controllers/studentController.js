@@ -1,16 +1,21 @@
 import "dotenv/config";
 import Student from "../models/student.models.js";
-import Counter from "../models/counter.models.js"; 
+import Counter from "../models/counter.models.js";
 import { appendToGoogleSheet } from "../utils/googleSheets.js";
 
-const SHEET_ID = process.env.GOOGLE_SHEET_ID;  
+const SHEET_ID = process.env.GOOGLE_SHEET_ID;
 
 
 export const registerStudent = async (req, res) => {
-  try {    
-    
+  try {
+
     // Create student object from body (but don't save yet)
     const newStudent = new Student(req.body);
+
+    // Set firebaseUid from the authenticated user
+    if (req.user && req.user.uid) {
+      newStudent.firebaseUid = req.user.uid;
+    }
 
     if (req.body.previousSchool === "Other" && req.body.customSchool) {
       newStudent.previousSchool = req.body.customSchool;

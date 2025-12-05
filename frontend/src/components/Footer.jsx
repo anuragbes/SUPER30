@@ -10,7 +10,7 @@ export default function Footer() {
     <footer className="bg-black text-primary-foreground py-12 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          
+
           {/* For More Information Section */}
           <div className="space-y-6">
             <div>
@@ -20,7 +20,7 @@ export default function Footer() {
 
             {/* Contact Details */}
             <div className="space-y-4">
-              
+
               {/* Name */}
               <div className="flex items-start gap-3">
                 <div className="text-white mt-1">
@@ -37,14 +37,14 @@ export default function Footer() {
                   <MapPin size={20} />
                 </div>
                 <div>
-                <a
+                  <a
                     href="https://maps.app.goo.gl/2aaWiomCspsrVRkK7"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-white hover:underline"
-                    >
+                  >
                     Near Gandhi maidan, Beside Chopra Agencies, Gaya (Bihar)
-                </a>
+                  </a>
                 </div>
               </div>
 
@@ -77,7 +77,7 @@ export default function Footer() {
             </div>
 
             <div className="flex gap-6">
-              
+
               {/* Facebook */}
               <Link
                 to="https://www.facebook.com/bes.gaya"
@@ -85,9 +85,9 @@ export default function Footer() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center w-12 h-12 bg-white text-accent-foreground rounded-full hover:opacity-80 transition-opacity"
                 aria-label="WhatsApp"
-                >
+              >
                 <img src={FacebookIcon} alt="Facebook" className="w-8 h-8" />
-                </Link>
+              </Link>
 
               {/* Instagram */}
               <Link
@@ -96,9 +96,9 @@ export default function Footer() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center w-12 h-12 bg-white text-accent-foreground rounded-full hover:opacity-80 transition-opacity"
                 aria-label="WhatsApp"
-                >
+              >
                 <img src={InstagramIcon} alt="Instagram" className="w-8 h-8" />
-                </Link>
+              </Link>
 
               {/* WhatsApp */}
               <Link
@@ -107,16 +107,19 @@ export default function Footer() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center w-12 h-12 bg-white text-accent-foreground rounded-full hover:opacity-80 transition-opacity"
                 aria-label="WhatsApp"
-                >
+              >
                 <img src={WhatsappIcon} alt="WhatsApp" className="w-8 h-8" />
-                </Link>
+              </Link>
             </div>
           </div>
         </div>
 
         {/* Bottom Section */}
-        <div className="border-t border-primary-foreground/20 mt-8 pt-8 text-center text-primary-foreground/80">
+        <div className="border-t border-primary-foreground/20 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center text-primary-foreground/80">
           <p>&copy; 2025 All rights reserved.</p>
+          <Link to="/admin/login" className="text-sm hover:text-white mt-2 md:mt-0 opacity-70 hover:opacity-100 transition-opacity">
+            Admin Login
+          </Link>
         </div>
       </div>
     </footer>
