@@ -1,6 +1,6 @@
 import express from "express";
 import { adminLogin } from "../controllers/adminAuthController.js";
-import { deleteAllStudents, generateRollNumbers, getDashboardStats, getExamSettings, getSummaryStats, updateExamSettings } from "../controllers/adminController.js";
+import { deleteAllStudents, deleteStudent, generateRollNumbers, getDashboardStats, getExamSettings, getSummaryStats, updateExamSettings } from "../controllers/adminController.js";
 import { adminAuth } from "../middlewares/adminAuth.js";
 import { bulkGenerateAdmitCards, bulkSendAdmitCards } from "../controllers/bulkAdmitController.js";
 
@@ -32,5 +32,9 @@ router.get("/summary-stats", adminAuth, getSummaryStats);
 
 // Update Exam Settings (Protected)
 router.post("/exam-settings", adminAuth, updateExamSettings);
+
+
+router.delete("/delete-student/:studentId", adminAuth, deleteStudent);
+
 
 export default router;

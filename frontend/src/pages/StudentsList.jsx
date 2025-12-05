@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import Navbar from "../components/Navbar";
 import { toast } from "sonner";
-import { CheckCheck, FileText, Mail, Search } from "lucide-react";
+import { CheckCheck, FileText, Mail, Search, Trash } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -212,6 +212,32 @@ export default function StudentsList() {
     setFilterStatus("");
     fetchStudents();
   };
+
+  const handleDeleteStudent = async (studentId) => {
+  if (!confirm("Are you sure you want to delete this student? This action cannot be undone.")) {
+    return;
+  }
+
+  try {
+    const res = await axios.delete(
+      `${backendURL}/api/admin/delete-student/${studentId}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    if (res.data.success) {
+      toast.success("Student deleted successfully!");
+
+      // Remove student locally without refetching whole list
+      setStudents((prev) => prev.filter((s) => s.studentId !== studentId));
+    } else {
+      toast.error(res.data.message || "Failed to delete student.");
+    }
+  } catch (error) {
+    console.error("Error deleting student:", error);
+    toast.error("Error deleting student");
+  }
+};
+
 
   return (
     <div>
@@ -440,7 +466,7 @@ export default function StudentsList() {
                           )}
                         </td>
 
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4 flex items-center gap-3">
                           {student.admitCardGenerated ? (
                             <Button
                               onClick={() =>
@@ -460,6 +486,10 @@ export default function StudentsList() {
                               View / Download
                             </Button>
                           )}
+                          <Trash
+                            className="w-5 h-5 text-red-600 cursor-pointer hover:text-red-800 transition"
+                            onClick={() => handleDeleteStudent(student.studentId)}
+                          />
                         </td>
                       </tr>
                     ))

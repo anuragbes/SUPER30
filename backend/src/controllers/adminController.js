@@ -1,7 +1,7 @@
 import Student from "../models/student.models.js";
 import Counter from "../models/counter.models.js";
 import Settings from "../models/settings.models.js";
-import { updatePCMAndPCB } from "../utils/googleSheets.js";
+import { updatePCMAndPCB, deleteStudentFromSheet } from "../utils/googleSheets.js";
 
 export const generateRollNumbers = async (req, res) => {
   try {
@@ -196,3 +196,37 @@ export const updateExamSettings = async (req, res) => {
 };
 
 
+// =============================
+// DELETE SINGLE STUDENT
+// =============================
+export const deleteStudent = async (req, res) => {
+  const { studentId } = req.params;
+
+  try {
+    // 1️⃣ Delete from DB
+    const student = await Student.findOneAndDelete({ studentId });
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
+    }
+
+    // 2️⃣ Delete from correct Google Sheet tab
+    await deleteStudentFromSheet(studentId, student.stream);
+
+    return res.json({
+      success: true,
+      message: "Student deleted from database & Google Sheet",
+    });
+
+  } catch (error) {
+    console.error("❌ Error deleting student:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error deleting student",
+      error: error.message,
+    });
+  }
+};

@@ -39,7 +39,7 @@ export function AutoSlider() {
           delay: 3000,
         }),
       ]}
-      className="w-full max-w-6xl mx-auto"
+      className="w-full max-w-6xl mx-auto mb-8"
     >
       <CarouselContent>
         {images.map((src, index) => (
@@ -164,7 +164,7 @@ export default function Home() {
 
       {/* ---- Navbar ---- */}
       <header
-        className="fixed top-0 left-0 w-full z-50 transition-all duration-300 px-2 sm:px-15 py-3 flex justify-between items-center"
+        className="fixed top-0 left-0 w-full z-50 transition-all duration-300 px-2 sm:px-15 py-3 flex justify-between items-center border-b border-gray-300"
         style={{
           background: "oklch(0.98 0.001 70 / 0.35)",
           backdropFilter: "blur(20px) saturate(180%)",
@@ -185,18 +185,10 @@ export default function Home() {
             British School – Gurukul
           </span>
         </div>
-
-        <Button
-          variant="glass"
-          className="hidden sm:flex"
-          onClick={() => navigate("/login")}
-        >
-          Student Login
-        </Button>
       </header>
 
       {/* ---- Hero Section ---- */}
-      <section className="min-h-[70vh] flex items-center pt-20 bg-blue-50">
+      <section className="min-h-[70vh] flex items-center pt-20 bg-blue-50 border-b border-gray-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:pr-8 lg:pl-0 py-8 w-full">
           <div className="grid grid-cols-1 lg:grid-cols-[7fr_3fr] gap-0 lg:gap-6 items-center">
 
@@ -293,15 +285,6 @@ export default function Home() {
                 )}
               </div>
             </div>
-            {/* Mobile Student Login Text */}
-            <div className="block sm:hidden text-right text-sm">
-              <button
-                onClick={() => navigate("/login")}
-                className="text-blue-600 font-semibold underline"
-              >
-                Already Registered? Login
-              </button>
-            </div>
           </div>
         </div>
       </section>
@@ -312,7 +295,7 @@ export default function Home() {
 
 
       {/* ---- Exam Details Section ---- */}
-      <section className="min-h-screen flex items-center py-10 bg-white">
+      <section className="py-12 bg-white border-y border-gray-300">
         <div className="max-w-7xl mx-auto px-4 w-full">
           <h2 className="text-3xl font-bold text-gray-900 text-center mb-10">
             Exam Details

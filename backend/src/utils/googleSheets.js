@@ -24,6 +24,19 @@ const authClient = new google.auth.GoogleAuth({
   scopes: ["https://www.googleapis.com/auth/spreadsheets"],
 });
 
+// Get Sheet ID by Sheet Name
+export const getSheetIdByName = async (sheetName) => {
+  const sheetInfo = await sheets.spreadsheets.get({
+    spreadsheetId: SHEET_ID,
+  });
+
+  const sheet = sheetInfo.data.sheets.find(
+    (sh) => sh.properties.title === sheetName
+  );
+
+  return sheet?.properties?.sheetId;
+};
+
 const sheets = google.sheets({ version: "v4", auth: authClient });
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID;
@@ -201,5 +214,64 @@ export const updatePCMAndPCB = async () => {
     console.log("🟢 PCM & PCB sheets updated");
   } catch (error) {
     console.error("❌ updatePCMAndPCB ERROR:", error.message);
+  }
+};
+
+
+/* ---------------------------------------------------------
+   4️⃣ DELETE STUDENT FROM GOOGLE SHEET (PCM / PCB)
+--------------------------------------------------------- */
+export const deleteStudentFromSheet = async (studentId, stream) => {
+  try {
+    const sheetName = stream === "PCM" ? "PCM" : "PCB";
+
+    // Ensure sheet exists
+    await ensureSheetExists(sheetName);
+
+    // Read all rows
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: `${sheetName}!A:Z`,
+    });
+
+    const rows = response.data.values || [];
+    if (rows.length <= 1) {
+      console.log(`⚠ No data found in sheet: ${sheetName}`);
+      return;
+    }
+
+    // Student ID is column C → index 2
+    const rowIndex = rows.findIndex((row) => row[2] === studentId);
+
+    if (rowIndex === -1) {
+      console.log(`⚠ Student ID ${studentId} not found in ${sheetName}`);
+      return;
+    }
+
+    // Get the actual sheetId for PCM/PCB
+    const sheetId = await getSheetIdByName(sheetName);
+
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId: SHEET_ID,
+      requestBody: {
+        requests: [
+          {
+            deleteDimension: {
+              range: {
+                sheetId,
+                dimension: "ROWS",
+                startIndex: rowIndex,
+                endIndex: rowIndex + 1,
+              },
+            },
+          },
+        ],
+      },
+    });
+
+    console.log(`🗑️ Deleted student ${studentId} from sheet ${sheetName}`);
+
+  } catch (error) {
+    console.error("❌ deleteStudentFromSheet ERROR:", error.message);
   }
 };
