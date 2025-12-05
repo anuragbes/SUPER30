@@ -101,15 +101,51 @@ export default function Home() {
         },
       });
     }
+
+    // Cleanup on unmount
+    return () => {
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.clear();
+        window.recaptchaVerifier = null;
+      }
+    };
   }, []);
 
   const handleSendOtp = async (e) => {
     e.preventDefault();
     setLoginLoading(true);
 
+    // 1. Check if phone is already registered
+    try {
+      const cleanPhone = phoneNumber.replace(/\D/g, "").slice(-10); // Extract last 10 digits
+      const checkRes = await axios.post(`${backendURL}/api/students/check-phone`, {
+        phoneNumber: cleanPhone
+      });
+
+      if (checkRes.data.exists) {
+        toast.info("You are already registered with this number.");
+        setLoginLoading(false);
+        return; // Stop execution
+      }
+
+    } catch (error) {
+      console.error("Error checking phone:", error);
+      toast.error("Failed to verify phone number.");
+      setLoginLoading(false);
+      return;
+    }
+
+    // 2. Send OTP if not registered
     const formattedPhone = phoneNumber.startsWith("+91") ? phoneNumber : `+91${phoneNumber}`;
 
     try {
+      if (!window.recaptchaVerifier) {
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+          size: "invisible",
+          callback: () => { },
+        });
+      }
+
       const appVerifier = window.recaptchaVerifier;
       const confirmation = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
       setConfirmationResult(confirmation);
@@ -118,10 +154,11 @@ export default function Home() {
     } catch (error) {
       console.error("Error sending OTP:", error);
       toast.error("Failed to send OTP. Try again.");
+
+      // Reset reCAPTCHA on error
       if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.render().then(widgetId => {
-          window.grecaptcha.reset(widgetId);
-        });
+        window.recaptchaVerifier.clear();
+        window.recaptchaVerifier = null;
       }
     }
     setLoginLoading(false);
@@ -136,21 +173,11 @@ export default function Home() {
       const user = result.user;
       const token = await user.getIdToken();
 
-      // Check if user is already registered in our DB
-      const checkRes = await axios.post(`${backendURL}/api/students/check-phone`, {
-        phoneNumber: phoneNumber.replace("+91", "") // Send without country code for consistency
-      });
+      toast.success("Phone verified! Proceeding to registration.");
 
-      if (checkRes.data.exists) {
-        toast.info("You are already registered.");
-        // Optional: Redirect to dashboard if implemented
-      } else {
-        toast.success("Phone verified! Proceeding to registration.");
-        navigate("/register");
-      }
-
-      // Store token for subsequent requests
+      // Store token and navigate
       localStorage.setItem("studentToken", token);
+      navigate("/register");
 
     } catch (error) {
       console.error("Error verifying OTP:", error);

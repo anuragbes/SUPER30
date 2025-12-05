@@ -121,6 +121,21 @@ export default function Footer() {
             Admin Login
           </Link>
         </div>
+
+        {/* Developer Credit */}
+        <div className="text-center text-xs text-primary-foreground/60 mt-4">
+          <p>
+            This website is developed and managed by{" "}
+            <a
+              href="https://www.linkedin.com/in/harshitraj1510"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-white underline decoration-dotted"
+            >
+              Harshit Raj
+            </a>
+          </p>
+        </div>
       </div>
     </footer>
   );
