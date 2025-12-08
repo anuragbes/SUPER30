@@ -23,12 +23,14 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 
 const images = [
+  "/images/poster8.png",
   "/images/poster1.jpeg",
   "/images/poster2.jpeg",
   "/images/poster3.png",
   "/images/poster4.jpg",
   "/images/poster5.jpg",
   "/images/poster6.jpg",
+  
 ];
 
 export function AutoSlider() {
