@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 
 const images = [
+  "/images/poster9.jpeg",
   "/images/poster8.png",
   "/images/poster1.jpeg",
   "/images/poster2.jpeg",
