@@ -93,7 +93,7 @@ export const createAdmitCardBuffer = (student, examDate) => {
   y = drawRow(
     "Test Venue",
     "British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)",
-    y
+    y, { maxLines: 3 }
   );
   y = drawRow("Exam Date", examDate || "-", y);
   y = drawRow("Exam Time", "11:00 AM - 01:00 PM", y);
