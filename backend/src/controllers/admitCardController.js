@@ -6,6 +6,22 @@ import { formatDateDDMMYYYY } from "../utils/googleSheets.js";
 import path from "path";
 
 const bannerPath = path.resolve("assets/banner.png"); // backend/assets/banner.png
+const watermarkPath = path.resolve("assets/watermark.png"); 
+
+const addImageWatermark = (doc) => {
+  const { width, height } = doc.page;
+
+  doc.save(); // save graphics state
+
+  doc
+    .opacity(0.08) // 🔥 adjust (0.05–0.15 recommended)
+    .image(watermarkPath, width / 2 - 200, height / 2 - 200, {
+      width: 400,
+      align: "center",
+    });
+
+  doc.restore(); // restore graphics state
+};
 
 // 🔹 Helper: create PDF buffer in memory
 export const createAdmitCardBuffer = (student, examDate) => {
@@ -16,6 +32,8 @@ export const createAdmitCardBuffer = (student, examDate) => {
     doc.on("data", (chunk) => chunks.push(chunk));
     doc.on("end", () => resolve(Buffer.concat(chunks)));
     doc.on("error", reject);
+
+     addImageWatermark(doc);
 
     // ====== YOUR EXISTING PDF LAYOUT CODE STARTS ======
     doc.image(bannerPath, 20, 20, { width: 555 });
@@ -62,9 +80,9 @@ export const createAdmitCardBuffer = (student, examDate) => {
       "British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)",
       startY + 135 // 126
     );
-    drawRow("Time", "09:00 AM - 11:00 AM", startY + 172); // 153
+    drawRow("Time", "11:00 AM - 01:00 PM", startY + 172); // 153
     drawRow("Date", examDate || "-", startY + 190); // 171
-    drawRow("Reporting Time", "08:00 AM", startY + 208); // 189
+    drawRow("Reporting Time", "10:00 AM", startY + 208); // 189
 
     doc.rect(470, startY, 100, 130).stroke();
     doc.fontSize(8).font("Helvetica").text("Affix", 460, startY + 50, { align: "center" });
