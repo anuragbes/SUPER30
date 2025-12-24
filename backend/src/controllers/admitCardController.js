@@ -6,24 +6,24 @@ import { formatDateDDMMYYYY } from "../utils/googleSheets.js";
 import path from "path";
 
 const bannerPath = path.resolve("assets/banner.png"); // backend/assets/banner.png
-const watermarkPath = path.resolve("assets/watermark.png"); 
+// const watermarkPath = path.resolve("assets/watermark.png"); 
 
 
 
-const addImageWatermark = (doc) => {
-  const { width, height } = doc.page;
+// const addImageWatermark = (doc) => {
+//   const { width, height } = doc.page;
 
-  doc.save(); // save graphics state
+//   doc.save(); // save graphics state
 
-  doc
-    .opacity(0.08) // 🔥 adjust (0.05–0.15 recommended)
-    .image(watermarkPath, width / 2 - 200, height / 2 - 200, {
-      width: 400,
-      align: "center",
-    });
+//   doc
+//     .opacity(0.08) // 🔥 adjust (0.05–0.15 recommended)
+//     .image(watermarkPath, width / 2 - 200, height / 2 - 200, {
+//       width: 400,
+//       align: "center",
+//     });
 
-  doc.restore(); // restore graphics state
-};
+//   doc.restore(); // restore graphics state
+// };
 
 // 🔹 Helper: create PDF buffer in memory
 export const createAdmitCardBuffer = (student, examDate) => {
@@ -35,7 +35,7 @@ export const createAdmitCardBuffer = (student, examDate) => {
     doc.on("end", () => resolve(Buffer.concat(chunks)));
     doc.on("error", reject);
 
-     addImageWatermark(doc);
+    //  addImageWatermark(doc);
 
     // ====== YOUR EXISTING PDF LAYOUT CODE STARTS ======
     doc.image(bannerPath, 20, 20, { width: 555 });
