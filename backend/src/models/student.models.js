@@ -160,29 +160,16 @@ studentSchema.pre("save", function (next) {
 });
 
 // Auto-increment studentID before saving (using Counter collection for unique IDs)
-// Assign studentId only after a successful save to avoid gaps when save fails
-studentSchema.post("save", async function (doc, next) {
-    try {
-        // If studentId already exists (e.g., seeded data), skip
-        if (doc.studentId) return next();
-
+studentSchema.pre("save", async function (next) {
+    if (this.isNew) {                                     // checks if the student is new
         const counter = await Counter.findOneAndUpdate(
             { id: "studentId" },
             { $inc: { seq: 1 } },
             { new: true, upsert: true }
         );
-
-        const newId = "STU" + counter.seq.toString().padStart(4, "0");
-
-        // Update the saved document with the generated studentId
-        await doc.constructor.findByIdAndUpdate(doc._id, { studentId: newId });
-
-        next();
-    } catch (err) {
-        // Do not block the saved document; log and continue
-        console.error("Error assigning studentId post-save:", err);
-        next();
+        this.studentId = "STU" + counter.seq.toString().padStart(4, "0");
     }
+    next();
 });
 
 
