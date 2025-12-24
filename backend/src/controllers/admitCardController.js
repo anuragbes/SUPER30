@@ -16,7 +16,7 @@ const addTextWatermark = (doc, text = "SBTSE - 2026") => {
     .fontSize(60)
     .font("Helvetica-Bold")
     .fillColor("gray")
-    .opacity(0.08) // 👈 watermark strength (0.05–0.12 ideal)
+    .opacity(0.2) // 👈 watermark strength (0.05–0.12 ideal)
     .text(text, width / 2 - 300, height / 2 - 30, {
       width: 600,
       align: "center",
@@ -93,7 +93,7 @@ export const createAdmitCardBuffer = (student, examDate) => {
 
     doc.fontSize(9).font("Helvetica");
     doc.text("Invigilator's Sign", leftX, candBoxTop + candBoxHeight - 15, {width: 565, align: "center"});
-    doc.text("Candidate's Sign", leftX, candBoxTop + candBoxHeight - 15, {width: 565, align: "right"});
+    doc.text("Candidate's Sign", leftX, candBoxTop + candBoxHeight - 15, {width: 540, align: "right"});
 
     doc.moveDown(2);
 
