@@ -65,17 +65,21 @@ export const createAdmitCardBuffer = (student, examDate) => {
     doc.fontSize(10).font("Helvetica");
 
     const drawRow = (label, value, y, options = {}) => {
-  const width = options.width || 280;
-  const gapAfter = options.gapAfter ?? 8;
+    const width = options.width || 280;
+    const gapAfter = options.gapAfter ?? 8;
+    const maxLines = options.maxLines ?? 1;
 
-  doc.text(label, leftX, y);
-  doc.text(":", leftX + labelWidth, y);
+    doc.text(label, leftX, y);
+    doc.text(":", leftX + labelWidth, y);
 
-  doc.text(value || "-", valueX, y, { width });
+    doc.text(value || "-", valueX, y, {
+      width,
+      height: doc.currentLineHeight() * maxLines,
+      ellipsis: true,
+    });
 
-  // 🔑 doc.y automatically moves after multiline text
-  return doc.y + gapAfter;
-};
+    return doc.y + gapAfter;
+  };
 
   let y = startY;
 
@@ -85,7 +89,7 @@ export const createAdmitCardBuffer = (student, examDate) => {
   y = drawRow("Stream", student.stream, y);
   y = drawRow("Class", student.classMoving, y);
   y = drawRow("Gender", student.gender || "-", y);
-  y = drawRow("Address", student.permanentAddress, y);
+  y = drawRow("Address", student.permanentAddress, y, { maxLines: 2 });
   y = drawRow(
     "Test Venue",
     "British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)",
@@ -148,7 +152,7 @@ export const createAdmitCardBuffer = (student, examDate) => {
     invY = drawRow("Candidate's Name", student.studentName, invY);
     invY = drawRow("Father's Name", student.fatherName || "-", invY);
     invY = drawRow("Stream", student.stream, invY);
-    invY = drawRow("Address", student.permanentAddress, invY);
+    invY = drawRow("Address", student.permanentAddress, invY, { maxLines: 2 });
     invY = drawRow("Target", student.target, invY);
     invY = drawRow("Date", examDate || "-", invY);
 
