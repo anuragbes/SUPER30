@@ -117,6 +117,15 @@ export const createAdmitCardBuffer = (student, examDate) => {
 
     doc.moveDown(1);
 
+    const lineY = doc.y + 5;
+
+  doc
+    .dash(4, { space: 3 })
+    .moveTo(leftX, lineY)
+    .lineTo(leftX + 540, lineY)
+    .stroke()
+    .undash();
+
     const invLabelY = doc.y;
     doc.rect(15, invLabelY, 565, 25).fillAndStroke("#E0E0E0", "#000");
     doc.fillColor("#000").fontSize(11).font("Helvetica-Bold")
