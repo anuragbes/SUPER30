@@ -8,6 +8,8 @@ import path from "path";
 const bannerPath = path.resolve("assets/banner.png"); // backend/assets/banner.png
 const watermarkPath = path.resolve("assets/watermark.png"); 
 
+
+
 const addImageWatermark = (doc) => {
   const { width, height } = doc.page;
 
