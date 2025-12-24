@@ -16,7 +16,7 @@ const addTextWatermark = (doc, text = "SBTSE - 2026") => {
     .fontSize(60)
     .font("Helvetica-Bold")
     .fillColor("gray")
-    .opacity(0.2) // 👈 watermark strength (0.05–0.12 ideal)
+    .opacity(0.2) 
     .text(text, width / 2 - 300, height / 2 - 30, {
       width: 600,
       align: "center",
@@ -64,27 +64,36 @@ export const createAdmitCardBuffer = (student, examDate) => {
 
     doc.fontSize(10).font("Helvetica");
 
-    const drawRow = (label, value, y) => {
-      doc.text(label, leftX, y);
-      doc.text(":", leftX + labelWidth, y);
-      doc.text(value, valueX, y, { width: 280 });
-    };
+    const drawRow = (label, value, y, options = {}) => {
+  const width = options.width || 280;
+  const gapAfter = options.gapAfter ?? 8;
 
-    drawRow("Roll No.", student.rollNo || "-", startY);
-    drawRow("Candidate's Name", student.studentName, startY + 18);
-    drawRow("Father's Name", student.fatherName || "-", startY + 36);
-    drawRow("Stream", student.stream, startY + 54);
-    drawRow("Class", student.classMoving, startY + 72);
-    drawRow("Gender", student.gender || "-", startY + 90);
-    drawRow("Address", student.permanentAddress, startY + 108);
-    drawRow(
-      "Test Venue",
-      "British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)",
-      startY + 135 // 126
-    );
-    drawRow("Exam Date", examDate || "-", startY + 172);
-    drawRow("Exam Time", "11:00 AM - 01:00 PM", startY + 190); // 153
-    drawRow("Reporting Time", "10:00 AM", startY + 208); // 189
+  doc.text(label, leftX, y);
+  doc.text(":", leftX + labelWidth, y);
+
+  doc.text(value || "-", valueX, y, { width });
+
+  // 🔑 doc.y automatically moves after multiline text
+  return doc.y + gapAfter;
+};
+
+  let y = startY;
+
+  y = drawRow("Roll No.", student.rollNo || "-", y);
+  y = drawRow("Candidate's Name", student.studentName, y);
+  y = drawRow("Father's Name", student.fatherName || "-", y);
+  y = drawRow("Stream", student.stream, y);
+  y = drawRow("Class", student.classMoving, y);
+  y = drawRow("Gender", student.gender || "-", y);
+  y = drawRow("Address", student.permanentAddress, y);
+  y = drawRow(
+    "Test Venue",
+    "British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)",
+    y
+  );
+  y = drawRow("Exam Date", examDate || "-", y);
+  y = drawRow("Exam Time", "11:00 AM - 01:00 PM", y);
+  y = drawRow("Reporting Time", "10:00 AM", y);
 
     doc.rect(470, startY, 100, 130).stroke();
     doc.fontSize(8).font("Helvetica").text("Affix", 460, startY + 50, { align: "center" });
@@ -133,13 +142,15 @@ export const createAdmitCardBuffer = (student, examDate) => {
 
     doc.fontSize(10).font("Helvetica");
 
-    drawRow("Roll No.", student.rollNo || "-", invStartY);
-    drawRow("Candidate's Name", student.studentName, invStartY + 18);
-    drawRow("Father's Name", student.fatherName || "-", invStartY + 36);
-    drawRow("Stream", student.stream, invStartY + 54);
-    drawRow("Address", student.permanentAddress, invStartY + 72);
-    drawRow("Target", student.target, invStartY + 90);
-    drawRow("Date", examDate || "-", invStartY + 108);
+    let invY = invStartY;
+
+    invY = drawRow("Roll No.", student.rollNo || "-", invY);
+    invY = drawRow("Candidate's Name", student.studentName, invY);
+    invY = drawRow("Father's Name", student.fatherName || "-", invY);
+    invY = drawRow("Stream", student.stream, invY);
+    invY = drawRow("Address", student.permanentAddress, invY);
+    invY = drawRow("Target", student.target, invY);
+    invY = drawRow("Date", examDate || "-", invY);
 
     doc.rect(470, invStartY, 100, 130).stroke();
     doc.fontSize(8).text("Affix", 460, invStartY + 50, { align: "center" });
