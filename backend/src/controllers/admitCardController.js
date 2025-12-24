@@ -82,8 +82,8 @@ export const createAdmitCardBuffer = (student, examDate) => {
       "British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)",
       startY + 135 // 126
     );
-    drawRow("Exam Time", "11:00 AM - 01:00 PM", startY + 172); // 153
-    drawRow("Exam Date", examDate || "-", startY + 190); // 171
+    drawRow("Exam Date", examDate || "-", startY + 172);
+    drawRow("Exam Time", "11:00 AM - 01:00 PM", startY + 190); // 153
     drawRow("Reporting Time", "10:00 AM", startY + 208); // 189
 
     doc.rect(470, startY, 100, 130).stroke();
@@ -103,10 +103,10 @@ export const createAdmitCardBuffer = (student, examDate) => {
     doc.fontSize(9.5).font("Helvetica");
     const instructions = [
       "100% Free Education, Fooding and Lodging facilities will be provided to the selected candidates after final stages subject to verification.",
-      "Affix two recent Passport Sized Photographs as mentioned in the Admit Card before coming to the examination Centre.",
+      "Affix two recent Passport Sized Photographs as mentioned in the Admit Card before coming to the examination centre.",
       "Candidates are required to carry original Photo ID proof (Aadhar Card/SchooI ID) during exam along with admit card.",
       "Result will be notified through SMS and School Website - www.britishenglishschool.in",
-      "LOCATION OF TEST CENTRE: British School Gurukul",
+      "LOCATION OF TEST CENTRE: British School Gurukul, Gaya, Bihar.",
       "You are required to keep the Admit Card in original to avail the final scholarship subject to background clearance",
     ];
 
