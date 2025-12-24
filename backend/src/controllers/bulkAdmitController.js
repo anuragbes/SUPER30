@@ -125,7 +125,7 @@ export const bulkSendAdmitCards = async (req, res) => {
               <p>1. Please download and print your Admit Card attached below for the exam.</p>
               <p>2. <b>Exam Date:</b> ${examDate}</p>
               <p>3. <b>Venue:</b> British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)</p>
-              <p>4. <b>Reporting Time:</b> 8:00 AM</p>
+              <p>4. <b>Reporting Time:</b> 10:00 AM</p>
               <br/>
               <p>5. In case of any difficulty, please contact @ 7766994020, 7766994006</p>
               <br/>
