@@ -6,24 +6,24 @@ import { formatDateDDMMYYYY } from "../utils/googleSheets.js";
 import path from "path";
 
 const bannerPath = path.resolve("assets/banner.png"); // backend/assets/banner.png
-// const watermarkPath = path.resolve("assets/watermark.png"); 
+const addTextWatermark = (doc, text = "SBTSE - 2026") => {
+  const { width, height } = doc.page;
 
+  doc.save(); // save current state
 
+  doc
+    .rotate(-45, { origin: [width / 2, height / 2] }) // diagonal
+    .fontSize(60)
+    .font("Helvetica-Bold")
+    .fillColor("gray")
+    .opacity(0.08) // 👈 watermark strength (0.05–0.12 ideal)
+    .text(text, width / 2 - 300, height / 2 - 30, {
+      width: 600,
+      align: "center",
+    });
 
-// const addImageWatermark = (doc) => {
-//   const { width, height } = doc.page;
-
-//   doc.save(); // save graphics state
-
-//   doc
-//     .opacity(0.08) // 🔥 adjust (0.05–0.15 recommended)
-//     .image(watermarkPath, width / 2 - 200, height / 2 - 200, {
-//       width: 400,
-//       align: "center",
-//     });
-
-//   doc.restore(); // restore graphics state
-// };
+  doc.restore(); // restore state
+};
 
 // 🔹 Helper: create PDF buffer in memory
 export const createAdmitCardBuffer = (student, examDate) => {
@@ -35,7 +35,7 @@ export const createAdmitCardBuffer = (student, examDate) => {
     doc.on("end", () => resolve(Buffer.concat(chunks)));
     doc.on("error", reject);
 
-    //  addImageWatermark(doc);
+      addTextWatermark(doc, "SBTSE - 2026");
 
     // ====== YOUR EXISTING PDF LAYOUT CODE STARTS ======
     doc.image(bannerPath, 20, 20, { width: 555 });
@@ -82,8 +82,8 @@ export const createAdmitCardBuffer = (student, examDate) => {
       "British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)",
       startY + 135 // 126
     );
-    drawRow("Time", "11:00 AM - 01:00 PM", startY + 172); // 153
-    drawRow("Date", examDate || "-", startY + 190); // 171
+    drawRow("Exam Time", "11:00 AM - 01:00 PM", startY + 172); // 153
+    drawRow("Exam Date", examDate || "-", startY + 190); // 171
     drawRow("Reporting Time", "10:00 AM", startY + 208); // 189
 
     doc.rect(470, startY, 100, 130).stroke();
@@ -92,8 +92,8 @@ export const createAdmitCardBuffer = (student, examDate) => {
     doc.text("Here", 460, startY + 74, { align: "center" });
 
     doc.fontSize(9).font("Helvetica");
-    doc.text("Invigilator's Sign", leftX, candBoxTop + candBoxHeight - 15);
-    doc.text("Candidate's Sign", 380, candBoxTop + candBoxHeight - 15);
+    doc.text("Invigilator's Sign", leftX, candBoxTop + candBoxHeight - 15, {width: 565, align: "center"});
+    doc.text("Candidate's Sign", leftX, candBoxTop + candBoxHeight - 15, {width: 565, align: "right"});
 
     doc.moveDown(2);
 
