@@ -27,6 +27,7 @@ export default function Dashboard() {
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#D7263D", "#6A4C93"];
 
   const backendURL = import.meta.env.VITE_BACKEND_URL;
+  const googleSheetURL = import.meta.env.VITE_GOOGLE_SHEET_URL;
 
   const fetchExamSettings = async () => {
     try {
@@ -303,7 +304,20 @@ export default function Dashboard() {
               />
             </ActionCard>
 
-                        <ActionCard
+            <ActionCard
+              title="Open Google Sheet"
+              description="View live student registration data"
+              buttonLabel="Open Sheet"
+              onClick={() => window.open(googleSheetURL, "_blank")}
+              variant="default"
+              icon={<FileText size={20} />}
+            >
+              <p className="text-xs text-muted-foreground">
+                Opens the connected Google Sheet in a new tab.
+              </p>
+            </ActionCard>
+
+            <ActionCard
               title={registrationOpen ? "Close Registration" : "Open Registration"}
               description="Open and Close Registration for Students"
               buttonLabel={registrationOpen ? "Close Registration" : "Open Registration"}

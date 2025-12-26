@@ -332,6 +332,11 @@ export default function RegisterStudent() {
                   onChange={(e) =>
                     setFormData({ ...formData, permanentAddress: e.target.value })
                   }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault(); // block new line
+                    }
+                  }}
                   maxLength={110}
                   className="border rounded-lg p-3 w-full"
                 />
@@ -351,6 +356,11 @@ export default function RegisterStudent() {
                   onChange={(e) =>
                     setFormData({ ...formData, presentAddress: e.target.value })
                   }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault(); // block new line
+                    }
+                  }}
                   maxLength={110}
                   className="border rounded-lg p-3 w-full"
                 />
@@ -472,8 +482,8 @@ export default function RegisterStudent() {
                       Co-operative Public School, Dubhal, Gaya, Bihar
                     </SelectItem>
 
-                    <SelectItem value="Co-operative Public School, Gaya, Bihar">
-                      Co-operative Public School, Gaya, Bihar
+                    <SelectItem value="Creane Memorial High School, Gaya, Bihar">
+                      Creane Memorial High School, Gaya, Bihar
                     </SelectItem>
 
                     <SelectItem value="DAV Public School, Cantt Area, Gaya, Bihar">
@@ -514,6 +524,10 @@ export default function RegisterStudent() {
 
                     <SelectItem value="National Public School, Gaya, Bihar">
                       National Public School, Gaya, Bihar
+                    </SelectItem>
+
+                    <SelectItem value="Nazareth Academy, Gaya, Bihar">
+                      Nazareth Academy, Gaya, Bihar
                     </SelectItem>
 
                     <SelectItem value="Open Minds – A Birla School, Gaya, Bihar">
