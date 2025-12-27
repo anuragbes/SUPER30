@@ -213,34 +213,6 @@ export default function StudentsList() {
     fetchStudents();
   };
 
-  const handleResendEmail = async (studentId) => {
-  try {
-    toast.loading("Resending email...", { id: `resend-${studentId}` });
-
-    await axios.post(
-      `${backendURL}/api/admin/bulk-send-admit-cards`,
-      { selectedStudents: [studentId] },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    toast.success("Email sent again successfully!", {
-      id: `resend-${studentId}`,
-    });
-
-    // Ensure UI stays in sync
-    setStudents((prev) =>
-      prev.map((s) =>
-        s.studentId === studentId ? { ...s, admitCardSent: true } : s
-      )
-    );
-  } catch (error) {
-    console.error("Resend failed:", error);
-    toast.error("Failed to resend email", {
-      id: `resend-${studentId}`,
-    });
-  }
-};
-
 
   const handleDeleteStudent = async (studentId) => {
   if (!confirm("Are you sure you want to delete this student? This action cannot be undone.")) {
@@ -511,18 +483,6 @@ export default function StudentsList() {
                               className="bg-slate-200 text-slate-400 cursor-not-allowed"
                             >
                               View
-                            </Button>
-                          )}
-
-                          {/* 🔁 Send Again */}
-                          {student.admitCardGenerated && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="border-emerald-500 text-emerald-600 hover:bg-emerald-50"
-                              onClick={() => handleResendEmail(student.studentId)}
-                            >
-                              Send Again
                             </Button>
                           )}
 
