@@ -213,6 +213,35 @@ export default function StudentsList() {
     fetchStudents();
   };
 
+  const handleResendEmail = async (studentId) => {
+  try {
+    toast.loading("Resending email...", { id: `resend-${studentId}` });
+
+    await axios.post(
+      `${backendURL}/api/admin/bulk-send-admit-cards`,
+      { selectedStudents: [studentId] },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    toast.success("Email sent again successfully!", {
+      id: `resend-${studentId}`,
+    });
+
+    // Ensure UI stays in sync
+    setStudents((prev) =>
+      prev.map((s) =>
+        s.studentId === studentId ? { ...s, admitCardSent: true } : s
+      )
+    );
+  } catch (error) {
+    console.error("Resend failed:", error);
+    toast.error("Failed to resend email", {
+      id: `resend-${studentId}`,
+    });
+  }
+};
+
+
   const handleDeleteStudent = async (studentId) => {
   if (!confirm("Are you sure you want to delete this student? This action cannot be undone.")) {
     return;
@@ -467,25 +496,37 @@ export default function StudentsList() {
                         </td>
 
                         <td className="px-6 py-4 flex items-center gap-3">
+                          {/* View */}
                           {student.admitCardGenerated ? (
                             <Button
-                              onClick={() =>
-                                handleDownloadAdmitCard(student.studentId)
-                              }
-                              variant="default"
+                              onClick={() => handleDownloadAdmitCard(student.studentId)}
                               size="sm"
                               className="bg-blue-600 hover:bg-blue-700 text-white"
                             >
-                              View / Download
+                              View
                             </Button>
                           ) : (
                             <Button
                               size="sm"
-                              className="bg-slate-200 text-slate-400 hover:bg-slate-200 cursor-not-allowed"
+                              className="bg-slate-200 text-slate-400 cursor-not-allowed"
                             >
-                              View / Download
+                              View
                             </Button>
                           )}
+
+                          {/* 🔁 Send Again */}
+                          {student.admitCardGenerated && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-emerald-500 text-emerald-600 hover:bg-emerald-50"
+                              onClick={() => handleResendEmail(student.studentId)}
+                            >
+                              Send Again
+                            </Button>
+                          )}
+
+                          {/* Delete */}
                           <Trash
                             className="w-5 h-5 text-red-600 cursor-pointer hover:text-red-800 transition"
                             onClick={() => handleDeleteStudent(student.studentId)}
