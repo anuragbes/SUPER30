@@ -319,6 +319,13 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ---- Announcement ---- */}
+    <div className="max-w-7xl mx-auto px-4 mt-6 mb-2">
+      <div className="bg-blue-100 border border-blue-300 text-blue-900 text-base sm:text-lg md:text-xl rounded-2xl px-6 py-4 text-center font-semibold shadow-sm">
+        📢 <span className="font-semibold">Important:</span> Results to be Published on 05 Jan 2026. Thank you for your Patience.
+      </div>
+    </div>
+
       <div className="mt-10">
         <AutoSlider />
       </div>
