@@ -21,6 +21,7 @@ import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { auth } from "../firebase";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import Result from "@/assets/result.svg";
 
 const images = [
   "/images/poster9.jpeg",
@@ -319,12 +320,43 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ---- Announcement ---- */}
-    <div className="max-w-7xl mx-auto px-4 mt-6 mb-2">
-      <div className="bg-blue-100 border border-blue-300 text-blue-900 text-base sm:text-lg md:text-xl rounded-2xl px-6 py-4 text-center font-semibold shadow-sm">
-        📢 <span className="font-semibold">Important:</span> Results to be Published on 05 Jan 2026. Thank you for your Patience.
+      {/* Announcement */}
+    <div className="max-w-7xl mx-auto px-4 mt-6 mb-4">
+      <div className="bg-blue-100 border border-blue-300 text-blue-900 text-base sm:text-lg md:text-xl rounded-2xl px-6 py-4 text-center font-semibold shadow-sm flex flex-col items-center gap-2">
+        {/* Result line */}
+        <div className="flex items-center justify-center gap-3">
+          <img
+            src={Result}
+            alt="Result Icon"
+            className="w-5 h-5 sm:w-7 sm:h-7"
+          />
+          <span>
+            Result Declared! The examination results have been officially released.
+          </span>
+        </div>
+
+        {/* New batch line */}
+        <div className="flex items-center justify-center gap-2">
+          <CalendarDays className="w-5 h-5 sm:w-7 sm:h-7" />
+          <span>New batch starts 16 March 2026 (Monday)</span>
+        </div>
+      </div>
+
+
+      {/* Check Result */}
+      <div className="mt-4 text-center">
+        <a
+          href="https://www.britishenglishschool.in/result.php"
+          target="_blank"
+          rel="noopener noreferrer"
+          
+          className="inline-flex items-center justify-center px-6 py-2.5 rounded-xl bg-blue-600 text-white font-semibold text-sm sm:text-base hover:bg-blue-700 transition-all duration-200"
+        >
+          Check Result
+        </a>
       </div>
     </div>
+
 
       <div className="mt-10">
         <AutoSlider />
