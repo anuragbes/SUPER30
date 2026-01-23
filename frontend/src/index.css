@@ -119,3 +119,33 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* Clerk UI Mobile Responsiveness */
+@media (max-width: 640px) {
+  .cl-rootBox {
+    padding: 0 !important;
+  }
+  
+  .cl-modalBackdrop {
+    padding: 1rem !important;
+  }
+  
+  .cl-card {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    border-radius: 0.5rem !important;
+  }
+  
+  .cl-formFieldInput {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+  }
+  
+  .cl-formButtonPrimary {
+    width: 100% !important;
+    padding: 0.75rem !important;
+  }
+  
+  .cl-socialButtonsBlockButton {
+    width: 100% !important;
+  }
+}

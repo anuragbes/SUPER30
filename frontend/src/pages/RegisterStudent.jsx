@@ -10,12 +10,14 @@ import { toast } from "sonner";
 import FormSection from "@/components/FormSection";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileUpload } from "@/components/FileUpload";
+import { useUser, useAuth } from "@clerk/clerk-react";
 
-import { auth } from "../firebase";
-import { signOut } from "firebase/auth";
 
 export default function RegisterStudent() {
   const navigate = useNavigate();
+
+  const { user } = useUser();
+  const { getToken, signOut } = useAuth();
 
   const [customSchool, setCustomSchool] = useState("");
 
@@ -32,29 +34,22 @@ export default function RegisterStudent() {
   const backendURL = import.meta.env.VITE_BACKEND_URL;
 
   useEffect(() => {
-    const user = auth.currentUser;
-    if (user && user.phoneNumber) {
-      // Remove +91 prefix if present for display/storage consistency
-      const phone = user.phoneNumber.replace("+91", "");
-      setFormData((prev) => ({
-        ...prev,
-        classMoving: "10th to 11th",
-        studentMobile: phone
-      }));
-    } else {
-      setFormData((prev) => ({ ...prev, classMoving: "10th to 11th" }));
+    if (user === null) {
+      navigate("/");
     }
-  }, []);
+  }, [user, navigate]);
 
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      navigate("/login");
-      toast.success("Logged out successfully");
-    } catch (error) {
-      toast.error("Failed to logout");
-    }
-  };
+  useEffect(() => {
+  if (!user) return;
+
+  const email = user.primaryEmailAddress?.emailAddress || "";
+
+  setFormData((prev) => ({
+    ...prev,
+    classMoving: "10th to 11th",
+    email,
+  }));
+}, [user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -73,6 +68,12 @@ export default function RegisterStudent() {
   const handleFileChange = (name, file) => {
     if (name === "passportPhoto") setPassportPhoto(file);
     if (name === "identityPhoto") setIdentityPhoto(file);
+  };
+
+  const handleLogout = async () => {
+        await signOut();
+        navigate("/");
+        toast.success("Logged out successfully");
   };
 
   const handleSubmit = async (e) => {
@@ -101,11 +102,7 @@ export default function RegisterStudent() {
       if (passportPhoto) form.append("passportPhoto", passportPhoto);
       if (identityPhoto) form.append("identityPhoto", identityPhoto);
 
-      const user = auth.currentUser;
-      let token = "";
-      if (user) {
-        token = await user.getIdToken();
-      }
+      const token = await getToken();
 
       const res = await axios.post(
         `${backendURL}/api/students/register`,
@@ -117,6 +114,7 @@ export default function RegisterStudent() {
           }
         }
       );
+
 
       toast.success("Registration Successful!", {
         description: `Student ID: ${res.data.studentId}`,
@@ -213,8 +211,8 @@ export default function RegisterStudent() {
                   className="border border-slate-200 rounded-lg bg-white w-full"
                   type="email"
                   name="email"
-                  placeholder="example@gmail.com"
-                  onChange={handleChange}
+                  value={formData.email || ""}
+                  readOnly
                   required
                 />
               </Field>
@@ -304,13 +302,12 @@ export default function RegisterStudent() {
                     +91
                   </span>
                   <Input
-                    className="h-10 bg-slate-100 border border-slate-200/60 border-l-0 rounded-l-none rounded-r-lg shadow-sm w-full cursor-not-allowed"
+                    className="h-10 bg-slate-100 border border-slate-200/60 border-l-0 rounded-l-none rounded-r-lg shadow-sm w-full"
                     type="tel"
                     name="studentMobile"
                     placeholder="Enter Mobile Number"
                     maxLength="10"
-                    value={formData.studentMobile || ""}
-                    readOnly
+                    onChange={handleChange}
                     required
                   />
                 </div>

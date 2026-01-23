@@ -17,11 +17,9 @@ import FAQ from "@/components/FAQ";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import Footer from "@/components/Footer";
-import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
-import { auth } from "../firebase";
-import { Input } from "@/components/ui/input";
-import { Spinner } from "@/components/ui/spinner";
 import Result from "@/assets/result.svg";
+import { SignedIn, SignedOut, SignIn, useAuth, useClerk } from "@clerk/clerk-react";
+
 
 const images = [
   "/images/poster9.jpeg",
@@ -60,7 +58,6 @@ export function AutoSlider() {
   );
 }
 
-
 const formatDateForDisplay = (dateString) => {
   if (!dateString) return "To Be Announced";
   const [year, month, day] = dateString.split("-");
@@ -74,12 +71,14 @@ export default function Home() {
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Login State
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [otp, setOtp] = useState("");
-  const [step, setStep] = useState("PHONE"); // PHONE or OTP
-  const [loginLoading, setLoginLoading] = useState(false);
-  const [confirmationResult, setConfirmationResult] = useState(null);
+  const { isSignedIn } = useAuth();
+  const { openSignIn } = useClerk();
+
+  useEffect(() => {
+    if (isSignedIn) {
+      navigate("/register");
+    }
+  }, [isSignedIn, navigate]);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -95,100 +94,6 @@ export default function Home() {
     fetchSettings();
   }, [backendURL]);
 
-  useEffect(() => {
-    // Initialize Recaptcha
-    if (!window.recaptchaVerifier) {
-      window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-        size: "invisible",
-        callback: () => {
-          // reCAPTCHA solved
-        },
-      });
-    }
-
-    // Cleanup on unmount
-    return () => {
-      if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear();
-        window.recaptchaVerifier = null;
-      }
-    };
-  }, []);
-
-  const handleSendOtp = async (e) => {
-    e.preventDefault();
-    setLoginLoading(true);
-
-    // 1. Check if phone is already registered
-    try {
-      const cleanPhone = phoneNumber.replace(/\D/g, "").slice(-10); // Extract last 10 digits
-      const checkRes = await axios.post(`${backendURL}/api/students/check-phone`, {
-        phoneNumber: cleanPhone
-      });
-
-      if (checkRes.data.exists) {
-        toast.info("You are already registered with this number.");
-        setLoginLoading(false);
-        return; // Stop execution
-      }
-
-    } catch (error) {
-      console.error("Error checking phone:", error);
-      toast.error("Failed to verify phone number.");
-      setLoginLoading(false);
-      return;
-    }
-
-    // 2. Send OTP if not registered
-    const formattedPhone = phoneNumber.startsWith("+91") ? phoneNumber : `+91${phoneNumber}`;
-
-    try {
-      if (!window.recaptchaVerifier) {
-        window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-          size: "invisible",
-          callback: () => { },
-        });
-      }
-
-      const appVerifier = window.recaptchaVerifier;
-      const confirmation = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
-      setConfirmationResult(confirmation);
-      setStep("OTP");
-      toast.success("OTP sent successfully!");
-    } catch (error) {
-      console.error("Error sending OTP:", error);
-      toast.error("Failed to send OTP. Try again.");
-
-      // Reset reCAPTCHA on error
-      if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear();
-        window.recaptchaVerifier = null;
-      }
-    }
-    setLoginLoading(false);
-  };
-
-  const handleVerifyOtp = async (e) => {
-    e.preventDefault();
-    setLoginLoading(true);
-
-    try {
-      const result = await confirmationResult.confirm(otp);
-      const user = result.user;
-      const token = await user.getIdToken();
-
-      toast.success("Phone verified! Proceeding to registration.");
-
-      // Store token and navigate
-      localStorage.setItem("studentToken", token);
-      navigate("/register");
-
-    } catch (error) {
-      console.error("Error verifying OTP:", error);
-      toast.error("Invalid OTP");
-    }
-    setLoginLoading(false);
-  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -251,69 +156,39 @@ export default function Home() {
                   Register for SUPER30
                 </h3>
 
-                <div id="recaptcha-container"></div>
+                
 
                 {loading ? (
-                  <p className="text-center text-gray-500">Loading...</p>
-                ) : !settings?.registrationOpen ? (
-                  <Button
-                    disabled
-                    className="w-full bg-gray-200 text-gray-700 cursor-not-allowed"
-                  >
-                    Registration Closed
-                  </Button>
-                ) : (
-                  // Embedded Login Flow
-                  <div className="w-full">
-                    {step === "PHONE" ? (
-                      <form onSubmit={handleSendOtp} className="flex flex-col gap-3">
-                        <Input
-                          type="tel"
-                          placeholder="Enter Mobile Number"
-                          value={phoneNumber}
-                          onChange={(e) => setPhoneNumber(e.target.value)}
-                          required
-                          className="rounded-lg p-3 border-slate-200"
-                          maxLength={10}
-                        />
+                    <p className="text-center text-gray-500">Loading...</p>
+                  ) : !settings?.registrationOpen ? (
+                    <Button
+                      disabled
+                      className="w-full bg-gray-200 text-gray-700 cursor-not-allowed"
+                    >
+                      Registration Closed
+                    </Button>
+                  ) : (
+                    <div className="w-full">
+                      <SignedOut>
                         <Button
-                          disabled={loginLoading || phoneNumber.length < 10}
-                          type="submit"
+                          onClick={() => openSignIn()}
                           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold"
                         >
-                          {loginLoading ? <Spinner /> : "Verify & Register"}
+                          Register
                         </Button>
-                      </form>
-                    ) : (
-                      <form onSubmit={handleVerifyOtp} className="flex flex-col gap-3">
-                        <Input
-                          type="text"
-                          placeholder="Enter OTP"
-                          value={otp}
-                          onChange={(e) => setOtp(e.target.value)}
-                          required
-                          className="rounded-lg p-3 text-center tracking-widest text-lg border-slate-200"
-                          maxLength={6}
-                        />
+                      </SignedOut>
+
+                      <SignedIn>
                         <Button
-                          disabled={loginLoading || otp.length < 6}
-                          type="submit"
+                          onClick={() => navigate("/register")}
                           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold"
                         >
-                          {loginLoading ? <Spinner /> : "Verify OTP"}
+                          Continue to Registration
                         </Button>
-                        <Button
-                          variant="ghost"
-                          type="button"
-                          onClick={() => setStep("PHONE")}
-                          className="w-full text-sm text-gray-500 hover:text-gray-700"
-                        >
-                          Change Phone Number
-                        </Button>
-                      </form>
-                    )}
-                  </div>
-                )}
+                      </SignedIn>
+                    </div>
+                  )}
+
               </div>
             </div>
           </div>

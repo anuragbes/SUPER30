@@ -127,7 +127,7 @@ export default function Footer() {
           <p>
             This website is developed and managed by{" "}
             <a
-              href="https://reactjs-portfolio-virid.vercel.app/"
+              href="https://eternalspce.tech"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-white underline decoration-dotted"

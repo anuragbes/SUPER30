@@ -8,43 +8,46 @@ const SHEET_ID = process.env.GOOGLE_SHEET_ID;
 
 export const registerStudent = async (req, res) => {
   try {
+    const clerkUserId = req.clerkUserId;
 
-    // Create student object from body (but don't save yet)
-    const newStudent = new Student(req.body);
-
-    // Set firebaseUid from the authenticated user
-    if (req.user && req.user.uid) {
-      newStudent.firebaseUid = req.user.uid;
+    if (!clerkUserId) {
+      return res.status(401).json({ error: "Unauthorized" });
     }
+
+    const existingStudent = await Student.findOne({ clerkUserId });
+    if (existingStudent) {
+      return res.status(400).json({
+        error: "You have already registered for this exam",
+      });
+    }
+
+    const newStudent = new Student({
+      ...req.body,
+      clerkUserId,
+    });
 
     if (req.body.previousSchool === "Other" && req.body.customSchool) {
       newStudent.previousSchool = req.body.customSchool;
     }
 
-    // Assign Cloudinary URLs BEFORE saving
-    if (req.files?.passportPhoto && req.files.passportPhoto[0]?.path) {
+    if (req.files?.passportPhoto?.[0]?.path) {
       newStudent.passportPhotoURL = req.files.passportPhoto[0].path;
     }
 
-    if (req.files?.identityPhoto && req.files.identityPhoto[0]?.path) {
+    if (req.files?.identityPhoto?.[0]?.path) {
       newStudent.identityPhotoURL = req.files.identityPhoto[0].path;
     }
 
-    // Save student (all required fields now exist)
     await newStudent.save();
-
-    // Append to Google Sheet
     await appendToGoogleSheet(newStudent);
 
-    // Respond success
     res.status(201).json({
       message: "✅ Registration successful",
       studentId: newStudent.studentId,
-      student: newStudent,
     });
 
   } catch (error) {
-    console.log("❌ ERROR in registerStudent:", error);
+    console.error("❌ ERROR in registerStudent:", error);
     res.status(500).json({ error: error.message });
   }
 };

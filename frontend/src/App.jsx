@@ -1,7 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import StudentLogin from "./pages/StudentLogin";
-import StudentRoute from "./auth/StudentRoute";
 
 import RegisterStudent from "./pages/RegisterStudent";
 import Success from "./pages/Success";
@@ -21,13 +19,8 @@ export default function App() {
 
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
-          <Route path="/login" element={<StudentLogin />} />
-
-          {/* Protected Student Routes */}
-          <Route element={<StudentRoute />}>
-            <Route path="/register" element={<RegisterStudent />} />
-            <Route path="/success/:studentId" element={<Success />} />
-          </Route>
+          <Route path="/register" element={<RegisterStudent />} />
+          <Route path="/success/:studentId" element={<Success />} />
 
           {/* Admin Login Route */}
           <Route path="/admin/login" element={<AdminLogin />} />

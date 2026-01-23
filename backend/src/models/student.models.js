@@ -15,11 +15,6 @@ const studentSchema = new mongoose.Schema({
         type: String,
         unique: true,
     },
-    firebaseUid: {
-        type: String,
-        unique: true,
-        sparse: true // Allows null/undefined values to not conflict
-    },
     studentName: {
         type: String,
         required: true,
@@ -135,7 +130,13 @@ const studentSchema = new mongoose.Schema({
     submittedAt: {
         type: Date,
         default: Date.now
-    }
+    },
+    clerkUserId: {
+        type: String,
+        required: true,
+        unique: true,
+        index: true,
+    },
 }, { timestamps: true })
 
 
