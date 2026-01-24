@@ -98,9 +98,14 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col">
 
+      {/* ---- Under Maintenance Tag ---- */}
+      <div className="fixed top-2 right-2 sm:top-4 sm:right-4 z-50 bg-red-500 text-white py-1 px-2 sm:py-2 sm:px-4 rounded-md sm:rounded-lg font-semibold text-[10px] sm:text-sm shadow-md">
+        🚧 Under Maintenance
+      </div>
+
       {/* ---- Navbar ---- */}
       <header
-        className="fixed top-0 left-0 w-full z-50 transition-all duration-300 px-2 sm:px-15 py-3 flex justify-between items-center border-b border-gray-300"
+        className="fixed top-0 left-0 w-full z-40 transition-all duration-300 px-2 sm:px-15 py-3 flex justify-between items-center border-b border-gray-300"
         style={{
           background: "oklch(0.98 0.001 70 / 0.35)",
           backdropFilter: "blur(20px) saturate(180%)",

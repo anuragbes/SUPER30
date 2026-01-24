@@ -70,6 +70,18 @@ const clerkAppearance = {
       textAlign: "center",
       display: "block"
     },
+    footerAction: {
+      display: "none" // Hide the entire footer action section (signup link)
+    },
+    footerActionText: {
+      display: "none" // Hide "Don't have an account? Sign up" text
+    },
+    footerActionLink__signUp: {
+      display: "none" // Hide the sign-up link
+    },
+    footer: {
+      display: "none" // Hide the entire footer
+    },
     socialButtons: {
       width: "100%",
       marginBottom: "1rem"
@@ -90,8 +102,22 @@ const clerkAppearance = {
     socialButtonsPlacement: "bottom",
     socialButtonsVariant: "blockButton",
     privacyPageUrl: undefined,
-    termsPageUrl: undefined
+    termsPageUrl: undefined,
+    showOptionalFields: false,
+    helpPageUrl: undefined,
+    logoPlacement: "inside",
+    logoImageUrl: undefined,
+    showSignUp: false // Disable sign-up option
   }
+};
+
+const clerkLocalization = {
+  signIn: {
+    start: {
+      title: "Register for SUPER30",
+      subtitle: "Sign in using Google to continue"
+    }
+  },
 };
 
 ReactDOM.createRoot(document.getElementById("root")).render(
@@ -99,6 +125,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <ClerkProvider 
       publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}
       appearance={clerkAppearance}
+      localization={clerkLocalization}
+      signUpUrl={null}
     >
       <App />
       <Toaster position="top-right" />

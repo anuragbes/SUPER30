@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import StudentsList from "./pages/StudentsList";
 import AdminLogin from "./pages/admin/adminLogin";
 import AdminRoute from "./auth/AdminRoute";
+import ClerkAuthRoute from "./auth/ClerkAuthRoute";
 
 import { Toaster } from "sonner";
 import Home from "./pages/Home";
@@ -19,8 +20,12 @@ export default function App() {
 
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
-          <Route path="/register" element={<RegisterStudent />} />
-          <Route path="/success/:studentId" element={<Success />} />
+
+          {/* Protected Routes (Clerk auth or Admin) */}
+          <Route element={<ClerkAuthRoute />}>
+            <Route path="/register" element={<RegisterStudent />} />
+            <Route path="/success/:studentId" element={<Success />} />
+          </Route>
 
           {/* Admin Login Route */}
           <Route path="/admin/login" element={<AdminLogin />} />
