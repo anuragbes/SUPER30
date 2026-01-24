@@ -171,7 +171,17 @@ export default function Home() {
                     <div className="w-full">
                       <SignedOut>
                         <Button
-                          onClick={() => openSignIn()}
+                          onClick={() =>
+                            openSignIn({
+                              routing: "virtual",
+                              signUpUrl: null,
+                              appearance: {
+                                elements: {
+                                  footerAction: "hidden",
+                                },
+                              },
+                            })
+                          }
                           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold"
                         >
                           Register
