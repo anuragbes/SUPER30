@@ -99,9 +99,9 @@ export default function Home() {
     <div className="min-h-screen flex flex-col">
 
       {/* ---- Under Maintenance Tag ---- */}
-      <div className="fixed top-2 right-2 sm:top-4 sm:right-4 z-50 bg-red-500 text-white py-1 px-2 sm:py-2 sm:px-4 rounded-md sm:rounded-lg font-semibold text-[10px] sm:text-sm shadow-md">
+      {/* <div className="fixed top-2 right-2 sm:top-4 sm:right-4 z-50 bg-red-500 text-white py-1 px-2 sm:py-2 sm:px-4 rounded-md sm:rounded-lg font-semibold text-[10px] sm:text-sm shadow-md">
         🚧 Under Maintenance
-      </div>
+      </div> */}
 
       {/* ---- Navbar ---- */}
       <header
