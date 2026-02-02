@@ -19,6 +19,7 @@ import Autoplay from "embla-carousel-autoplay";
 import Footer from "@/components/Footer";
 import Result from "@/assets/result.svg";
 import { SignedIn, SignedOut, SignIn, useAuth, useClerk } from "@clerk/clerk-react";
+import AnnouncementSection from "@/components/AnnouncementSection";
 
 
 const images = [
@@ -129,7 +130,7 @@ export default function Home() {
       </header>
 
       {/* ---- Hero Section ---- */}
-      <section className="min-h-[70vh] flex items-center pt-20 bg-blue-50 border-b border-gray-300">
+      <section className="min-h-[70vh] flex items-center pt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:pr-8 lg:pl-0 py-8 w-full">
           <div className="grid grid-cols-1 lg:grid-cols-[7fr_3fr] gap-0 lg:gap-6 items-center">
 
@@ -211,41 +212,11 @@ export default function Home() {
       </section>
 
       {/* Announcement */}
-    <div className="max-w-7xl mx-auto px-4 mt-6 mb-4">
-      <div className="bg-blue-100 border border-blue-300 text-blue-900 text-base sm:text-lg md:text-xl rounded-2xl px-6 py-4 text-center font-semibold shadow-sm flex flex-col items-center gap-2">
-        {/* Result line */}
-        <div className="flex items-center justify-center gap-3">
-          <img
-            src={Result}
-            alt="Result Icon"
-            className="w-5 h-5 sm:w-7 sm:h-7"
-          />
-          <span>
-            Result Declared! The examination results have been officially released.
-          </span>
-        </div>
-
-        {/* New batch line */}
-        <div className="flex items-center justify-center gap-2">
-          <CalendarDays className="w-5 h-5 sm:w-7 sm:h-7" />
-          <span>New batch starts 16 March 2026 (Monday)</span>
-        </div>
-      </div>
-
-
-      {/* Check Result */}
-      <div className="mt-4 text-center">
-        <a
-          href="https://www.britishenglishschool.in/result.php"
-          target="_blank"
-          rel="noopener noreferrer"
-          
-          className="inline-flex items-center justify-center px-6 py-2.5 rounded-xl bg-blue-600 text-white font-semibold text-sm sm:text-base hover:bg-blue-700 transition-all duration-200"
-        >
-          Check Result
-        </a>
-      </div>
+      <section className="py-12 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 w-full">
+    <AnnouncementSection />
     </div>
+    </section>
 
 
       <div className="mt-10">
@@ -256,9 +227,15 @@ export default function Home() {
       {/* ---- Exam Details Section ---- */}
       <section className="py-12 bg-white border-y border-gray-300">
         <div className="max-w-7xl mx-auto px-4 w-full">
-          <h2 className="text-3xl font-bold text-gray-900 text-center mb-10">
-            Exam Details
-          </h2>
+          <div className="flex items-center gap-3 mb-10">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <FileCheck className="w-5 h-5 text-primary" />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-[hsl(var(--section-title))]">
+              Exam Details
+            </h2>
+            <div className="flex-1 h-px bg-border ml-4" />
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <DetailsCard

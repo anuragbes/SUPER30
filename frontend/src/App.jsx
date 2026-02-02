@@ -11,6 +11,7 @@ import ClerkAuthRoute from "./auth/ClerkAuthRoute";
 
 import { Toaster } from "sonner";
 import Home from "./pages/Home";
+import Announcements from "./pages/Announcements";
 
 export default function App() {
   return (
@@ -34,6 +35,7 @@ export default function App() {
           <Route element={<AdminRoute />}>
             <Route path="/admin/dashboard" element={<Dashboard />} />
             <Route path="/admin/students" element={<StudentsList />} />
+            <Route path="/admin/announcements" element={<Announcements />} />
           </Route>
 
         </Routes>

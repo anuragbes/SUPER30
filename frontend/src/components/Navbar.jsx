@@ -17,7 +17,7 @@ export default function Navbar() {
     { name: "Home", path:"/"},
     { name: "Dashboard", path: "/admin/dashboard" },
     { name: "Students List", path: "/admin/students" },
-    { name: "Register Student", path: "/register" },
+    { name: "Announcements", path: "/admin/announcements" },
   ];
 
   return (

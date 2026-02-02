@@ -1,4 +1,5 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { HelpCircle } from "lucide-react"
 
 const faqItems = [
   {
@@ -39,9 +40,15 @@ export default function FAQ() {
       <div className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8">
 
         {/* Title */}
-        <h2 className="text-xl sm:text-3xl md:text-4xl font-bold text-gray-900 text-center mb-6 sm:mb-10">
-          Frequently Asked Questions
-        </h2>
+        <div className="flex items-center gap-3 mb-6 sm:mb-10">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <HelpCircle className="w-5 h-5 text-primary" />
+          </div>
+          <h2 className="text-xl sm:text-2xl font-bold text-[hsl(var(--section-title))]">
+            Frequently Asked Questions
+          </h2>
+          <div className="flex-1 h-px bg-border ml-4" />
+        </div>
 
         <Accordion type="single" collapsible className="w-full space-y-3 sm:space-y-4">
           {faqItems.map((item) => (

@@ -3,6 +3,7 @@ import { adminLogin } from "../controllers/adminAuthController.js";
 import { deleteAllStudents, deleteStudent, generateRollNumbers, getDashboardStats, getExamSettings, getSummaryStats, updateExamSettings } from "../controllers/adminController.js";
 import { adminAuth } from "../middlewares/adminAuth.js";
 import { bulkGenerateAdmitCards, bulkSendAdmitCards } from "../controllers/bulkAdmitController.js";
+import { createAnnouncement, deleteAnnouncement, getActiveAnnouncements, getAllAnnouncements, toggleAnnouncementStatus } from "../controllers/announcementController.js";
 
 
 const router = express.Router();
@@ -13,6 +14,9 @@ router.post("/login", adminLogin);
 
 // Get Exam Settings (Public - needed for Home page)
 router.get("/exam-settings", getExamSettings);
+
+// Announcements (Public - needed for Home page)
+router.get("/announcements", getActiveAnnouncements);
 
 
 // ====== PROTECTED ROUTES ======
@@ -32,6 +36,14 @@ router.get("/summary-stats", adminAuth, getSummaryStats);
 
 // Update Exam Settings (Protected)
 router.post("/exam-settings", adminAuth, updateExamSettings);
+
+
+// Announcement
+router.post("/announcements", adminAuth, createAnnouncement);
+router.get("/announcements", adminAuth, getAllAnnouncements);
+router.patch("/announcements/:id/toggle", adminAuth, toggleAnnouncementStatus);
+router.delete("/announcements/:id", adminAuth, deleteAnnouncement);
+
 
 
 router.delete("/delete-student/:studentId", adminAuth, deleteStudent);
