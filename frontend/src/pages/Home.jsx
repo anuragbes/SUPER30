@@ -23,11 +23,16 @@ import AnnouncementSection from "@/components/AnnouncementSection";
 
 
 const images = [
-  "/images/poster9.jpeg",
-  "/images/poster8.png",
-  "/images/poster1.jpeg",
-  "/images/poster2.jpeg",
-  "/images/poster3.png",
+  "/images/poster10.webp",
+  "/images/poster11.webp",
+  "/images/poster12.webp",
+  "/images/poster13.webp",
+  "/images/poster14.webp",
+  "/images/poster9.webp",
+  "/images/poster8.webp",
+  "/images/poster1.webp",
+  "/images/poster2.webp",
+  "/images/poster3.webp",
   "/images/poster4.jpg",
   "/images/poster5.jpg",
   "/images/poster6.jpg",
@@ -137,7 +142,7 @@ export default function Home() {
             {/* Left Image */}
             <div className="flex justify-center lg:justify-start">
               <img
-                src="/images/hero.png"
+                src="/images/hero.webp"
                 alt="SUPER30 Poster"
                 className="w-full max-w-xl sm:max-w-xl lg:max-w-xl object-contain"
               />
