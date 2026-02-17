@@ -163,7 +163,7 @@ export default function RegisterStudent() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
               <Field>
-                <FieldLabel className="block text-sm font-medium text-foreground mb-2">
+                <FieldLabel className="block text-sm font-medium text-foreground mb-0.5">
                   Student Name<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <Input className="border border-slate-200 rounded-lg bg-white w-full"
@@ -175,7 +175,7 @@ export default function RegisterStudent() {
               </Field>
 
               <Field>
-                <FieldLabel className="block text-sm font-medium text-foreground mb-2">
+                <FieldLabel className="block text-sm font-medium text-foreground mb-0.5">
                   Date of Birth<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <Input className="border border-slate-200 rounded-lg bg-white w-full"
@@ -187,7 +187,7 @@ export default function RegisterStudent() {
               </Field>
 
               <Field>
-                <FieldLabel className="block text-sm font-medium text-foreground mb-2">
+                <FieldLabel className="block text-sm font-medium text-foreground mb-0.5">
                   Gender<span className="text-red-500"> *</span>
                 </FieldLabel>
 
@@ -204,7 +204,7 @@ export default function RegisterStudent() {
               </Field>
 
               <Field>
-                <FieldLabel className="block text-sm font-medium text-foreground mb-2">
+                <FieldLabel className="block text-sm font-medium text-foreground mb-0.5">
                   Email Address<span className="text-red-500"> *</span> <span className="text-xs text-gray-500 ml-1">(Admit Card will be sent to this email)</span>
                 </FieldLabel>
                 <Input
@@ -225,7 +225,7 @@ export default function RegisterStudent() {
 
               {/* Father Name */}
               <Field>
-                <FieldLabel className="text-sm font-medium text-foreground mb-2">
+                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
                   Father Name<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <Input
@@ -239,7 +239,7 @@ export default function RegisterStudent() {
 
               {/* Mother Name */}
               <Field>
-                <FieldLabel className="text-sm font-medium text-foreground mb-2">
+                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
                   Mother Name<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <Input
@@ -253,7 +253,7 @@ export default function RegisterStudent() {
 
               {/* Parent Mobile */}
               <Field>
-                <FieldLabel className="text-sm font-medium text-foreground mb-2">
+                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
                   Parent Mobile No.<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <div className="flex items-center w-full">
@@ -274,7 +274,7 @@ export default function RegisterStudent() {
 
               {/* WhatsApp Number */}
               <Field>
-                <FieldLabel className="text-sm font-medium text-foreground mb-2">
+                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
                   WhatsApp Number
                 </FieldLabel>
                 <div className="flex items-center w-full">
@@ -294,7 +294,7 @@ export default function RegisterStudent() {
 
               {/* Student Mobile */}
               <Field>
-                <FieldLabel className="text-sm font-medium text-foreground mb-2">
+                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
                   Student Mobile No.<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <div className="flex items-center w-full">
@@ -320,7 +320,7 @@ export default function RegisterStudent() {
             <div className="space-y-4">
 
               <Field className="col-span-2">
-                <FieldLabel className="text-sm font-medium text-foreground mb-2">
+                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
                   Permanent Address<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <textarea
@@ -344,7 +344,7 @@ export default function RegisterStudent() {
               </Field>
 
               <Field className="col-span-2">
-                <FieldLabel className="text-sm font-medium text-foreground mb-2">
+                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
                   Present Address<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <textarea
@@ -374,21 +374,25 @@ export default function RegisterStudent() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
               <Field>
-                <FieldLabel className="text-sm font-medium text-foreground mb-2">
+                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
                   Class Moving To<span className="text-red-500"> *</span>
                 </FieldLabel>
-                <Select value="10th to 11th" disabled>
-                  <SelectTrigger className="bg-gray-100 cursor-not-allowed border border-slate-200 text-black w-full">
-                    <SelectValue />
+                <Select
+                  value={formData.classMoving || ""}
+                  onValueChange={(value) => setFormData({ ...formData, classMoving: value })}
+                >
+                  <SelectTrigger className="bg-gray-100 border border-slate-200 text-black w-full">
+                    <SelectValue placeholder="Select Class" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="10th to 11th">10th to 11th</SelectItem>
+                    <SelectItem value="11th to 12th">11th to 12th</SelectItem>
                   </SelectContent>
                 </Select>
               </Field>
 
               <Field>
-                <FieldLabel className="text-sm font-medium text-foreground mb-2">
+                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
                   Select Stream<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <Select
@@ -407,7 +411,7 @@ export default function RegisterStudent() {
               </Field>
 
               <Field>
-                <FieldLabel className="text-sm font-medium text-foreground mb-2">
+                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
                   Target<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <Select
@@ -427,7 +431,7 @@ export default function RegisterStudent() {
               </Field>
 
               <Field>
-                <FieldLabel className="text-sm font-medium text-foreground mb-2">
+                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
                   Student's Previous Result (In Percentage)<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <Input
@@ -443,8 +447,8 @@ export default function RegisterStudent() {
               </Field>
 
               <Field>
-                <FieldLabel className="text-sm font-medium text-foreground mb-2">
-                  Previous School Name<span className="text-red-500"> *</span> <span className="text-xs text-gray-500 ml-1">(Select Other if not in the List)</span>
+                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
+                  Previous School Name<span className="text-red-500"> *</span>
                 </FieldLabel>
 
                 <Select
@@ -572,7 +576,7 @@ export default function RegisterStudent() {
 
 
               <Field>
-                <FieldLabel className="text-sm font-medium text-foreground mb-2">
+                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
                   Test Centre<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <Select value="British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)" disabled>
@@ -594,7 +598,7 @@ export default function RegisterStudent() {
             <div className="space-y-4">
 
               <Field>
-                <FieldLabel className="text-sm font-medium text-foreground mb-2">
+                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
                   Scholarship Offered?<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <Select
@@ -617,7 +621,7 @@ export default function RegisterStudent() {
               </Field>
 
               <Field className="col-span-2">
-                <FieldLabel className="text-sm font-medium text-foreground mb-2">Scholarship Details</FieldLabel>
+                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">Scholarship Details</FieldLabel>
                 <textarea
                   name="scholarshipDetails"
                   placeholder="Specify Scholarship details"
@@ -635,7 +639,7 @@ export default function RegisterStudent() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
               <Field>
-                <FieldLabel className="text-sm font-medium text-foreground mb-2">
+                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
                   Recent Passport Size Photo<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <FileUpload
@@ -646,7 +650,7 @@ export default function RegisterStudent() {
               </Field>
 
               <Field>
-                <FieldLabel className="text-sm font-medium text-foreground mb-2">
+                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
                   School ID Card / Identity Proof (Aadhar Card)<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <FileUpload

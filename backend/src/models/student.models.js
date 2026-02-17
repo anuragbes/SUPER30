@@ -27,7 +27,7 @@ const studentSchema = new mongoose.Schema({
     },
     classMoving: {
         type: String,
-        enum: ["10th to 11th"],
+        enum: ["10th to 11th", "11th to 12th"],
         required: true
     },
     dateOfBirth: {
