@@ -599,7 +599,7 @@ export default function RegisterStudent() {
 
               <Field>
                 <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
-                  Scholarship Offered?<span className="text-red-500"> *</span>
+                  Scholarship Offered Anywhere Else?<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <Select
                   value={formData.scholarshipOffered === true ? "yes" : formData.scholarshipOffered === false ? "no" : ""}
