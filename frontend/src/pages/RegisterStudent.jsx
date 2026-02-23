@@ -622,12 +622,15 @@ export default function RegisterStudent() {
 
               <Field className="col-span-2">
                 <FieldLabel className="text-sm font-medium text-foreground mb-0.5">Scholarship Details</FieldLabel>
+                <p className="text-[13px] text-muted-foreground mb-1">
+                  If Yes, mention the scholarship name, provider, and amount/percentage of fee waived (e.g., Govt Merit Scholarship – 50% tuition fee)
+                </p>
                 <textarea
                   name="scholarshipDetails"
-                  placeholder="Specify Scholarship details"
+                  placeholder="Enter Scholarship Details"
                   onChange={handleChange}
                   disabled={!scholarship}
-                  className={`border rounded-lg p-3 min-h-20 w-full ${!scholarship ? "bg-slate-100 cursor-not-allowed" : "bg-white"
+                  className={`border rounded-lg p-3 min-h-20 w-full placeholder:text-xs md:placeholder:text-sm ${!scholarship ? "bg-slate-100 cursor-not-allowed" : "bg-white"
                     }`}
                 />
               </Field>

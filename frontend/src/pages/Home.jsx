@@ -246,13 +246,19 @@ export default function Home() {
             <DetailsCard
               icon={<Users className="w-10 h-10 text-[#00afd0]" />}
               title="Eligibility"
-              text="Class 10th to 11th Moving Students"
+              text={
+                <>
+                Class 10th to 11th Moving Students
+                <br />
+                Class 11th to 12th Moving Students
+                </>
+              }
             />
 
             <DetailsCard
               icon={<Target className="w-10 h-10 text-[#00afd0]" />}
               title="Target"
-              text="JEE Main/Advanced, NEET (UG) - 2028"
+              text="JEE Main/Advanced, NEET (UG) - 2027 / 2028"
             />
 
             <DetailsCard
@@ -268,11 +274,12 @@ export default function Home() {
               title="Exam Time & Mode (Revised)"
               text={
                 <>
-                  11:00 AM – 01:00 PM • Offline (At Center)
+                  {/* 11:00 AM – 01:00 PM • Offline (At Center)
                   <br />
                   <span className="text-sm text-muted-foreground">
                     Reporting Time: 10:00 AM
-                  </span>
+                  </span> */}
+                  To Be Announced
                 </>
               }
             />
