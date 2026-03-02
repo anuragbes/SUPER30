@@ -96,6 +96,50 @@ export const toggleAnnouncementStatus = async (req, res) => {
 };
 
 /**
+ * @desc    Update an announcement (Admin)
+ * @route   PATCH /admin/announcement/:id
+ * @access  Admin
+ */
+export const updateAnnouncement = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, message } = req.body;
+
+    if (!title || !message) {
+      return res.status(400).json({
+        success: false,
+        message: "Title and message are required",
+      });
+    }
+
+    const announcement = await Announcement.findByIdAndUpdate(
+      id,
+      { title, message },
+      { new: true, runValidators: true }
+    );
+
+    if (!announcement) {
+      return res.status(404).json({
+        success: false,
+        message: "Announcement not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Announcement updated successfully",
+      data: announcement,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to update announcement",
+      error: error.message,
+    });
+  }
+};
+
+/**
  * @desc    Delete an announcement (Admin)
  * @route   DELETE /admin/announcement/:id
  * @access  Admin
