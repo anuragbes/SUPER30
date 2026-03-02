@@ -262,14 +262,17 @@ const Announcements = () => {
                       </div>
                     ) : (
                       // View Mode
-                      <div className="flex justify-between items-start gap-4">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-foreground mb-2">{a.title}</h3>
-                          <p className="text-sm text-slate-600 mb-3 leading-relaxed whitespace-pre-wrap">{a.message}</p>
-                          <div className="flex items-center gap-3">
+                      <div className="flex flex-col gap-4">
+                        <div>
+                          <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2 break-words">{a.title}</h3>
+                          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">{a.message}</p>
+                        </div>
+
+                        <div className="flex justify-between items-center gap-3">
+                          <div className="flex items-center gap-2 sm:gap-3">
                             <span className="text-xs font-medium text-slate-500">Status:</span>
                             <span
-                              className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                              className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs font-semibold ${
                                 a.isActive
                                   ? "bg-green-100 text-green-700"
                                   : "bg-red-100 text-red-700"
@@ -278,32 +281,33 @@ const Announcements = () => {
                               {a.isActive ? "Active" : "Inactive"}
                             </span>
                           </div>
-                        </div>
 
-                        <div className="flex gap-2 sm:gap-3">
-                          <Button
-                            variant="outline"
-                            onClick={() => openEdit(a)}
-                            className="px-3 sm:px-4 py-2 text-sm font-medium"
-                          >
-                            <Edit2 size={16} />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            onClick={() => toggleStatus(a._id)}
-                            disabled={loading.id === a._id && loading.type === "toggle"}
-                            className="px-3 sm:px-4 py-2 text-sm font-medium"
-                          >
-                            {loading.id === a._id && loading.type === "toggle" ? "Updating..." : (a.isActive ? "Disable" : "Enable")}
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            onClick={() => deleteAnnouncement(a._id)}
-                            disabled={loading.id === a._id && loading.type === "delete"}
-                            className="px-3 sm:px-4 py-2 text-sm font-medium"
-                          >
-                            {loading.id === a._id && loading.type === "delete" ? "Deleting..." : <Trash2 size={16} />}
-                          </Button>
+                          <div className="flex gap-2 sm:gap-3">
+                            <Button
+                              variant="outline"
+                              onClick={() => openEdit(a)}
+                              className="px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium"
+                            >
+                              <Edit2 size={16} className="mr-1 sm:mr-0" />
+                              <span className="sm:hidden">Edit</span>
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => toggleStatus(a._id)}
+                              disabled={loading.id === a._id && loading.type === "toggle"}
+                              className="px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium"
+                            >
+                              {loading.id === a._id && loading.type === "toggle" ? "..." : (a.isActive ? "Disable" : "Enable")}
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              onClick={() => deleteAnnouncement(a._id)}
+                              disabled={loading.id === a._id && loading.type === "delete"}
+                              className="px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium"
+                            >
+                              {loading.id === a._id && loading.type === "delete" ? "..." : <Trash2 size={16} />}
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     )}
