@@ -2,10 +2,13 @@
 import { Bell, Pin } from "lucide-react";
 
 const formatText = (text) => {
+  if (!text) return text;
+
   const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const urlTestRegex = /^https?:\/\/[^\s]+$/;
 
   return text.split(urlRegex).map((part, index) =>
-    urlRegex.test(part) ? (
+    urlTestRegex.test(part) ? (
       <a
         key={index}
         href={part}
@@ -20,8 +23,7 @@ const formatText = (text) => {
     )
   );
 };
-
-const AnnouncementCard = ({ title, description, date, isPinned }) => {
+const AnnouncementCard = ({ title, description, isPinned }) => {
   return (
     <div className={`announcement-card-hover cursor-pointer shadow-md hover:shadow-lg transition p-5 rounded-xl border border-[hsl(var(--announcement-border))] bg-card group ${isPinned ? "border-yellow-400 bg-yellow-50/30" : ""}`}>
       <div className="flex items-start gap-3">

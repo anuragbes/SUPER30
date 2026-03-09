@@ -62,36 +62,41 @@ const Announcements = () => {
     }
   }, [formData, token, fetchAnnouncements]);
 
-  // Toggle Announcement
-  const toggleStatus = useCallback(async (id) => {
+  // Generic field toggle handler
+  const handleToggleField = useCallback(async (id, endpointSuffix, fieldKey, successMessage) => {
     try {
-      setLoading({ type: "toggle", id });
+      setLoading({ type: endpointSuffix, id });
       await axios.patch(
-        `${API_URL}/api/admin/announcements/${id}/toggle`,
+        `${API_URL}/api/admin/announcements/${id}/${endpointSuffix}`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
       
-      // Update local state immediately
+      // Optimistic update - toggle the field
       setAnnouncements((prev) =>
         prev.map((a) =>
           a._id === id
-            ? { ...a, isActive: !a.isActive }
+            ? { ...a, [fieldKey]: !a[fieldKey] }
             : a
         )
       );
       
-      toast.success("Announcement status updated!");
+      toast.success(successMessage);
     } catch (err) {
-      console.error("Failed to toggle status:", err);
-      toast.error("Failed to update announcement status");
+      console.error(`Failed to toggle ${fieldKey}:`, err);
+      toast.error(`Failed to update ${fieldKey}`);
       fetchAnnouncements();
     } finally {
       setLoading({ type: null, id: null });
     }
   }, [token, fetchAnnouncements]);
+
+  // Toggle Announcement Status
+  const toggleStatus = useCallback(async (id) => {
+    handleToggleField(id, "toggle", "isActive", "Announcement status updated!");
+  }, [handleToggleField]);
 
   // Delete Announcement
   const deleteAnnouncement = useCallback(async (id) => {
@@ -114,34 +119,8 @@ const Announcements = () => {
 
   // Toggle Pin Status
   const togglePin = useCallback(async (id) => {
-    try {
-      setLoading({ type: "pin", id });
-      await axios.patch(
-        `${API_URL}/api/admin/announcements/${id}/pin`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      
-      // Update local state immediately
-      setAnnouncements((prev) =>
-        prev.map((a) =>
-          a._id === id
-            ? { ...a, isPinned: !a.isPinned }
-            : a
-        )
-      );
-      
-      toast.success("Announcement pin status updated!");
-    } catch (err) {
-      console.error("Failed to toggle pin status:", err);
-      toast.error("Failed to update pin status");
-      fetchAnnouncements();
-    } finally {
-      setLoading({ type: null, id: null });
-    }
-  }, [token, fetchAnnouncements]);
+    handleToggleField(id, "pin", "isPinned", "Announcement pin status updated!");
+  }, [handleToggleField]);
 
   // Open Edit Modal
   const openEdit = useCallback((announcement) => {
@@ -295,7 +274,7 @@ const Announcements = () => {
                       // View Mode
                       <div className="flex flex-col gap-4">
                         <div>
-                          <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2 wrap-break-word">{a.title}</h3>
+                          <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2 break-words">{a.title}</h3>
                           <p className="text-xs sm:text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">{a.message}</p>
                         </div>
 
