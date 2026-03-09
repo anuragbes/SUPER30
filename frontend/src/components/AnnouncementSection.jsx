@@ -57,6 +57,7 @@ const AnnouncementSection = () => {
             title={a.title}
             description={a.message}
             date={new Date(a.createdAt).toLocaleDateString()}
+            isPinned={a.isPinned}
           />
         ))}
       </div>

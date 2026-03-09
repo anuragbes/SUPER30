@@ -19,6 +19,11 @@ const announcementSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+
+    isPinned: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true, 

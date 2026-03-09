@@ -171,6 +171,43 @@ export const deleteAnnouncement = async (req, res) => {
 };
 
 /**
+ * @desc    Toggle announcement pin status (Admin)
+ * @route   PATCH /admin/announcements/:id/pin
+ * @access  Admin
+ */
+export const toggleAnnouncementPin = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const announcement = await Announcement.findById(id);
+
+    if (!announcement) {
+      return res.status(404).json({
+        success: false,
+        message: "Announcement not found",
+      });
+    }
+
+    announcement.isPinned = !announcement.isPinned;
+    await announcement.save();
+
+    res.status(200).json({
+      success: true,
+      message: `Announcement ${
+        announcement.isPinned ? "pinned" : "unpinned"
+      } successfully`,
+      data: announcement,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to update announcement pin status",
+      error: error.message,
+    });
+  }
+};
+
+/**
  * @desc    Get active announcements (Public)
  * @route   GET /announcements
  * @access  Public
@@ -178,6 +215,7 @@ export const deleteAnnouncement = async (req, res) => {
 export const getActiveAnnouncements = async (req, res) => {
   try {
     const announcements = await Announcement.find({ isActive: true }).sort({
+      isPinned: -1,
       createdAt: -1,
     });
 

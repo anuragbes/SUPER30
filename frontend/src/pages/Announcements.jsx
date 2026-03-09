@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import Navbar from "@/components/Navbar";
-import { Bell, Trash2, Edit2, X } from "lucide-react";
+import { Bell, Trash2, Edit2, X, Pin } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -107,6 +107,37 @@ const Announcements = () => {
     } catch (err) {
       console.error(err);
       toast.error("Failed to delete announcement");
+    } finally {
+      setLoading({ type: null, id: null });
+    }
+  }, [token, fetchAnnouncements]);
+
+  // Toggle Pin Status
+  const togglePin = useCallback(async (id) => {
+    try {
+      setLoading({ type: "pin", id });
+      await axios.patch(
+        `${API_URL}/api/admin/announcements/${id}/pin`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      
+      // Update local state immediately
+      setAnnouncements((prev) =>
+        prev.map((a) =>
+          a._id === id
+            ? { ...a, isPinned: !a.isPinned }
+            : a
+        )
+      );
+      
+      toast.success("Announcement pin status updated!");
+    } catch (err) {
+      console.error("Failed to toggle pin status:", err);
+      toast.error("Failed to update pin status");
+      fetchAnnouncements();
     } finally {
       setLoading({ type: null, id: null });
     }
@@ -264,7 +295,7 @@ const Announcements = () => {
                       // View Mode
                       <div className="flex flex-col gap-4">
                         <div>
-                          <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2 break-words">{a.title}</h3>
+                          <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2 wrap-break-word">{a.title}</h3>
                           <p className="text-xs sm:text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">{a.message}</p>
                         </div>
 
@@ -280,6 +311,12 @@ const Announcements = () => {
                             >
                               {a.isActive ? "Active" : "Inactive"}
                             </span>
+                            {a.isPinned && (
+                              <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">
+                                <Pin size={14} />
+                                Pinned
+                              </span>
+                            )}
                           </div>
 
                           <div className="flex gap-2 sm:gap-3">
@@ -290,6 +327,15 @@ const Announcements = () => {
                             >
                               <Edit2 size={16} className="mr-1 sm:mr-0" />
                               <span className="sm:hidden">Edit</span>
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => togglePin(a._id)}
+                              disabled={loading.id === a._id && loading.type === "pin"}
+                              className="px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium"
+                              title={a.isPinned ? "Unpin" : "Pin"}
+                            >
+                              {loading.id === a._id && loading.type === "pin" ? "..." : <Pin size={16} className={a.isPinned ? "fill-yellow-500 text-yellow-500" : ""} />}
                             </Button>
                             <Button
                               variant="outline"

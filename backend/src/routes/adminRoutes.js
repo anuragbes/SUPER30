@@ -3,7 +3,7 @@ import { adminLogin } from "../controllers/adminAuthController.js";
 import { deleteAllStudents, deleteStudent, generateRollNumbers, getDashboardStats, getExamSettings, getSummaryStats, updateExamSettings } from "../controllers/adminController.js";
 import { adminAuth } from "../middlewares/adminAuth.js";
 import { bulkGenerateAdmitCards, bulkSendAdmitCards } from "../controllers/bulkAdmitController.js";
-import { createAnnouncement, deleteAnnouncement, getActiveAnnouncements, getAllAnnouncements, toggleAnnouncementStatus, updateAnnouncement } from "../controllers/announcementController.js";
+import { createAnnouncement, deleteAnnouncement, getActiveAnnouncements, getAllAnnouncements, toggleAnnouncementPin, toggleAnnouncementStatus, updateAnnouncement } from "../controllers/announcementController.js";
 
 
 const router = express.Router();
@@ -43,6 +43,7 @@ router.post("/announcements", adminAuth, createAnnouncement);
 router.get("/announcements", adminAuth, getAllAnnouncements);
 router.patch("/announcements/:id", adminAuth, updateAnnouncement);
 router.patch("/announcements/:id/toggle", adminAuth, toggleAnnouncementStatus);
+router.patch("/announcements/:id/pin", adminAuth, toggleAnnouncementPin);
 router.delete("/announcements/:id", adminAuth, deleteAnnouncement);
 
 
