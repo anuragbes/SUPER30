@@ -1,4 +1,4 @@
-import { Building, MapPin, Phone } from "lucide-react";
+import { Building, Mail, MapPin, Phone } from "lucide-react";
 import { Link } from "react-router-dom";
 import WhatsappIcon from "@/assets/whatsapp.svg";
 import InstagramIcon from "@/assets/instagram.svg";
@@ -28,6 +28,18 @@ export default function Footer() {
                 </div>
                 <div>
                   <p className="text-white">British School Gurukul</p>
+                </div>
+              </div>
+
+              {/* Mail */}
+              <div className="flex items-start gap-3">
+                <div className="text-white mt-1">
+                  <Mail size={20} />
+                </div>
+                <div>
+                  <p className="text-white">
+                    <a href="mailto:contact@bsgurukul.com">contact@bsgurukul.com</a>
+                  </p>
                 </div>
               </div>
 
