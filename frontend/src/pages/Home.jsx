@@ -271,15 +271,15 @@ export default function Home() {
 
             <DetailsCard
               icon={<Clock className="w-10 h-10 text-[#00afd0]" />}
-              title="Exam Time & Mode (Revised)"
+              title="Exam Time & Mode"
               text={
                 <>
-                  {/* 11:00 AM – 01:00 PM • Offline (At Center)
+                  10:00 AM • Offline (At Center)
                   <br />
                   <span className="text-sm text-muted-foreground">
-                    Reporting Time: 10:00 AM
-                  </span> */}
-                  To Be Announced
+                    Reporting Time: 09:00 AM
+                  </span>
+                  {/* To Be Announced */}
                 </>
               }
             />
