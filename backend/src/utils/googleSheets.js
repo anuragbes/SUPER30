@@ -275,3 +275,62 @@ export const deleteStudentFromSheet = async (studentId, stream) => {
     console.error("❌ deleteStudentFromSheet ERROR:", error.message);
   }
 };
+
+/* ---------------------------------------------------------
+   5️⃣ CLEAR ROLL NUMBERS FROM SHEET (for specific stream)
+--------------------------------------------------------- */
+export const clearRollNumbersFromSheet = async (stream) => {
+  try {
+    const sheetName = stream === "PCM" ? "PCM" : "PCB";
+
+    // Ensure sheet exists
+    await ensureSheetExists(sheetName);
+
+    // Fetch all students from that stream
+    const students = await Student.find({ stream }).sort({ studentName: 1 });
+
+    if (students.length === 0) {
+      console.log(`⚠️ No students found for stream: ${stream}`);
+      return;
+    }
+
+    // Create rows with rollNo cleared (empty string)
+    const convert = (s) => [
+      s.submittedAt?.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }) || "",
+      "", // Roll No - CLEARED
+      s.studentId || "",
+      s.studentName || "",
+      s.email || "",
+      s.gender || "",
+      s.classMoving || "",
+      s.dateOfBirth ? formatDateDDMMYYYY(s.dateOfBirth) : "",
+      s.stream || "",
+      s.target || "",
+      s.fatherName || "",
+      s.motherName || "",
+      s.permanentAddress || "",
+      s.presentAddress || "",
+      s.parentMobile || "",
+      s.studentMobile || "",
+      s.whatsappMobile || "",
+      s.previousSchool || "",
+      s.previousResultPercentage || "",
+      s.scholarshipOffered ? "Yes" : "No",
+      s.scholarshipDetails || "",
+      s.passportPhotoURL || "",
+      s.identityPhotoURL || "",
+    ];
+
+    // Update the sheet with cleared roll numbers
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SHEET_ID,
+      range: `${sheetName}!A1`,
+      valueInputOption: "RAW",
+      requestBody: { values: [headers, ...students.map(convert)] },
+    });
+
+    console.log(`🟢 Cleared roll numbers for ${stream} stream in Google Sheet`);
+  } catch (error) {
+    console.error("❌ clearRollNumbersFromSheet ERROR:", error.message);
+  }
+};

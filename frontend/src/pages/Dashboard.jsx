@@ -6,14 +6,16 @@ import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import "../App.css";
-import { Users, BookOpen, FileText, Calendar, Shuffle, RotateCcw, Trash2 } from "lucide-react";
+import { Users, BookOpen, FileText, Calendar, Shuffle, RotateCcw, Trash2, X } from "lucide-react";
 import ActionCard from "@/components/ActionCard";
 
 export default function Dashboard() {
   const [loadingReset, setLoadingReset] = useState(false);
   const [loadingRoll, setLoadingRoll] = useState(false);
+  const [loadingRemoveRoll, setLoadingRemoveRoll] = useState(false);
   const [loading, setLoading] = useState(false);
   const [order, setOrder] = useState("alphabetical");
+  const [removeStream, setRemoveStream] = useState("PCM");
   const [stats, setStats] = useState(null);
   const [summary, setSummary] = useState(null);
   const [examDate, setExamDate] = useState("");
@@ -125,6 +127,32 @@ export default function Dashboard() {
       toast.error("Failed to generate roll numbers");
     } finally {
       setLoadingRoll(false);
+    }
+  };
+
+  const removeRollNo = async () => {
+    if (!removeStream) {
+      toast.warning("Please select a stream.");
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to remove all roll numbers for ${removeStream} stream? This will clear roll numbers from both database and Google Sheet.`)) {
+      return;
+    }
+
+    try {
+      setLoadingRemoveRoll(true);
+      const payload = { stream: removeStream };
+      await axios.post(`${backendURL}/api/admin/remove-rollno`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      toast.success(`Roll numbers removed for ${removeStream} stream`);
+      fetchDashboardData();
+    } catch (error) {
+      toast.error("Failed to remove roll numbers");
+      console.error(error);
+    } finally {
+      setLoadingRemoveRoll(false);
     }
   };
 
@@ -253,6 +281,27 @@ export default function Dashboard() {
                 <option value="alphabetical">Alphabetical (A → Z)</option>
                 <option value="random">Random</option>
               </select>
+            </ActionCard>
+
+            <ActionCard
+              title="Remove Roll Numbers"
+              description="Clear roll numbers for a stream"
+              buttonLabel={loadingRemoveRoll ? "Removing..." : "Remove Roll Numbers"}
+              onClick={removeRollNo}
+              disabled={loadingRemoveRoll}
+              variant="destructive"
+              icon={<X size={20} />}
+            >
+              <label className="text-sm font-medium text-foreground block">Select Stream</label>
+              <select
+                value={removeStream}
+                onChange={(e) => setRemoveStream(e.target.value)}
+                className="border border-input bg-background rounded-md p-2 w-full mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+              >
+                <option value="PCM">PCM</option>
+                <option value="PCB">PCB</option>
+              </select>
+              {/* <p className="text-xs text-muted-foreground mt-2">This will remove all roll numbers for the selected stream and update the Google Sheet.</p> */}
             </ActionCard>
 
             <ActionCard

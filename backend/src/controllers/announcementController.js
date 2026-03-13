@@ -42,6 +42,7 @@ export const createAnnouncement = async (req, res) => {
 export const getAllAnnouncements = async (req, res) => {
   try {
     const announcements = await Announcement.find().sort({
+      isPinned: -1,
       createdAt: -1,
     });
 

@@ -96,8 +96,8 @@ export const createAdmitCardBuffer = (student, examDate) => {
     y, { maxLines: 3 }
   );
   y = drawRow("Exam Date", examDate || "-", y);
-  y = drawRow("Exam Time", "11:00 AM - 01:00 PM", y);
-  y = drawRow("Reporting Time", "10:00 AM", y);
+  y = drawRow("Exam Time", "10:00 AM", y);
+  y = drawRow("Reporting Time", "09:00 AM", y);
 
     doc.rect(470, startY, 100, 130).stroke();
     doc.fontSize(8).font("Helvetica").text("Affix", 460, startY + 50, { align: "center" });

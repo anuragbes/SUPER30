@@ -1,6 +1,6 @@
 import express from "express";
 import { adminLogin } from "../controllers/adminAuthController.js";
-import { deleteAllStudents, deleteStudent, generateRollNumbers, getDashboardStats, getExamSettings, getSummaryStats, updateExamSettings } from "../controllers/adminController.js";
+import { deleteAllStudents, deleteStudent, generateRollNumbers, getDashboardStats, getExamSettings, getSummaryStats, updateExamSettings, removeRollNumbers } from "../controllers/adminController.js";
 import { adminAuth } from "../middlewares/adminAuth.js";
 import { bulkGenerateAdmitCards, bulkSendAdmitCards } from "../controllers/bulkAdmitController.js";
 import { createAnnouncement, deleteAnnouncement, getActiveAnnouncements, getAllAnnouncements, toggleAnnouncementPin, toggleAnnouncementStatus, updateAnnouncement } from "../controllers/announcementController.js";
@@ -22,6 +22,9 @@ router.get("/announcements", getActiveAnnouncements);
 // ====== PROTECTED ROUTES ======
 // Generate Roll Number
 router.post("/generate-rollno", adminAuth, generateRollNumbers);
+
+// Remove Roll Numbers
+router.post("/remove-rollno", adminAuth, removeRollNumbers);
 
 // Delete all students
 router.delete("/clear-database", adminAuth, deleteAllStudents);

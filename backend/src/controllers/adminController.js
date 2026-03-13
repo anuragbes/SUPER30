@@ -1,7 +1,7 @@
 import Student from "../models/student.models.js";
 import Counter from "../models/counter.models.js";
 import Settings from "../models/settings.models.js";
-import { updatePCMAndPCB, deleteStudentFromSheet } from "../utils/googleSheets.js";
+import { updatePCMAndPCB, deleteStudentFromSheet, clearRollNumbersFromSheet } from "../utils/googleSheets.js";
 
 export const generateRollNumbers = async (req, res) => {
   try {
@@ -32,10 +32,10 @@ export const generateRollNumbers = async (req, res) => {
     const bulkOps = [];
 
     // PCM: start from last + 1 OR 3001
-    const lastPCM = await Student.findOne({ rollNo: { $gte: 3001, $lt: 4000 } })
+    const lastPCM = await Student.findOne({ rollNo: { $gte: 4001, $lt: 5000 } })
       .sort({ rollNo: -1 });
 
-    let rollPCM = lastPCM ? lastPCM.rollNo + 1 : 3001;
+    let rollPCM = lastPCM ? lastPCM.rollNo + 1 : 4001;
 
     pcm.forEach((s) =>
       bulkOps.push({
@@ -47,10 +47,10 @@ export const generateRollNumbers = async (req, res) => {
     );
 
     // PCB: start from last + 1 OR 5001
-    const lastPCB = await Student.findOne({ rollNo: { $gte: 5001, $lt: 6000 } })
+    const lastPCB = await Student.findOne({ rollNo: { $gte: 6001, $lt: 7000 } })
       .sort({ rollNo: -1 });
 
-    let rollPCB = lastPCB ? lastPCB.rollNo + 1 : 5001;
+    let rollPCB = lastPCB ? lastPCB.rollNo + 1 : 6001;
 
     pcb.forEach((s) =>
       bulkOps.push({
@@ -226,6 +226,46 @@ export const deleteStudent = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Server error deleting student",
+      error: error.message,
+    });
+  }
+};
+
+
+// REMOVE ROLL NUMBERS FOR A STREAM
+// =============================
+export const removeRollNumbers = async (req, res) => {
+  try {
+    const { stream } = req.body;
+
+    // Validate stream
+    if (!stream || !["PCM", "PCB"].includes(stream)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid stream. Must be PCM or PCB.",
+      });
+    }
+
+    // Clear roll numbers in database for the stream
+    const result = await Student.updateMany(
+      { stream },
+      { $set: { rollNo: null } }
+    );
+
+    // Clear roll numbers in Google Sheet for the stream
+    await clearRollNumbersFromSheet(stream);
+
+    return res.json({
+      success: true,
+      message: `Roll numbers removed for ${stream} stream.`,
+      updated: result.modifiedCount,
+    });
+
+  } catch (error) {
+    console.error("❌ Error removing roll numbers:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to remove roll numbers",
       error: error.message,
     });
   }
