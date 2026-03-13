@@ -119,14 +119,14 @@ export const bulkSendAdmitCards = async (req, res) => {
           const emailPromise = await resend.emails.send({
             from: `British School - Gurukul <noreply@bsgurukul.com>`,
             to: student.email,
-            subject: `Admit Card for Super 30 South Bihar Talent Search Examination ${currentYear}`,
+            subject: `Admit Card for Super 30 South Bihar Talent Search Examination ${currentYear} - PHASE II`,
             html: `
               <p>Dear <b>${student.studentName}</b>,</p>
               <p>1. Please download and print your Admit Card attached below for the exam.</p>
               <p>2. <b>Exam Date:</b> ${examDate}</p>
               <p>3. <b>Venue:</b> British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)</p>
-              <p>4. <b>Exam Time:</b> 11:00 AM - 01:00 PM</p>
-              <p>4. <b>Reporting Time:</b> 10:00 AM</p>
+              <p>4. <b>Exam Time:</b> 10:00 AM</p>
+              <p>4. <b>Reporting Time:</b> 09:00 AM</p>
               <br/>
               <p>5. In case of any difficulty, please contact @ 7766994020, 7766994006</p>
               <br/>
