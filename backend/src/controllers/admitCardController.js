@@ -35,7 +35,7 @@ export const createAdmitCardBuffer = (student, examDate) => {
     doc.on("end", () => resolve(Buffer.concat(chunks)));
     doc.on("error", reject);
 
-      addTextWatermark(doc, "SBTSE - 2026");
+      addTextWatermark(doc, "PHASE II");
 
     // ====== YOUR EXISTING PDF LAYOUT CODE STARTS ======
     doc.image(bannerPath, 20, 20, { width: 555 });
