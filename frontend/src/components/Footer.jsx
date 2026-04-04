@@ -55,7 +55,7 @@ export default function Footer() {
                     rel="noopener noreferrer"
                     className="text-white hover:underline"
                   >
-                    Bhim Raj Prasad, Bishar Talab, New Area, Gaya, Bihar 
+                    BHIM RAJ PRASAD, BISHAR TALAB, NEW AREA, Gaya, Gaya, Bihar, 823001
                   </a>
                 </div>
               </div>
