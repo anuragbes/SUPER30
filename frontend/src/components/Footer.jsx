@@ -55,7 +55,7 @@ export default function Footer() {
                     rel="noopener noreferrer"
                     className="text-white hover:underline"
                   >
-                    Near Gandhi Maidan, Beside Chopra Agencies, Gaya (Bihar)
+                    Bhim Raj Prasad, Bishar Talab, New Area, Gaya, Bihar 
                   </a>
                 </div>
               </div>
