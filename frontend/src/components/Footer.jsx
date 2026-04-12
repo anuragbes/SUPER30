@@ -59,7 +59,7 @@ export default function Footer() {
                   </a>
                 </div>
               </div>
-
+              
               {/* Pin Code */}
               <div className="flex items-start gap-3">
                 <div className="text-white mt-1">
