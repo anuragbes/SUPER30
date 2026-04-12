@@ -12,7 +12,14 @@ public/temp/
 public/uploads/
 
 # Google Cloud Credentials
+credentials/
+credentials/*.json
+bsg-gurukul.json
+.env
+.env.local
+.env.*.local
 
+/credentials
 
 # Create New Admin
 createAdmin.js
