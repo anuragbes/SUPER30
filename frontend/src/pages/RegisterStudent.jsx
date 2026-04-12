@@ -636,7 +636,7 @@ export default function RegisterStudent() {
               </Field>
             </div>
           </FormSection>
-
+          
           {/* DOCUMENT UPLOAD */}
           <FormSection title="Document Upload" description="Upload required documents">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
