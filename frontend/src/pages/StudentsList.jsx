@@ -6,9 +6,16 @@ import { CheckCheck, FileText, Mail, Search, Trash } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import PaginationControls from "@/components/PaginationControls";
+import { SkeletonTableRow } from "@/components/SkeletonCard";
 
 export default function StudentsList() {
   const [students, setStudents] = useState([]);
@@ -19,7 +26,10 @@ export default function StudentsList() {
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [loadingGenerate, setLoadingGenerate] = useState(false);
   const [loadingSend, setLoadingSend] = useState(false);
-  const [progressGenerate, setProgressGenerate] = useState({ current: 0, total: 0 });
+  const [progressGenerate, setProgressGenerate] = useState({
+    current: 0,
+    total: 0,
+  });
   const [progressSend, setProgressSend] = useState({ current: 0, total: 0 });
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -47,7 +57,6 @@ export default function StudentsList() {
 
       setStudents(data);
       setTotalPages(res.data.totalPages || 1);
-      
 
       data.sort((a, b) => {
         const na = parseInt((a.studentId || "").replace(/\D/g, "")) || 0;
@@ -76,7 +85,7 @@ export default function StudentsList() {
     setSelectedStudents((prev) =>
       prev.includes(studentId)
         ? prev.filter((id) => id !== studentId)
-        : [...prev, studentId]
+        : [...prev, studentId],
     );
   };
 
@@ -107,7 +116,7 @@ export default function StudentsList() {
           const res = await axios.post(
             `${backendURL}/api/admin/bulk-generate-admit-cards`,
             { selectedStudents: [studentId] },
-            { headers: { Authorization: `Bearer ${token}` } }
+            { headers: { Authorization: `Bearer ${token}` } },
           );
 
           if (!res.data.success) {
@@ -117,8 +126,10 @@ export default function StudentsList() {
 
           setStudents((prev) =>
             prev.map((s) =>
-              s.studentId === studentId ? { ...s, admitCardGenerated: true } : s
-            )
+              s.studentId === studentId
+                ? { ...s, admitCardGenerated: true }
+                : s,
+            ),
           );
         } catch (error) {
           const msg =
@@ -158,13 +169,13 @@ export default function StudentsList() {
         await axios.post(
           `${backendURL}/api/admin/bulk-send-admit-cards`,
           { selectedStudents: [studentId] },
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers: { Authorization: `Bearer ${token}` } },
         );
 
         setStudents((prev) =>
           prev.map((s) =>
-            s.studentId === studentId ? { ...s, admitCardSent: true } : s
-          )
+            s.studentId === studentId ? { ...s, admitCardSent: true } : s,
+          ),
         );
 
         await new Promise((r) => setTimeout(r, 300));
@@ -184,9 +195,12 @@ export default function StudentsList() {
   // ✅ Download single admit card
   const handleDownloadAdmitCard = async (studentId) => {
     try {
-      const res = await axios.get(`${backendURL}/api/students/admit-card/${studentId}`, {
-        responseType: "blob",
-      });
+      const res = await axios.get(
+        `${backendURL}/api/students/admit-card/${studentId}`,
+        {
+          responseType: "blob",
+        },
+      );
 
       const blob = new Blob([res.data], { type: "application/pdf" });
       const url = window.URL.createObjectURL(blob);
@@ -194,8 +208,8 @@ export default function StudentsList() {
 
       setStudents((prev) =>
         prev.map((s) =>
-          s.studentId === studentId ? { ...s, admitCardGenerated: true } : s
-        )
+          s.studentId === studentId ? { ...s, admitCardGenerated: true } : s,
+        ),
       );
 
       setTimeout(() => fetchStudents(), 800);
@@ -207,38 +221,40 @@ export default function StudentsList() {
 
   const clearFilters = () => {
     setSearch("");
-       setFilterStream("");
+    setFilterStream("");
     setFilterTarget("");
     setFilterStatus("");
     fetchStudents();
   };
 
-
   const handleDeleteStudent = async (studentId) => {
-  if (!confirm("Are you sure you want to delete this student? This action cannot be undone.")) {
-    return;
-  }
-
-  try {
-    const res = await axios.delete(
-      `${backendURL}/api/admin/delete-student/${studentId}`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    if (res.data.success) {
-      toast.success("Student deleted successfully!");
-
-      // Remove student locally without refetching whole list
-      setStudents((prev) => prev.filter((s) => s.studentId !== studentId));
-    } else {
-      toast.error(res.data.message || "Failed to delete student.");
+    if (
+      !confirm(
+        "Are you sure you want to delete this student? This action cannot be undone.",
+      )
+    ) {
+      return;
     }
-  } catch (error) {
-    console.error("Error deleting student:", error);
-    toast.error("Error deleting student");
-  }
-};
 
+    try {
+      const res = await axios.delete(
+        `${backendURL}/api/admin/delete-student/${studentId}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+
+      if (res.data.success) {
+        toast.success("Student deleted successfully!");
+
+        // Remove student locally without refetching whole list
+        setStudents((prev) => prev.filter((s) => s.studentId !== studentId));
+      } else {
+        toast.error(res.data.message || "Failed to delete student.");
+      }
+    } catch (error) {
+      console.error("Error deleting student:", error);
+      toast.error("Error deleting student");
+    }
+  };
 
   return (
     <div>
@@ -246,8 +262,12 @@ export default function StudentsList() {
       <div className="w-full min-h-screen bg-gray-50 pt-20 sm:pt-24 px-4 sm:px-6 md:px-8 pb-8">
         <div className="w-full max-w-7xl mx-auto space-y-6">
           <div className="space-y-2">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight">Student Management</h1>
-            <p className="text-sm sm:text-base text-slate-600">Generate and track Admit Card status</p>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight">
+              Student Management
+            </h1>
+            <p className="text-sm sm:text-base text-slate-600">
+              Generate and track Admit Card status
+            </p>
           </div>
 
           {/* ================= Search Bar ================= */}
@@ -301,7 +321,9 @@ export default function StudentsList() {
               <div className="flex flex-col gap-1 w-full sm:w-auto sm:flex-1">
                 <Select
                   value={filterStatus || "all"}
-                  onValueChange={(value) => setFilterStatus(value === "all" ? "" : value)}
+                  onValueChange={(value) =>
+                    setFilterStatus(value === "all" ? "" : value)
+                  }
                 >
                   <SelectTrigger className="bg-slate-50 border-slate-200 text-slate-900 w-full">
                     <SelectValue placeholder="Select Status" />
@@ -309,7 +331,9 @@ export default function StudentsList() {
 
                   <SelectContent>
                     <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="Generated">Admit Card Generated</SelectItem>
+                    <SelectItem value="Generated">
+                      Admit Card Generated
+                    </SelectItem>
                     <SelectItem value="Sent">Admit Card Sent</SelectItem>
                     <SelectItem value="Pending">Pending</SelectItem>
                   </SelectContent>
@@ -418,7 +442,11 @@ export default function StudentsList() {
                 </thead>
 
                 <tbody>
-                  {students.length > 0 ? (
+                  {loading ? (
+                    Array(5)
+                      .fill(0)
+                      .map((_, i) => <SkeletonTableRow key={i} />)
+                  ) : students.length > 0 ? (
                     students.map((student) => (
                       <tr key={student._id}>
                         <td className="text-center">
@@ -429,7 +457,9 @@ export default function StudentsList() {
                           ) : (
                             <Checkbox
                               onChange={() => toggleStudent(student.studentId)}
-                              checked={selectedStudents.includes(student.studentId)}
+                              checked={selectedStudents.includes(
+                                student.studentId,
+                              )}
                               className="h-4 w-4"
                             />
                           )}
@@ -471,7 +501,9 @@ export default function StudentsList() {
                           {/* View */}
                           {student.admitCardGenerated ? (
                             <Button
-                              onClick={() => handleDownloadAdmitCard(student.studentId)}
+                              onClick={() =>
+                                handleDownloadAdmitCard(student.studentId)
+                              }
                               size="sm"
                               className="bg-blue-600 hover:bg-blue-700 text-white"
                             >
@@ -489,7 +521,9 @@ export default function StudentsList() {
                           {/* Delete */}
                           <Trash
                             className="w-5 h-5 text-red-600 cursor-pointer hover:text-red-800 transition"
-                            onClick={() => handleDeleteStudent(student.studentId)}
+                            onClick={() =>
+                              handleDeleteStudent(student.studentId)
+                            }
                           />
                         </td>
                       </tr>
@@ -505,8 +539,11 @@ export default function StudentsList() {
               </table>
             </div>
           </div>
-              <PaginationControls page={page} setPage={setPage} totalPages={totalPages} />
-
+          <PaginationControls
+            page={page}
+            setPage={setPage}
+            totalPages={totalPages}
+          />
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import DetailsCard from "@/components/DetailsCard";
+import { SkeletonDetailsCard } from "@/components/SkeletonCard";
 import {
   CalendarDays,
   Clock,
@@ -184,7 +185,7 @@ export default function Home() {
       </div>
 
       {/* ---- Hero Section ---- */}
-      <section className="min-h-[70vh] flex items-center pt-20 bg-gray-100">
+      <section className="min-h-[70vh] flex items-center pt-20 bg-gray-100 border-t border-gray-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:pr-8 lg:pl-0 py-8 w-full">
           <div className="grid grid-cols-1 lg:grid-cols-[7fr_3fr] gap-0 lg:gap-6 items-center">
             {/* Left Image */}
@@ -217,12 +218,17 @@ export default function Home() {
                 {loading ? (
                   <p className="text-center text-gray-500">Loading...</p>
                 ) : !settings?.registrationOpen ? (
-                  <Button
-                    disabled
-                    className="w-full bg-gray-200 text-gray-700 cursor-not-allowed"
-                  >
-                    Registration Closed
-                  </Button>
+                  <>
+                    <Button
+                      disabled
+                      className="w-full bg-gray-200 text-gray-700 cursor-not-allowed"
+                    >
+                      Registration Closed
+                    </Button>
+                    <p className="text-center text-sm text-gray-500 mt-3">
+                      The exam has been conducted for this year
+                    </p>
+                  </>
                 ) : (
                   <div className="w-full">
                     <SignedOut>
@@ -252,6 +258,10 @@ export default function Home() {
                         Continue to Registration
                       </Button>
                     </SignedIn>
+
+                    <p className="text-center text-sm text-gray-500 mt-3">
+                      The exam has been conducted for this year
+                    </p>
                   </div>
                 )}
               </div>
@@ -274,63 +284,69 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <DetailsCard
-              icon={<Users className="w-10 h-10 text-[#00afd0]" />}
-              title="Eligibility"
-              text={
-                <>
-                  Class 10th to 11th Moving Students
-                  <br />
-                  Class 11th to 12th Moving Students
-                </>
-              }
-            />
-
-            <DetailsCard
-              icon={<Target className="w-10 h-10 text-[#00afd0]" />}
-              title="Target"
-              text="JEE Main/Advanced, NEET (UG) - 2027 / 2028"
-            />
-
-            <DetailsCard
-              icon={<CalendarDays className="w-10 h-10 text-[#00afd0]" />}
-              title="Exam Date"
-              text={
-                formatDateForDisplay(settings?.examDate) || "To Be Announced"
-              }
-            />
-
-            <DetailsCard
-              icon={<Clock className="w-10 h-10 text-[#00afd0]" />}
-              title="Exam Time & Mode"
-              text={
-                <>
-                  10:00 AM • Offline (At Center)
-                  <br />
-                  <span className="text-sm text-muted-foreground">
-                    Reporting Time: 09:00 AM
-                  </span>
-                  {/* To Be Announced */}
-                </>
-              }
-            />
-
-            <DetailsCard
-              icon={<TrendingUp className="w-10 h-10 text-[#00afd0]" />}
-              title="Last Date to Register"
-              text={
-                formatDateForDisplay(settings?.lastDateToRegister) ||
-                "To Be Announced"
-              }
-            />
-
-            <DetailsCard
-              icon={<FileCheck className="w-10 h-10 text-[#00afd0]" />}
-              title="Result Date"
-              text={
-                formatDateForDisplay(settings?.resultDate) || "To Be Announced"
-              }
-            />
+            {loading
+              ? Array(6)
+                  .fill(0)
+                  .map((_, i) => <SkeletonDetailsCard key={i} />)
+              : [
+                  {
+                    icon: <Users className="w-10 h-10 text-[#00afd0]" />,
+                    title: "Eligibility",
+                    text: (
+                      <>
+                        Class 10th to 11th Moving Students
+                        <br />
+                        Class 11th to 12th Moving Students
+                      </>
+                    ),
+                  },
+                  {
+                    icon: <Target className="w-10 h-10 text-[#00afd0]" />,
+                    title: "Target",
+                    text: "JEE Main/Advanced, NEET (UG) - 2027 / 2028",
+                  },
+                  {
+                    icon: <CalendarDays className="w-10 h-10 text-[#00afd0]" />,
+                    title: "Exam Date",
+                    text:
+                      formatDateForDisplay(settings?.examDate) ||
+                      "To Be Announced",
+                  },
+                  {
+                    icon: <Clock className="w-10 h-10 text-[#00afd0]" />,
+                    title: "Exam Time & Mode",
+                    text: (
+                      <>
+                        10:00 AM • Offline (At Center)
+                        <br />
+                        <span className="text-sm text-muted-foreground">
+                          Reporting Time: 09:00 AM
+                        </span>
+                      </>
+                    ),
+                  },
+                  {
+                    icon: <TrendingUp className="w-10 h-10 text-[#00afd0]" />,
+                    title: "Last Date to Register",
+                    text:
+                      formatDateForDisplay(settings?.lastDateToRegister) ||
+                      "To Be Announced",
+                  },
+                  {
+                    icon: <FileCheck className="w-10 h-10 text-[#00afd0]" />,
+                    title: "Result Date",
+                    text:
+                      formatDateForDisplay(settings?.resultDate) ||
+                      "To Be Announced",
+                  },
+                ].map((card, i) => (
+                  <DetailsCard
+                    key={i}
+                    icon={card.icon}
+                    title={card.title}
+                    text={card.text}
+                  />
+                ))}
           </div>
         </div>
       </section>

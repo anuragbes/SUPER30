@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import AnnouncementCard from "./AnnouncementCard";
+import { SkeletonAnnouncementCard } from "./SkeletonCard";
 import { Bell } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_BACKEND_URL;
@@ -24,7 +25,7 @@ const AnnouncementSection = ({ compact = false }) => {
     fetchAnnouncements();
   }, []);
 
-  if (loading || announcements.length === 0) return null;
+  if (!loading && announcements.length === 0) return null;
 
   return (
     <section className={`${compact ? "w-full text-left" : ""}`}>
@@ -49,16 +50,22 @@ const AnnouncementSection = ({ compact = false }) => {
       <div
         className={`grid grid-cols-1 gap-3 ${compact ? "max-h-96 overflow-y-auto pr-2" : ""}`}
       >
-        {announcements.map((a) => (
-          <AnnouncementCard
-            key={a._id}
-            title={a.title}
-            description={a.message}
-            date={new Date(a.createdAt).toLocaleDateString()}
-            isPinned={a.isPinned}
-            compact={compact}
-          />
-        ))}
+        {loading
+          ? Array(3)
+              .fill(0)
+              .map((_, i) => (
+                <SkeletonAnnouncementCard key={i} compact={compact} />
+              ))
+          : announcements.map((a) => (
+              <AnnouncementCard
+                key={a._id}
+                title={a.title}
+                description={a.message}
+                date={new Date(a.createdAt).toLocaleDateString()}
+                isPinned={a.isPinned}
+                compact={compact}
+              />
+            ))}
       </div>
     </section>
   );

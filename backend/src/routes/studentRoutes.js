@@ -5,6 +5,7 @@ import upload from "../middlewares/upload.js";
 
 import { verifyClerkToken } from "../middlewares/authMiddleware.js";
 import Student from "../models/student.models.js";
+import { registrationLimiter } from "../middlewares/rateLimiter.js";
 
 const router = express.Router();
 
@@ -14,6 +15,7 @@ router.get("/admit-card/:studentId", generateAdmitCard);
 
 router.post(
   "/register",
+  registrationLimiter, // Rate limit registrations
   verifyClerkToken, // Protect this route
   upload.fields([
     { name: "passportPhoto", maxCount: 1 },

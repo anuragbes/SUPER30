@@ -4,13 +4,14 @@ import { deleteAllStudents, deleteStudent, generateRollNumbers, getDashboardStat
 import { adminAuth } from "../middlewares/adminAuth.js";
 import { bulkGenerateAdmitCards, bulkSendAdmitCards } from "../controllers/bulkAdmitController.js";
 import { createAnnouncement, deleteAnnouncement, getActiveAnnouncements, getAllAnnouncements, toggleAnnouncementPin, toggleAnnouncementStatus, updateAnnouncement } from "../controllers/announcementController.js";
+import { loginLimiter, bulkOperationLimiter, emailLimiter } from "../middlewares/rateLimiter.js";
 
 
 const router = express.Router();
 
 // ====== PUBLIC ROUTES ======
 // Admin Login
-router.post("/login", adminLogin);
+router.post("/login", loginLimiter, adminLogin);
 
 // Get Exam Settings (Public - needed for Home page)
 router.get("/exam-settings", getExamSettings);
@@ -30,8 +31,8 @@ router.post("/remove-rollno", adminAuth, removeRollNumbers);
 router.delete("/clear-database", adminAuth, deleteAllStudents);
 
 // Generate and send Admit Card
-router.post("/bulk-generate-admit-cards", adminAuth, bulkGenerateAdmitCards);
-router.post("/bulk-send-admit-cards", adminAuth, bulkSendAdmitCards);
+router.post("/bulk-generate-admit-cards", adminAuth, bulkOperationLimiter, bulkGenerateAdmitCards);
+router.post("/bulk-send-admit-cards", adminAuth, emailLimiter, bulkSendAdmitCards);
 
 // Dashboard Stats
 router.get("/dashboard-stats", adminAuth, getDashboardStats);

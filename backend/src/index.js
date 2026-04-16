@@ -7,6 +7,7 @@ import studentRoutes from './routes/studentRoutes.js';
 import connectDB from './db/index.js'
 import cors from "cors";
 import adminRoutes from "./routes/adminRoutes.js";
+import { apiLimiter } from './middlewares/rateLimiter.js';
 
 
 // initialise express app
@@ -33,6 +34,9 @@ connectDB()
 // middleware to parse JSON Body
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Apply global API rate limiting
+app.use('/api/', apiLimiter);
 
 // routes
 app.use('/api/students', studentRoutes);
