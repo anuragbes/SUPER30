@@ -14,13 +14,22 @@ import {
 } from "lucide-react";
 import RegisterIcon from "@/assets/register.svg";
 import FAQ from "@/components/FAQ";
-import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import Footer from "@/components/Footer";
 import Result from "@/assets/result.svg";
-import { SignedIn, SignedOut, SignIn, useAuth, useClerk } from "@clerk/clerk-react";
+import {
+  SignedIn,
+  SignedOut,
+  SignIn,
+  useAuth,
+  useClerk,
+} from "@clerk/clerk-react";
 import AnnouncementSection from "@/components/AnnouncementSection";
-
 
 const images = [
   "/images/poster10.webp",
@@ -36,7 +45,6 @@ const images = [
   "/images/poster4.jpg",
   "/images/poster5.jpg",
   "/images/poster6.jpg",
-  
 ];
 
 export function AutoSlider() {
@@ -100,10 +108,8 @@ export default function Home() {
     fetchSettings();
   }, [backendURL]);
 
-
   return (
     <div className="min-h-screen flex flex-col">
-
       {/* ---- Under Maintenance Tag ---- */}
       {/* <div className="fixed top-2 right-2 sm:top-4 sm:right-4 z-50 bg-red-500 text-white py-1 px-2 sm:py-2 sm:px-4 rounded-md sm:rounded-lg font-semibold text-[10px] sm:text-sm shadow-md">
         🚧 Under Maintenance
@@ -120,8 +126,8 @@ export default function Home() {
       >
         <div
           className="flex items-center gap-2 cursor-pointer"
-          onClick={() => navigate("/")}>
-
+          onClick={() => navigate("/")}
+        >
           <img
             src="/images/logo.jpg"
             alt="British School – Gurukul Logo"
@@ -134,11 +140,53 @@ export default function Home() {
         </div>
       </header>
 
+      <div className="mt-10 pt-12">
+        <div className="max-w-8xl mx-auto px-2 grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
+          {/* AutoSlider */}
+          <div className="lg:col-span-2">
+            <AutoSlider />
+          </div>
+
+          {/* Redirect Dialog */}
+          <div className="flex h-100 sm:h-80 md:h-160 items-center justify-center">
+            <div className="bg-gray-100 border border-gray-300 shadow-md rounded-2xl mb-8 sm:mb-9 w-full max-w-sm text-center flex flex-col h-full overflow-hidden">
+              {/* Scrollable Announcements */}
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+                <AnnouncementSection compact={true} />
+              </div>
+
+              {/* Fixed Bottom Section */}
+              <div className="border-t border-gray-300 p-4 sm:p-6 bg-white rounded-b-2xl">
+                <h3 className="text-lg font-semibold mb-3">
+                  Student Performance Report
+                </h3>
+
+                <p className="text-sm text-gray-500 mb-4">
+                  Track Your Performance
+                </p>
+
+                <Button
+                  onClick={() =>
+                    window.open(
+                      "https://bsgurukul.etutor.co",
+                      "_blank",
+                      "noopener,noreferrer",
+                    )
+                  }
+                  className="w-full bg-[#00afd0] hover:bg-[#0295b3] text-white"
+                >
+                  Go to Login Page
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* ---- Hero Section ---- */}
-      <section className="min-h-[70vh] flex items-center pt-20">
+      <section className="min-h-[70vh] flex items-center pt-20 bg-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:pr-8 lg:pl-0 py-8 w-full">
           <div className="grid grid-cols-1 lg:grid-cols-[7fr_3fr] gap-0 lg:gap-6 items-center">
-
             {/* Left Image */}
             <div className="flex justify-center lg:justify-start">
               <img
@@ -151,7 +199,6 @@ export default function Home() {
             {/* Registration Card */}
             <div className="flex justify-center lg:justify-end mt-8 mb-1 lg:mt-0 lg:mb-0">
               <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-sm border border-slate-300 shadow-md">
-
                 {/* Icon */}
                 <div className="flex justify-center mb-4 sm:mb-6">
                   <div className="w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center">
@@ -167,67 +214,51 @@ export default function Home() {
                   Register for SUPER30
                 </h3>
 
-                
-
                 {loading ? (
-                    <p className="text-center text-gray-500">Loading...</p>
-                  ) : !settings?.registrationOpen ? (
-                    <Button
-                      disabled
-                      className="w-full bg-gray-200 text-gray-700 cursor-not-allowed"
-                    >
-                      Registration Closed
-                    </Button>
-                  ) : (
-                    <div className="w-full">
-                      <SignedOut>
-                        <Button
-                          onClick={() =>
-                            openSignIn({
-                              routing: "virtual",
-                              signUpUrl: null,
-                              appearance: {
-                                elements: {
-                                  footerAction: "hidden",
-                                },
+                  <p className="text-center text-gray-500">Loading...</p>
+                ) : !settings?.registrationOpen ? (
+                  <Button
+                    disabled
+                    className="w-full bg-gray-200 text-gray-700 cursor-not-allowed"
+                  >
+                    Registration Closed
+                  </Button>
+                ) : (
+                  <div className="w-full">
+                    <SignedOut>
+                      <Button
+                        onClick={() =>
+                          openSignIn({
+                            routing: "virtual",
+                            signUpUrl: null,
+                            appearance: {
+                              elements: {
+                                footerAction: "hidden",
                               },
-                            })
-                          }
-                          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold"
-                        >
-                          Register
-                        </Button>
-                      </SignedOut>
+                            },
+                          })
+                        }
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+                      >
+                        Register
+                      </Button>
+                    </SignedOut>
 
-                      <SignedIn>
-                        <Button
-                          onClick={() => navigate("/register")}
-                          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold"
-                        >
-                          Continue to Registration
-                        </Button>
-                      </SignedIn>
-                    </div>
-                  )}
-
+                    <SignedIn>
+                      <Button
+                        onClick={() => navigate("/register")}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+                      >
+                        Continue to Registration
+                      </Button>
+                    </SignedIn>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
       </section>
-
-      {/* Announcement */}
-      <section className="py-12 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 w-full">
-    <AnnouncementSection />
-    </div>
-    </section>
-
-
-      <div className="mt-10">
-        <AutoSlider />
-      </div>
-
 
       {/* ---- Exam Details Section ---- */}
       <section className="py-12 bg-white border-y border-gray-300">
@@ -248,9 +279,9 @@ export default function Home() {
               title="Eligibility"
               text={
                 <>
-                Class 10th to 11th Moving Students
-                <br />
-                Class 11th to 12th Moving Students
+                  Class 10th to 11th Moving Students
+                  <br />
+                  Class 11th to 12th Moving Students
                 </>
               }
             />
@@ -297,8 +328,7 @@ export default function Home() {
               icon={<FileCheck className="w-10 h-10 text-[#00afd0]" />}
               title="Result Date"
               text={
-                formatDateForDisplay(settings?.resultDate) ||
-                "To Be Announced"
+                formatDateForDisplay(settings?.resultDate) || "To Be Announced"
               }
             />
           </div>

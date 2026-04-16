@@ -4,12 +4,10 @@ import AnnouncementCard from "./AnnouncementCard";
 import { Bell } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_BACKEND_URL;
-const STEP = 3;
 
-const AnnouncementSection = () => {
+const AnnouncementSection = ({ compact = false }) => {
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [visibleCount, setVisibleCount] = useState(STEP);
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
@@ -28,59 +26,39 @@ const AnnouncementSection = () => {
 
   if (loading || announcements.length === 0) return null;
 
-  const handleReadMore = () => {
-    setVisibleCount((prev) => prev + STEP);
-  };
-
-  const handleViewLess = () => {
-    setVisibleCount(STEP);
-  };
-
   return (
-    <section>
+    <section className={`${compact ? "w-full text-left" : ""}`}>
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 rounded-lg bg-primary/10">
-          <Bell className="w-5 h-5 text-primary" />
-        </div>
-        <h2 className="text-2xl sm:text-3xl font-bold text-[hsl(var(--section-title))]">
-          Announcements
+      <div
+        className={`flex items-center gap-3 ${compact ? "mb-3 justify-start" : "mb-6"}`}
+      >
+        {!compact && (
+          <div className="p-2 rounded-lg bg-primary/10">
+            <Bell className="w-5 h-5 text-primary" />
+          </div>
+        )}
+        <h2
+          className={`${compact ? "text-sm sm:text-base font-semibold" : "text-2xl sm:text-3xl font-bold"} text-[hsl(var(--section-title))]`}
+        >
+          {compact ? "Latest Updates" : "Announcements"}
         </h2>
-        <div className="flex-1 h-px bg-border ml-4" />
+        {!compact && <div className="flex-1 h-px bg-border ml-4" />}
       </div>
 
       {/* Announcements */}
-      <div className="grid grid-cols-1 gap-3">
-        {announcements.slice(0, visibleCount).map((a) => (
+      <div
+        className={`grid grid-cols-1 gap-3 ${compact ? "max-h-96 overflow-y-auto pr-2" : ""}`}
+      >
+        {announcements.map((a) => (
           <AnnouncementCard
             key={a._id}
             title={a.title}
             description={a.message}
             date={new Date(a.createdAt).toLocaleDateString()}
             isPinned={a.isPinned}
+            compact={compact}
           />
         ))}
-      </div>
-
-      {/* Actions */}
-      <div className="mt-4 flex justify-center gap-4">
-        {visibleCount < announcements.length && (
-          <button
-            onClick={handleReadMore}
-            className="text-sm font-semibold p-4 text-primary hover:underline"
-          >
-            View more ↓
-          </button>
-        )}
-
-        {visibleCount > STEP && (
-          <button
-            onClick={handleViewLess}
-            className="text-sm font-semibold p-4 text-muted-foreground hover:underline"
-          >
-            View less ↑
-          </button>
-        )}
       </div>
     </section>
   );

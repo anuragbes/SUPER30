@@ -55,7 +55,7 @@ export default function Footer() {
                     rel="noopener noreferrer"
                     className="text-white hover:underline"
                   >
-                    BHIM RAJ PRASAD, BISHAR TALAB, NEW AREA, Gaya, Gaya, Bihar, 823001
+                    Near Gandhi Maidan, Beside Chopra Agencies, Gaya (Bihar)
                   </a>
                 </div>
               </div>
