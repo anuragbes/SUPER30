@@ -294,16 +294,18 @@ export default function Home() {
                     title: "Eligibility",
                     text: (
                       <>
-                        Class 10th to 11th Moving Students
+                      To Be Announced
+                        {/* Class 10th to 11th Moving Students
                         <br />
-                        Class 11th to 12th Moving Students
+                        Class 11th to 12th Moving Students */}
                       </>
                     ),
                   },
                   {
                     icon: <Target className="w-10 h-10 text-[#00afd0]" />,
                     title: "Target",
-                    text: "JEE Main/Advanced, NEET (UG) - 2027 / 2028",
+                    text: "To Be Announced",
+                    // text: "JEE Main/Advanced, NEET (UG) - 2027 / 2028",
                   },
                   {
                     icon: <CalendarDays className="w-10 h-10 text-[#00afd0]" />,
@@ -317,11 +319,12 @@ export default function Home() {
                     title: "Exam Time & Mode",
                     text: (
                       <>
-                        10:00 AM • Offline (At Center)
-                        <br />
+                      To Be Announced
+                        {/* 10:00 AM • Offline (At Center) */}
+                        {/* <br />
                         <span className="text-sm text-muted-foreground">
                           Reporting Time: 09:00 AM
-                        </span>
+                        </span> */}
                       </>
                     ),
                   },

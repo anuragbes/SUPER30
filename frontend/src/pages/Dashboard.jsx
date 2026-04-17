@@ -207,6 +207,31 @@ export default function Dashboard() {
     }
   };
 
+  const clearDate = async (dateField) => {
+    let updatedData = {
+      examDate,
+      lastDateToRegister: lastDate,
+      resultDate,
+      registrationOpen,
+    };
+
+    if (dateField === "examDate") {
+      setExamDate("");
+      updatedData.examDate = "";
+    } else if (dateField === "lastDate") {
+      setLastDate("");
+      updatedData.lastDateToRegister = "";
+    } else if (dateField === "resultDate") {
+      setResultDate("");
+      updatedData.resultDate = "";
+    }
+
+    await updateExamSettings(updatedData);
+    toast.success(
+      `${dateField === "examDate" ? "Exam" : dateField === "lastDate" ? "Registration" : "Result"} date reset to "TO BE ANNOUNCED"`,
+    );
+  };
+
   const renderPieChart = (title, data, showLabel = true) => (
     <div className="flex flex-col bg-white rounded-2xl shadow-lg p-4 sm:p-6 border border-slate-100 hover:shadow-xl transition-shadow">
       <h2 className="text-sm sm:text-base md:text-lg font-semibold text-foreground mb-4">
@@ -389,12 +414,22 @@ export default function Dashboard() {
               <label className="text-sm font-medium text-foreground block">
                 Exam Date
               </label>
-              <Input
-                type="date"
-                value={examDate}
-                onChange={(e) => setExamDate(e.target.value)}
-                className="text-sm"
-              />
+              <div className="flex gap-2 mt-1">
+                <Input
+                  type="date"
+                  value={examDate}
+                  onChange={(e) => setExamDate(e.target.value)}
+                  className="text-sm flex-1"
+                />
+                <Button
+                  onClick={() => clearDate("examDate")}
+                  variant="outline"
+                  className="text-xs"
+                  title="Clear date"
+                >
+                  ✕
+                </Button>
+              </div>
             </ActionCard>
 
             <ActionCard
@@ -405,12 +440,22 @@ export default function Dashboard() {
               icon={<Calendar size={20} />}
             >
               <label className="text-sm font-medium block">Last Date</label>
-              <Input
-                type="date"
-                value={lastDate}
-                onChange={(e) => setLastDate(e.target.value)}
-                className="text-sm"
-              />
+              <div className="flex gap-2 mt-1">
+                <Input
+                  type="date"
+                  value={lastDate}
+                  onChange={(e) => setLastDate(e.target.value)}
+                  className="text-sm flex-1"
+                />
+                <Button
+                  onClick={() => clearDate("lastDate")}
+                  variant="outline"
+                  className="text-xs"
+                  title="Clear date"
+                >
+                  ✕
+                </Button>
+              </div>
             </ActionCard>
 
             <ActionCard
@@ -421,12 +466,22 @@ export default function Dashboard() {
               icon={<Calendar size={20} />}
             >
               <label className="text-sm font-medium block">Result Date</label>
-              <Input
-                type="date"
-                value={resultDate}
-                onChange={(e) => setResultDate(e.target.value)}
-                className="text-sm"
-              />
+              <div className="flex gap-2 mt-1">
+                <Input
+                  type="date"
+                  value={resultDate}
+                  onChange={(e) => setResultDate(e.target.value)}
+                  className="text-sm flex-1"
+                />
+                <Button
+                  onClick={() => clearDate("resultDate")}
+                  variant="outline"
+                  className="text-xs"
+                  title="Clear date"
+                >
+                  ✕
+                </Button>
+              </div>
             </ActionCard>
 
             <ActionCard

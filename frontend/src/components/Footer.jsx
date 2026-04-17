@@ -128,7 +128,7 @@ export default function Footer() {
 
         {/* Bottom Section */}
         <div className="border-t border-primary-foreground/20 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center text-primary-foreground/80">
-          <p>&copy; 2025 All rights reserved.</p>
+          <p>&copy; 2026 All rights reserved.</p>
           <Link to="/admin/login" className="text-sm hover:text-white mt-2 md:mt-0 opacity-70 hover:opacity-100 transition-opacity">
             Admin Login
           </Link>
