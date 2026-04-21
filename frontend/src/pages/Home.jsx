@@ -33,6 +33,7 @@ import {
 import AnnouncementSection from "@/components/AnnouncementSection";
 
 const images = [
+  "/images/poster15.webp",
   "/images/poster10.webp",
   "/images/poster11.webp",
   "/images/poster12.webp",
