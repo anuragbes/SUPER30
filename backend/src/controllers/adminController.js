@@ -32,30 +32,66 @@ export const generateRollNumbers = async (req, res) => {
     const bulkOps = [];
 
     // PCM: start from last + 1 OR 3001
-    const lastPCM = await Student.findOne({ rollNo: { $gte: 4001, $lt: 5000 } })
-      .sort({ rollNo: -1 });
+    const pcmCount = pcm.length;
 
-    let rollPCM = lastPCM ? lastPCM.rollNo + 1 : 4001;
+    let startPCM = null;
+
+    if (pcmCount > 0) {
+      const counter = await Counter.findOneAndUpdate(
+        { id: "pcmRoll" },
+        { $inc: { seq: pcmCount } },
+        { new: true, upsert: true }
+      );
+
+      startPCM = 4000 + (counter.seq - pcmCount + 1);
+    }
+
+    let rollPCM = startPCM;
 
     pcm.forEach((s) =>
       bulkOps.push({
         updateOne: {
-          filter: { _id: s._id },
+          filter: {
+            _id: s._id,
+            $or: [
+              { rollNo: null },
+              { rollNo: "" },
+              { rollNo: { $exists: false } },
+            ],
+          },
           update: { $set: { rollNo: rollPCM++ } },
         },
       })
     );
 
     // PCB: start from last + 1 OR 5001
-    const lastPCB = await Student.findOne({ rollNo: { $gte: 6001, $lt: 7000 } })
-      .sort({ rollNo: -1 });
+    const pcbCount = pcb.length;
 
-    let rollPCB = lastPCB ? lastPCB.rollNo + 1 : 6001;
+    let startPCB = null;
+
+    if (pcbCount > 0) {
+      const counter = await Counter.findOneAndUpdate(
+        { id: "pcbRoll" },
+        { $inc: { seq: pcbCount } },
+        { new: true, upsert: true }
+      );
+
+      startPCB = 6000 + (counter.seq - pcbCount + 1);
+    }
+
+    let rollPCB = startPCB;
 
     pcb.forEach((s) =>
       bulkOps.push({
         updateOne: {
-          filter: { _id: s._id },
+          filter: {
+            _id: s._id,
+            $or: [
+              { rollNo: null },
+              { rollNo: "" },
+              { rollNo: { $exists: false } },
+            ],
+          },
           update: { $set: { rollNo: rollPCB++ } },
         },
       })
@@ -90,6 +126,10 @@ export const deleteAllStudents = async (req, res) => {
       { seq: 0 }, // reset student ID counter
       { new: true }
     );
+
+    // Reset roll number counters
+    await Counter.findOneAndUpdate({ id: "pcmRoll" }, { seq: 0 }, { upsert: true });
+    await Counter.findOneAndUpdate({ id: "pcbRoll" }, { seq: 0 }, { upsert: true });
 
     res.status(200).json({ message: "All student data cleared successfully" });
   } catch (error) {
@@ -170,7 +210,7 @@ export const updateExamSettings = async (req, res) => {
 
     // Find existing settings first
     let settings = await Settings.findOne();
-    
+
     // Build update object with only provided fields
     const updateData = {};
     if (examDate !== undefined) updateData.examDate = examDate;
@@ -251,6 +291,10 @@ export const removeRollNumbers = async (req, res) => {
       { stream },
       { $set: { rollNo: null } }
     );
+
+    // Reset the roll number counter for this stream
+    const counterId = stream === "PCM" ? "pcmRoll" : "pcbRoll";
+    await Counter.findOneAndUpdate({ id: counterId }, { seq: 0 }, { upsert: true });
 
     // Clear roll numbers in Google Sheet for the stream
     await clearRollNumbersFromSheet(stream);
