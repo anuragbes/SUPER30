@@ -22,13 +22,7 @@ export default function Navbar() {
 
   return (
     <header
-      className="fixed top-0 left-0 w-full z-50 shadow-lg transition-all duration-300"
-      style={{
-        background: "oklch(0.98 0.001 70 / 0.35)", 
-        backdropFilter: "blur(20px) saturate(180%)",
-        WebkitBackdropFilter: "blur(20px) saturate(180%)",
-        boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)", 
-      }}
+      className="fixed top-0 left-0 w-full z-50 bg-card border-b border-border transition-all duration-300"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex justify-between items-center">
         {/* Logo / Title */}
@@ -42,7 +36,7 @@ export default function Navbar() {
             className="h-8 sm:h-10 md:h-12 object-contain"
           />
 
-          <span className="text-lg sm:text-xl md:text-2xl font-bold text-[#00afd0]">
+          <span className="text-lg sm:text-xl md:text-2xl font-bold text-primary">
             British School – Gurukul
           </span>
         </div>
@@ -56,8 +50,8 @@ export default function Navbar() {
               className={`
                 px-3 py-2 font-medium tracking-wide transition-all duration-200 whitespace-nowrap
                 ${location.pathname === link.path
-                  ? "text-blue-600 border-b-2 border-blue-600"
-                  : "text-gray-500 hover:text-blue-500"}
+                  ? "text-primary border-b-2 border-primary"
+                  : "text-muted-foreground hover:text-primary"}
               `}
             >
               {link.name}
@@ -79,7 +73,7 @@ export default function Navbar() {
         <Button
           variant="ghost"
           size="icon"
-          className="md:hidden h-9 w-9 p-1 text-gray-700 hover:text-blue-600 hover:bg-blue-50"
+          className="md:hidden h-9 w-9 p-1 text-muted-foreground hover:text-primary hover:bg-primary/10"
           onClick={() => setIsOpen(!isOpen)}
         >
           {isOpen ? <X size={24} /> : <Menu size={24} />}
@@ -88,7 +82,7 @@ export default function Navbar() {
 
       {/* Mobile Dropdown Menu */}
       {isOpen && (
-        <div className="md:hidden border-t border-gray-200 bg-white shadow-lg animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="md:hidden border-t border-border bg-card shadow-lg animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="px-4 py-4 space-y-3">
             {navLinks.map((link) => (
               <Link
@@ -97,8 +91,8 @@ export default function Navbar() {
                 onClick={() => setIsOpen(false)}
                 className={`block px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
                   location.pathname === link.path
-                    ? "bg-blue-100 text-[#00afd0]"
-                    : "text-gray-700 hover:bg-gray-100"
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-muted"
                 }`}
               >
                 {link.name}

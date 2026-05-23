@@ -20,6 +20,7 @@ export default function RegisterStudent() {
   const { getToken, signOut } = useAuth();
 
   const [customSchool, setCustomSchool] = useState("");
+  const [formMode, setFormMode] = useState("senior");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -40,16 +41,30 @@ export default function RegisterStudent() {
   }, [user, navigate]);
 
   useEffect(() => {
+    const fetchFormMode = async () => {
+      try {
+        const res = await axios.get(`${backendURL}/api/admin/exam-settings`);
+        const mode = res.data.formMode || "senior";
+        setFormMode(mode);
+      } catch (error) {
+        console.error("Failed to fetch form mode:", error);
+      }
+    };
+    fetchFormMode();
+  }, [backendURL]);
+
+  useEffect(() => {
   if (!user) return;
 
   const email = user.primaryEmailAddress?.emailAddress || "";
 
   setFormData((prev) => ({
     ...prev,
-    classMoving: "10th to 11th",
+    classMoving: formMode === "junior" ? "Class 8" : "10th to 11th",
+    testCentre: formMode === "junior" ? "" : "British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)",
     email,
   }));
-}, [user]);
+}, [user, formMode]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -375,7 +390,7 @@ export default function RegisterStudent() {
 
               <Field>
                 <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
-                  Class Moving To<span className="text-red-500"> *</span>
+                  {formMode === "junior" ? "Class" : "Class Moving To"}<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <Select
                   value={formData.classMoving || ""}
@@ -385,12 +400,23 @@ export default function RegisterStudent() {
                     <SelectValue placeholder="Select Class" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="10th to 11th">10th to 11th</SelectItem>
-                    <SelectItem value="11th to 12th">11th to 12th</SelectItem>
+                    {formMode === "junior" ? (
+                      <>
+                        <SelectItem value="Class 8">Class 8</SelectItem>
+                        <SelectItem value="Class 9">Class 9</SelectItem>
+                        <SelectItem value="Class 10">Class 10</SelectItem>
+                      </>
+                    ) : (
+                      <>
+                        <SelectItem value="10th to 11th">10th to 11th</SelectItem>
+                        <SelectItem value="11th to 12th">11th to 12th</SelectItem>
+                      </>
+                    )}
                   </SelectContent>
                 </Select>
               </Field>
 
+              {formMode !== "junior" && (
               <Field>
                 <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
                   Select Stream<span className="text-red-500"> *</span>
@@ -409,6 +435,7 @@ export default function RegisterStudent() {
                   </SelectContent>
                 </Select>
               </Field>
+              )}
 
               <Field>
                 <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
@@ -423,9 +450,19 @@ export default function RegisterStudent() {
                   </SelectTrigger>
 
                   <SelectContent>
-                    <SelectItem value="JEE">JEE</SelectItem>
-                    <SelectItem value="NEET">NEET</SelectItem>
-                    <SelectItem value="CBSE Board">CBSE Board</SelectItem>
+                    {formMode === "junior" ? (
+                      <>
+                        <SelectItem value="JEE Mains/ Advanced / Olympiads">JEE Mains/ Advanced / Olympiads</SelectItem>
+                        <SelectItem value="NEET">NEET</SelectItem>
+                        <SelectItem value="CBSE - Board">CBSE Board</SelectItem>
+                      </>
+                    ) : (
+                      <>
+                        <SelectItem value="JEE">JEE</SelectItem>
+                        <SelectItem value="NEET">NEET</SelectItem>
+                        <SelectItem value="CBSE Board">CBSE Board</SelectItem>
+                      </>
+                    )}
                   </SelectContent>
                 </Select>
               </Field>
@@ -448,7 +485,7 @@ export default function RegisterStudent() {
 
               <Field>
                 <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
-                  Previous School Name<span className="text-red-500"> *</span>
+                  {formMode === "junior" ? "Current School Name" : "Previous School Name"}<span className="text-red-500"> *</span>
                 </FieldLabel>
 
                 <Select
@@ -579,17 +616,60 @@ export default function RegisterStudent() {
                 <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
                   Test Centre<span className="text-red-500"> *</span>
                 </FieldLabel>
-                <Select value="British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)" disabled>
-                  <SelectTrigger className="bg-gray-100 cursor-not-allowed text-slate-700 border border-slate-200 rounded-lg opacity-70 w-full text-left" style={{ whiteSpace: "normal", lineHeight: "1.3" }} >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)">
-                      British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                {formMode === "junior" ? (
+                  <Select
+                    value={formData.testCentre || ""}
+                    onValueChange={(value) => setFormData({ ...formData, testCentre: value })}
+                  >
+                    <SelectTrigger className="border border-slate-200 rounded-lg bg-white w-full text-left" style={{ whiteSpace: "normal", lineHeight: "1.3" }}>
+                      <SelectValue placeholder="Select Test Centre" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)">
+                        British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)
+                      </SelectItem>
+                      <SelectItem value="British English School, Gere, Manpur, Gaya (Bihar)">
+                        British English School, Gere, Manpur, Gaya (Bihar)
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Select value="British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)" disabled>
+                    <SelectTrigger className="bg-gray-100 cursor-not-allowed text-slate-700 border border-slate-200 rounded-lg opacity-70 w-full text-left" style={{ whiteSpace: "normal", lineHeight: "1.3" }} >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)">
+                        British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
               </Field>
+
+              {formMode === "junior" && (
+                <Field>
+                  <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
+                    Study Centre<span className="text-red-500"> *</span>
+                  </FieldLabel>
+                  <Select
+                    value={formData.studyCentre || ""}
+                    onValueChange={(value) => setFormData({ ...formData, studyCentre: value })}
+                  >
+                    <SelectTrigger className="border border-slate-200 rounded-lg bg-white w-full text-left" style={{ whiteSpace: "normal", lineHeight: "1.3" }}>
+                      <SelectValue placeholder="Select Study Centre" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)">
+                        British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)
+                      </SelectItem>
+                      <SelectItem value="British English School, Gere, Manpur, Gaya (Bihar)">
+                        British English School, Gere, Manpur, Gaya (Bihar)
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
+              )}
             </div>
           </FormSection>
 

@@ -54,7 +54,7 @@ export const registerStudent = async (req, res) => {
 
 export const getAllStudents = async (req, res) => {
   try {
-    const { search, stream, target, status, page = 1 } = req.query;
+    const { search, stream, classMoving, target, status, page = 1 } = req.query;
 
     const limit = 100;
     const skip = (page - 1) * limit;
@@ -71,6 +71,9 @@ export const getAllStudents = async (req, res) => {
 
     // 🎓 Stream filter
     if (stream) query.stream = stream;
+
+    // 🏫 Class filter
+    if (classMoving) query.classMoving = classMoving;
 
     // 🎯 Target filter
     if (target) query.target = target;

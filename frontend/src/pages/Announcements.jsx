@@ -180,7 +180,7 @@ const Announcements = () => {
           {/* Create Announcement Card */}
           <Card className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-100 shadow-md hover:shadow-lg transition-shadow mb-8">
             <div className="flex items-center gap-3 mb-6">
-              <Bell className="w-6 h-6 text-blue-600" />
+              <Bell className="w-6 h-6 text-[#00afd0]" />
               <h2 className="text-lg sm:text-xl font-semibold text-foreground">Publish New Announcement</h2>
             </div>
 
@@ -198,7 +198,7 @@ const Announcements = () => {
               <div>
                 <label className="text-sm font-medium text-foreground block mb-2">Message</label>
                 <textarea
-                  className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#00afd0]/50 focus:border-transparent"
                   rows="4"
                   placeholder="Enter announcement message"
                   value={formData.message}
@@ -209,7 +209,7 @@ const Announcements = () => {
               <Button 
                 onClick={handleCreate} 
                 disabled={loading.type === "create" || !formData.title || !formData.message}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+                className="w-full bg-[#00afd0] hover:bg-[#0295b3] text-white font-semibold"
               >
                 {loading.type === "create" ? "Publishing..." : "Publish Announcement"}
               </Button>
@@ -231,7 +231,7 @@ const Announcements = () => {
                       // Edit Form
                       <div className="space-y-4">
                         <div className="flex items-center gap-2 mb-4">
-                          <Edit2 className="w-5 h-5 text-blue-600" />
+                          <Edit2 className="w-5 h-5 text-[#00afd0]" />
                           <h3 className="text-lg font-semibold text-foreground">Edit Announcement</h3>
                         </div>
                         <div>
@@ -246,7 +246,7 @@ const Announcements = () => {
                         <div>
                           <label className="text-sm font-medium text-foreground block mb-2">Message</label>
                           <textarea
-                            className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#00afd0]/50 focus:border-transparent"
                             rows="4"
                             placeholder="Enter announcement message"
                             value={editData.message}
@@ -257,7 +257,7 @@ const Announcements = () => {
                           <Button
                             onClick={handleSaveEdit}
                             disabled={loading.type === "save" || !editData.title || !editData.message}
-                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+                            className="flex-1 bg-[#00afd0] hover:bg-[#0295b3] text-white font-semibold"
                           >
                             {loading.type === "save" ? "Saving..." : "Save Changes"}
                           </Button>

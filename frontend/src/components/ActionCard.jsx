@@ -11,21 +11,21 @@ export default function ActionCard({
   variant = "default",
 }) {
   const borderColorMap = {
-    default: "border-slate-200 hover:border-blue-500",
-    warning: "border-yellow-300 hover:border-yellow-500",
-    destructive: "border-red-300 hover:border-red-500",
+    default: "border-border hover:border-primary/50",
+    warning: "border-border hover:border-yellow-500/50",
+    destructive: "border-border hover:border-destructive/50",
   }
 
   const headerBgMap = {
-    default: "bg-slate-100",
-    warning: "bg-yellow-100",
-    destructive: "bg-red-100",
+    default: "bg-muted/50",
+    warning: "bg-yellow-500/10",
+    destructive: "bg-destructive/10",
   }
 
   const iconColorMap = {
     default: "text-primary",
     warning: "text-yellow-600",
-    destructive: "text-red-600",
+    destructive: "text-destructive",
   }
 
   const buttonVariantMap = {
@@ -37,7 +37,7 @@ export default function ActionCard({
   const buttonClassMap = {
     default: "",
     warning: "bg-yellow-600 hover:bg-yellow-700 text-white",
-    destructive: "bg-red-600 hover:bg-red-700 text-white",
+    destructive: "",
   }
 
   return (

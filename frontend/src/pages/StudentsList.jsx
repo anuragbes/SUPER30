@@ -21,6 +21,7 @@ export default function StudentsList() {
   const [students, setStudents] = useState([]);
   const [search, setSearch] = useState("");
   const [filterStream, setFilterStream] = useState("");
+  const [filterClass, setFilterClass] = useState("");
   const [filterTarget, setFilterTarget] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [selectedStudents, setSelectedStudents] = useState([]);
@@ -34,6 +35,7 @@ export default function StudentsList() {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [formMode, setFormMode] = useState("senior");
 
   const token = localStorage.getItem("adminToken");
   const backendURL = import.meta.env.VITE_BACKEND_URL;
@@ -46,7 +48,8 @@ export default function StudentsList() {
         headers: { Authorization: `Bearer ${token}` },
         params: {
           search,
-          stream: filterStream,
+          stream: formMode === "senior" ? filterStream : "",
+          classMoving: formMode === "junior" ? filterClass : "",
           target: filterTarget,
           status: filterStatus,
           page,
@@ -74,8 +77,22 @@ export default function StudentsList() {
   };
 
   useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await axios.get(`${backendURL}/api/admin/exam-settings`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setFormMode(res.data.formMode || "senior");
+      } catch (error) {
+        console.error("Error fetching settings:", error);
+      }
+    };
+    fetchSettings();
+  }, []);
+
+  useEffect(() => {
     fetchStudents();
-  }, [search, filterStream, filterTarget, filterStatus, page]);
+  }, [search, filterStream, filterClass, filterTarget, filterStatus, page, formMode]);
 
   const handleFilter = () => {
     fetchStudents();
@@ -222,6 +239,7 @@ export default function StudentsList() {
   const clearFilters = () => {
     setSearch("");
     setFilterStream("");
+    setFilterClass("");
     setFilterTarget("");
     setFilterStatus("");
     fetchStudents();
@@ -259,13 +277,13 @@ export default function StudentsList() {
   return (
     <div>
       <Navbar />
-      <div className="w-full min-h-screen bg-gray-50 pt-20 sm:pt-24 px-4 sm:px-6 md:px-8 pb-8">
+      <div className="w-full min-h-screen bg-background pt-20 sm:pt-24 px-4 sm:px-6 md:px-8 pb-8">
         <div className="w-full max-w-7xl mx-auto space-y-6">
           <div className="space-y-2">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground tracking-tight">
               Student Management
             </h1>
-            <p className="text-sm sm:text-base text-slate-600">
+            <p className="text-sm sm:text-base text-muted-foreground">
               Generate and track Admit Card status
             </p>
           </div>
@@ -278,7 +296,7 @@ export default function StudentsList() {
               placeholder="Search by Name or ID..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500/20"
+              className="pl-10 bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20"
             />
           </div>
 
@@ -286,19 +304,36 @@ export default function StudentsList() {
           <div className="">
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="flex flex-col gap-1 w-full sm:w-auto sm:flex-1">
-                <Select
-                  value={filterStream}
-                  onValueChange={(value) => setFilterStream(value)}
-                >
-                  <SelectTrigger className="bg-slate-50 border-slate-200 text-slate-900 w-full">
-                    <SelectValue placeholder="Select Stream" />
-                  </SelectTrigger>
+                {formMode === "junior" ? (
+                  <Select
+                    value={filterClass}
+                    onValueChange={(value) => setFilterClass(value)}
+                  >
+                    <SelectTrigger className="bg-background border-border text-foreground w-full">
+                      <SelectValue placeholder="Select Class" />
+                    </SelectTrigger>
 
-                  <SelectContent>
-                    <SelectItem value="PCM">PCM</SelectItem>
-                    <SelectItem value="PCB">PCB</SelectItem>
-                  </SelectContent>
-                </Select>
+                    <SelectContent>
+                      <SelectItem value="Class 8">Class 8</SelectItem>
+                      <SelectItem value="Class 9">Class 9</SelectItem>
+                      <SelectItem value="Class 10">Class 10</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Select
+                    value={filterStream}
+                    onValueChange={(value) => setFilterStream(value)}
+                  >
+                    <SelectTrigger className="bg-background border-border text-foreground w-full">
+                      <SelectValue placeholder="Select Stream" />
+                    </SelectTrigger>
+
+                    <SelectContent>
+                      <SelectItem value="PCM">PCM</SelectItem>
+                      <SelectItem value="PCB">PCB</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
 
               <div className="flex flex-col gap-1 w-full sm:w-auto sm:flex-1">
@@ -306,7 +341,7 @@ export default function StudentsList() {
                   value={filterTarget}
                   onValueChange={(value) => setFilterTarget(value)}
                 >
-                  <SelectTrigger className="bg-slate-50 border-slate-200 text-slate-900 w-full">
+                  <SelectTrigger className="bg-background border-border text-foreground w-full">
                     <SelectValue placeholder="Select Target" />
                   </SelectTrigger>
 
@@ -325,7 +360,7 @@ export default function StudentsList() {
                     setFilterStatus(value === "all" ? "" : value)
                   }
                 >
-                  <SelectTrigger className="bg-slate-50 border-slate-200 text-slate-900 w-full">
+                  <SelectTrigger className="bg-background border-border text-foreground w-full">
                     <SelectValue placeholder="Select Status" />
                   </SelectTrigger>
 
@@ -358,7 +393,7 @@ export default function StudentsList() {
               onClick={generateAdmitCards}
               disabled={loadingGenerate || loadingSend}
               variant="default"
-              className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
             >
               <FileText className="w-4 h-4" />
               {loadingGenerate
@@ -370,7 +405,7 @@ export default function StudentsList() {
               onClick={sendAdmitCardEmails}
               disabled={loadingSend || loadingGenerate}
               variant="default"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
             >
               <Mail className="w-4 h-4" />
               {loadingSend
@@ -383,7 +418,7 @@ export default function StudentsList() {
           {loadingGenerate && progressGenerate.total > 0 && (
             <div className="w-full bg-gray-200 h-2 rounded mb-3">
               <div
-                className="bg-blue-600 h-2 rounded"
+                className="bg-primary h-2 rounded"
                 style={{
                   width: `${(progressGenerate.current / progressGenerate.total) * 100}%`,
                   transition: "width 0.3s ease",
@@ -395,7 +430,7 @@ export default function StudentsList() {
           {loadingSend && progressSend.total > 0 && (
             <div className="w-full bg-gray-200 h-2 rounded mb-3">
               <div
-                className="bg-green-600 h-2 rounded"
+                className="bg-primary h-2 rounded"
                 style={{
                   width: `${(progressSend.current / progressSend.total) * 100}%`,
                   transition: "width 0.3s ease",
@@ -405,11 +440,11 @@ export default function StudentsList() {
           )}
 
           {/* ================= Students Table ================= */}
-          <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+          <div className="rounded-xl border border-border bg-card overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-100 text-left">
-                  <tr className="border-b border-slate-200 bg-slate-50">
+                <thead className="bg-muted/50 text-left">
+                  <tr className="border-b border-border bg-muted/20">
                     <th className="px-6 py-4 text-left">
                       <Checkbox
                         onChange={toggleSelectAll}
@@ -420,22 +455,22 @@ export default function StudentsList() {
                         className="border-slate-300"
                       />
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                       Student ID
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                       Name
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                      Stream
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      {formMode === "junior" ? "Class" : "Stream"}
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                       Target
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
@@ -451,7 +486,7 @@ export default function StudentsList() {
                       <tr key={student._id}>
                         <td className="text-center">
                           {student.admitCardSent ? (
-                            <span className="text-green-600 font-semibold inline-flex items-center gap-1">
+                            <span className="text-primary font-semibold inline-flex items-center gap-1">
                               <CheckCheck className="w-4 h-4" />
                             </span>
                           ) : (
@@ -465,33 +500,33 @@ export default function StudentsList() {
                           )}
                         </td>
 
-                        <td className="px-6 py-4 text-sm font-medium text-slate-900">
+                        <td className="px-6 py-4 text-sm font-medium text-foreground">
                           {student.studentId}
                         </td>
 
-                        <td className="px-6 py-4 text-sm text-slate-900">
+                        <td className="px-6 py-4 text-sm text-foreground">
                           {student.studentName}
                         </td>
 
-                        <td className="px-6 py-4 text-sm text-slate-600">
-                          {student.stream}
+                        <td className="px-6 py-4 text-sm text-muted-foreground">
+                          {formMode === "junior" ? student.classMoving : student.stream}
                         </td>
 
-                        <td className="px-6 py-4 text-sm text-slate-600">
+                        <td className="px-6 py-4 text-sm text-muted-foreground">
                           {student.target}
                         </td>
 
                         <td className="px-6 py-4 text-sm">
                           {student.admitCardSent ? (
-                            <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100">
+                            <Badge className="bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 shadow-none border border-emerald-200">
                               Sent
                             </Badge>
                           ) : student.admitCardGenerated ? (
-                            <Badge className="bg-amber-50 text-amber-700 hover:bg-amber-100">
+                            <Badge className="bg-primary/10 text-primary hover:bg-primary/20 shadow-none border border-primary/20">
                               Generated
                             </Badge>
                           ) : (
-                            <Badge className="bg-blue-50 text-[#00afd0] hover:bg-blue-100">
+                            <Badge className="bg-muted text-muted-foreground hover:bg-muted/80 shadow-none border border-border">
                               Pending
                             </Badge>
                           )}
@@ -505,14 +540,14 @@ export default function StudentsList() {
                                 handleDownloadAdmitCard(student.studentId)
                               }
                               size="sm"
-                              className="bg-blue-600 hover:bg-blue-700 text-white"
+                              className="bg-primary hover:bg-primary/90 text-primary-foreground"
                             >
                               View
                             </Button>
                           ) : (
                             <Button
                               size="sm"
-                              className="bg-slate-200 text-slate-400 cursor-not-allowed"
+                              className="bg-muted text-muted-foreground cursor-not-allowed hover:bg-muted"
                             >
                               View
                             </Button>
@@ -520,7 +555,7 @@ export default function StudentsList() {
 
                           {/* Delete */}
                           <Trash
-                            className="w-5 h-5 text-red-600 cursor-pointer hover:text-red-800 transition"
+                            className="w-5 h-5 text-destructive/80 cursor-pointer hover:text-destructive transition"
                             onClick={() =>
                               handleDeleteStudent(student.studentId)
                             }

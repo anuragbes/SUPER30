@@ -6,7 +6,7 @@ import { formatDateDDMMYYYY } from "../utils/googleSheets.js";
 import path from "path";
 
 const bannerPath = path.resolve("assets/banner.png"); // backend/assets/banner.png
-const addTextWatermark = (doc, text = "SBTSE - 2026") => {
+const addTextWatermark = (doc, text = "UDAAN") => {       // blueprint for the watermark
   const { width, height } = doc.page;
 
   doc.save(); // save current state
@@ -35,7 +35,7 @@ export const createAdmitCardBuffer = (student, examDate) => {
     doc.on("end", () => resolve(Buffer.concat(chunks)));
     doc.on("error", reject);
 
-      addTextWatermark(doc, "PHASE II");
+      addTextWatermark(doc, "UDAAN");     // actual text for watermark
 
     // ====== YOUR EXISTING PDF LAYOUT CODE STARTS ======
     doc.image(bannerPath, 20, 20, { width: 555 });
@@ -86,13 +86,15 @@ export const createAdmitCardBuffer = (student, examDate) => {
   y = drawRow("Roll No.", student.rollNo || "-", y);
   y = drawRow("Candidate's Name", student.studentName, y);
   y = drawRow("Father's Name", student.fatherName || "-", y);
-  y = drawRow("Stream", student.stream, y);
+  if (student.stream) {
+    y = drawRow("Stream", student.stream, y);
+  }
   y = drawRow("Class", student.classMoving, y);
   y = drawRow("Gender", student.gender || "-", y);
   y = drawRow("Address", student.permanentAddress, y, { maxLines: 2 });
   y = drawRow(
     "Test Venue",
-    "British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)",
+    student.testCentre || "-",
     y, { maxLines: 3 }
   );
   y = drawRow("Exam Date", examDate || "-", y);
@@ -119,7 +121,7 @@ export const createAdmitCardBuffer = (student, examDate) => {
       "Affix two recent Passport Sized Photographs as mentioned in the Admit Card before coming to the examination centre.",
       "Candidates are required to carry original Photo ID proof (Aadhar Card/SchooI ID) during exam along with admit card.",
       "Result will be notified through SMS and School Website - www.britishenglishschool.in",
-      "LOCATION OF TEST CENTRE: British School Gurukul, Gaya, Bihar.",
+      `LOCATION OF TEST CENTRE: ${student.testCentre || "To Be Announced"}`,
       "You are required to keep the Admit Card in original to avail the final scholarship subject to background clearance",
     ];
 
@@ -151,7 +153,10 @@ export const createAdmitCardBuffer = (student, examDate) => {
     invY = drawRow("Roll No.", student.rollNo || "-", invY);
     invY = drawRow("Candidate's Name", student.studentName, invY);
     invY = drawRow("Father's Name", student.fatherName || "-", invY);
-    invY = drawRow("Stream", student.stream, invY);
+    if (student.stream) {
+      invY = drawRow("Stream", student.stream, invY);
+    }
+    invY = drawRow("Class", student.classMoving, invY);
     invY = drawRow("Address", student.permanentAddress, invY, { maxLines: 2 });
     invY = drawRow("Target", student.target, invY);
     invY = drawRow("Date", examDate || "-", invY);

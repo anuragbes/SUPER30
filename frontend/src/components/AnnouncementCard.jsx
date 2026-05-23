@@ -30,7 +30,7 @@ const AnnouncementCard = ({
 }) => {
   return (
     <div
-      className={`announcement-card-hover cursor-pointer shadow-md hover:shadow-lg transition border border-[hsl(var(--announcement-border))] bg-card group rounded-xl ${compact ? "p-3" : "p-5"} ${isPinned ? "border-yellow-400 bg-yellow-50/30" : ""}`}
+      className={`announcement-card-hover cursor-pointer shadow-md hover:shadow-lg transition bg-card group rounded-xl ${compact ? "p-3" : "p-5"} ${isPinned ? "bg-yellow-50/30" : ""}`}
     >
       <div className="flex items-start gap-3">
         <Bell

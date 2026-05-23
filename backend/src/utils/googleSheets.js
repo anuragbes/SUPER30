@@ -49,7 +49,7 @@ export const headers = [
   "Student Name",
   "Email",
   "Gender",
-  "Class Moving",
+  "Class",
   "Date of Birth",
   "Stream",
   "Target",
@@ -62,6 +62,8 @@ export const headers = [
   "Whatsapp Mobile",
   "Previous School",
   "Previous Percentage",
+  "Test Centre",
+  "Study Centre",
   "Scholarship Offered",
   "Scholarship Details",
   "Passport Photo URL",
@@ -108,11 +110,21 @@ export const ensureSheetExists = async (sheetName) => {
 };
 
 /* ---------------------------------------------------------
-   2️⃣ APPEND STUDENT TO GOOGLE SHEET (PCM / PCB TAB)
+   2️⃣ APPEND STUDENT TO GOOGLE SHEET
+   Senior → PCM / PCB tabs
+   Junior → Class 8 / Class 9 / Class 10 tabs
 --------------------------------------------------------- */
+export const getTargetSheet = (student) => {
+  if (student.stream) {
+    return student.stream === "PCM" ? "PCM" : "PCB";
+  }
+  // Junior mode: use classMoving as tab name
+  return student.classMoving || "Class 8";
+};
+
 export const appendToGoogleSheet = async (student) => {
   try {
-    const targetSheet = student.stream === "PCM" ? "PCM" : "PCB";
+    const targetSheet = getTargetSheet(student);
 
     // Ensure tab exists
     await ensureSheetExists(targetSheet);
@@ -137,6 +149,8 @@ export const appendToGoogleSheet = async (student) => {
       student.whatsappMobile || "",
       student.previousSchool || "",
       student.previousResultPercentage || "",
+      student.testCentre || "",
+      student.studyCentre || "",
       student.scholarshipOffered ? "Yes" : "No",
       student.scholarshipDetails || "",
       student.passportPhotoURL || "",
@@ -159,59 +173,64 @@ export const appendToGoogleSheet = async (student) => {
 };
 
 /* ---------------------------------------------------------
-   3️⃣ UPDATE BOTH PCM AND PCB SHEETS AFTER ROLL NO. GENERATION
+   3️⃣ UPDATE SHEETS AFTER ROLL NO. GENERATION
+   Senior → PCM / PCB tabs
+   Junior → Class 8 / Class 9 / Class 10 tabs
 --------------------------------------------------------- */
+const convertStudentToRow = (s) => [
+  s.submittedAt?.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }) || "",
+  s.rollNo || "",
+  s.studentId || "",
+  s.studentName || "",
+  s.email || "",
+  s.gender || "",
+  s.classMoving || "",
+  s.dateOfBirth ? formatDateDDMMYYYY(s.dateOfBirth) : "",
+  s.stream || "",
+  s.target || "",
+  s.fatherName || "",
+  s.motherName || "",
+  s.permanentAddress || "",
+  s.presentAddress || "",
+  s.parentMobile || "",
+  s.studentMobile || "",
+  s.whatsappMobile || "",
+  s.previousSchool || "",
+  s.previousResultPercentage || "",
+  s.testCentre || "",
+  s.studyCentre || "",
+  s.scholarshipOffered ? "Yes" : "No",
+  s.scholarshipDetails || "",
+  s.passportPhotoURL || "",
+  s.identityPhotoURL || "",
+];
+
+const updateSheetForGroup = async (sheetName, query) => {
+  await ensureSheetExists(sheetName);
+  const students = await Student.find(query).sort({ rollNo: 1 });
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: SHEET_ID,
+    range: `${sheetName}!A1`,
+    valueInputOption: "RAW",
+    requestBody: { values: [headers, ...students.map(convertStudentToRow)] },
+  });
+};
+
 export const updatePCMAndPCB = async () => {
   try {
-    await ensureSheetExists("PCM");
-    await ensureSheetExists("PCB");
+    // Senior mode: PCM & PCB
+    await updateSheetForGroup("PCM", { stream: "PCM" });
+    await updateSheetForGroup("PCB", { stream: "PCB" });
 
-    const pcm = await Student.find({ stream: "PCM" }).sort({ rollNo: 1 });
-    const pcb = await Student.find({ stream: "PCB" }).sort({ rollNo: 1 });
+    // Junior mode: Class 8, Class 9, Class 10
+    for (const cls of ["Class 8", "Class 9", "Class 10"]) {
+      const count = await Student.countDocuments({ classMoving: cls, stream: null });
+      if (count > 0) {
+        await updateSheetForGroup(cls, { classMoving: cls, stream: null });
+      }
+    }
 
-    const convert = (s) => [
-      s.submittedAt?.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }) || "",
-      s.rollNo || "",
-      s.studentId || "",
-      s.studentName || "",
-      s.email || "",
-      s.gender || "",
-      s.classMoving || "",
-      s.dateOfBirth ? formatDateDDMMYYYY(s.dateOfBirth) : "",
-      s.stream || "",
-      s.target || "",
-      s.fatherName || "",
-      s.motherName || "",
-      s.permanentAddress || "",
-      s.presentAddress || "",
-      s.parentMobile || "",
-      s.studentMobile || "",
-      s.whatsappMobile || "",
-      s.previousSchool || "",
-      s.previousResultPercentage || "",
-      s.scholarshipOffered ? "Yes" : "No",
-      s.scholarshipDetails || "",
-      s.passportPhotoURL || "",
-      s.identityPhotoURL || "",
-    ];
-
-    // PCM update
-    await sheets.spreadsheets.values.update({
-      spreadsheetId: SHEET_ID,
-      range: `PCM!A1`,
-      valueInputOption: "RAW",
-      requestBody: { values: [headers, ...pcm.map(convert)] },
-    });
-
-    // PCB update
-    await sheets.spreadsheets.values.update({
-      spreadsheetId: SHEET_ID,
-      range: `PCB!A1`,
-      valueInputOption: "RAW",
-      requestBody: { values: [headers, ...pcb.map(convert)] },
-    });
-
-    console.log("🟢 PCM & PCB sheets updated");
+    console.log("🟢 All sheets updated");
   } catch (error) {
     console.error("❌ updatePCMAndPCB ERROR:", error.message);
   }
@@ -219,11 +238,12 @@ export const updatePCMAndPCB = async () => {
 
 
 /* ---------------------------------------------------------
-   4️⃣ DELETE STUDENT FROM GOOGLE SHEET (PCM / PCB)
+   4️⃣ DELETE STUDENT FROM GOOGLE SHEET
+   Uses stream for senior, classMoving for junior
 --------------------------------------------------------- */
-export const deleteStudentFromSheet = async (studentId, stream) => {
+export const deleteStudentFromSheet = async (studentId, stream, classMoving) => {
   try {
-    const sheetName = stream === "PCM" ? "PCM" : "PCB";
+    const sheetName = stream ? (stream === "PCM" ? "PCM" : "PCB") : (classMoving || "Class 8");
 
     // Ensure sheet exists
     await ensureSheetExists(sheetName);
@@ -248,7 +268,7 @@ export const deleteStudentFromSheet = async (studentId, stream) => {
       return;
     }
 
-    // Get the actual sheetId for PCM/PCB
+    // Get the actual sheetId
     const sheetId = await getSheetIdByName(sheetName);
 
     await sheets.spreadsheets.batchUpdate({
@@ -277,7 +297,8 @@ export const deleteStudentFromSheet = async (studentId, stream) => {
 };
 
 /* ---------------------------------------------------------
-   5️⃣ CLEAR ROLL NUMBERS FROM SHEET (for specific stream)
+   5️⃣ CLEAR ROLL NUMBERS FROM SHEET
+   Supports both stream-based (PCM/PCB) and class-based tabs
 --------------------------------------------------------- */
 export const clearRollNumbersFromSheet = async (stream) => {
   try {
@@ -295,7 +316,7 @@ export const clearRollNumbersFromSheet = async (stream) => {
     }
 
     // Create rows with rollNo cleared (empty string)
-    const convert = (s) => [
+    const convertCleared = (s) => [
       s.submittedAt?.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }) || "",
       "", // Roll No - CLEARED
       s.studentId || "",
@@ -315,6 +336,8 @@ export const clearRollNumbersFromSheet = async (stream) => {
       s.whatsappMobile || "",
       s.previousSchool || "",
       s.previousResultPercentage || "",
+      s.testCentre || "",
+      s.studyCentre || "",
       s.scholarshipOffered ? "Yes" : "No",
       s.scholarshipDetails || "",
       s.passportPhotoURL || "",
@@ -326,11 +349,66 @@ export const clearRollNumbersFromSheet = async (stream) => {
       spreadsheetId: SHEET_ID,
       range: `${sheetName}!A1`,
       valueInputOption: "RAW",
-      requestBody: { values: [headers, ...students.map(convert)] },
+      requestBody: { values: [headers, ...students.map(convertCleared)] },
     });
 
     console.log(`🟢 Cleared roll numbers for ${stream} stream in Google Sheet`);
   } catch (error) {
     console.error("❌ clearRollNumbersFromSheet ERROR:", error.message);
+  }
+};
+
+/* ---------------------------------------------------------
+   6️⃣ CLEAR ROLL NUMBERS FROM CLASS-BASED SHEET (Junior mode)
+--------------------------------------------------------- */
+export const clearRollNumbersFromClassSheet = async (classGroup) => {
+  try {
+    await ensureSheetExists(classGroup);
+
+    const students = await Student.find({ classMoving: classGroup, stream: null }).sort({ studentName: 1 });
+
+    if (students.length === 0) {
+      console.log(`⚠️ No students found for class: ${classGroup}`);
+      return;
+    }
+
+    const convertCleared = (s) => [
+      s.submittedAt?.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }) || "",
+      "", // Roll No - CLEARED
+      s.studentId || "",
+      s.studentName || "",
+      s.email || "",
+      s.gender || "",
+      s.classMoving || "",
+      s.dateOfBirth ? formatDateDDMMYYYY(s.dateOfBirth) : "",
+      s.stream || "",
+      s.target || "",
+      s.fatherName || "",
+      s.motherName || "",
+      s.permanentAddress || "",
+      s.presentAddress || "",
+      s.parentMobile || "",
+      s.studentMobile || "",
+      s.whatsappMobile || "",
+      s.previousSchool || "",
+      s.previousResultPercentage || "",
+      s.testCentre || "",
+      s.studyCentre || "",
+      s.scholarshipOffered ? "Yes" : "No",
+      s.scholarshipDetails || "",
+      s.passportPhotoURL || "",
+      s.identityPhotoURL || "",
+    ];
+
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SHEET_ID,
+      range: `${classGroup}!A1`,
+      valueInputOption: "RAW",
+      requestBody: { values: [headers, ...students.map(convertCleared)] },
+    });
+
+    console.log(`🟢 Cleared roll numbers for ${classGroup} in Google Sheet`);
+  } catch (error) {
+    console.error("❌ clearRollNumbersFromClassSheet ERROR:", error.message);
   }
 };

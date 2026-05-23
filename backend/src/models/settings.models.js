@@ -1,6 +1,11 @@
 import mongoose from "mongoose";
 
 const settingsSchema = new mongoose.Schema({
+  formMode: {
+    type: String,
+    enum: ["junior", "senior"],
+    default: "senior"
+  },
   examDate: { 
     type: String, 
     required: false 

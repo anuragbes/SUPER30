@@ -1,21 +1,26 @@
 import Student from "../models/student.models.js";
 import Counter from "../models/counter.models.js";
 import Settings from "../models/settings.models.js";
-import { updatePCMAndPCB, deleteStudentFromSheet, clearRollNumbersFromSheet } from "../utils/googleSheets.js";
+import { updatePCMAndPCB, deleteStudentFromSheet, clearRollNumbersFromSheet, clearRollNumbersFromClassSheet } from "../utils/googleSheets.js";
 
 export const generateRollNumbers = async (req, res) => {
   try {
     const order = req.body.order || "alphabetical";
 
-    const fetchByStream = async (stream) => {
-      const query = {
-        stream,
-        $or: [
-          { rollNo: null },
-          { rollNo: "" },
-          { rollNo: { $exists: false } },
-        ],
-      };
+    // Check current form mode
+    const settings = await Settings.findOne();
+    const isJunior = settings?.formMode === "junior";
+
+    const noRollQuery = {
+      $or: [
+        { rollNo: null },
+        { rollNo: "" },
+        { rollNo: { $exists: false } },
+      ],
+    };
+
+    const fetchStudents = async (filter) => {
+      const query = { ...filter, ...noRollQuery };
 
       if (order === "random") {
         const total = await Student.countDocuments(query);
@@ -26,76 +31,85 @@ export const generateRollNumbers = async (req, res) => {
       return await Student.find(query).sort({ studentName: 1 });
     };
 
-    const pcm = await fetchByStream("PCM");
-    const pcb = await fetchByStream("PCB");
-
     const bulkOps = [];
+    const assigned = {};
 
-    // PCM: start from last + 1 OR 3001
-    const pcmCount = pcm.length;
+    if (isJunior) {
+      // Junior mode: generate roll numbers by class
+      const classGroups = [
+        { name: "Class 8", counterId: "class8Roll", startBase: 8000 },
+        { name: "Class 9", counterId: "class9Roll", startBase: 9000 },
+        { name: "Class 10", counterId: "class10Roll", startBase: 10000 },
+      ];
 
-    let startPCM = null;
+      for (const group of classGroups) {
+        const students = await fetchStudents({ classMoving: group.name, stream: null });
+        const count = students.length;
+        assigned[group.name] = count;
 
-    if (pcmCount > 0) {
-      const counter = await Counter.findOneAndUpdate(
-        { id: "pcmRoll" },
-        { $inc: { seq: pcmCount } },
-        { new: true, upsert: true }
-      );
+        if (count > 0) {
+          const counter = await Counter.findOneAndUpdate(
+            { id: group.counterId },
+            { $inc: { seq: count } },
+            { new: true, upsert: true }
+          );
 
-      startPCM = 4000 + (counter.seq - pcmCount + 1);
+          let rollNo = group.startBase + (counter.seq - count + 1);
+
+          students.forEach((s) =>
+            bulkOps.push({
+              updateOne: {
+                filter: { _id: s._id, ...noRollQuery },
+                update: { $set: { rollNo: rollNo++ } },
+              },
+            })
+          );
+        }
+      }
+    } else {
+      // Senior mode: generate roll numbers by stream (PCM / PCB)
+      const pcm = await fetchStudents({ stream: "PCM" });
+      const pcb = await fetchStudents({ stream: "PCB" });
+
+      assigned.PCM = pcm.length;
+      assigned.PCB = pcb.length;
+
+      if (pcm.length > 0) {
+        const counter = await Counter.findOneAndUpdate(
+          { id: "pcmRoll" },
+          { $inc: { seq: pcm.length } },
+          { new: true, upsert: true }
+        );
+        let rollPCM = 4000 + (counter.seq - pcm.length + 1);
+
+        pcm.forEach((s) =>
+          bulkOps.push({
+            updateOne: {
+              filter: { _id: s._id, ...noRollQuery },
+              update: { $set: { rollNo: rollPCM++ } },
+            },
+          })
+        );
+      }
+
+      if (pcb.length > 0) {
+        const counter = await Counter.findOneAndUpdate(
+          { id: "pcbRoll" },
+          { $inc: { seq: pcb.length } },
+          { new: true, upsert: true }
+        );
+        let rollPCB = 6000 + (counter.seq - pcb.length + 1);
+
+        pcb.forEach((s) =>
+          bulkOps.push({
+            updateOne: {
+              filter: { _id: s._id, ...noRollQuery },
+              update: { $set: { rollNo: rollPCB++ } },
+            },
+          })
+        );
+      }
     }
-
-    let rollPCM = startPCM;
-
-    pcm.forEach((s) =>
-      bulkOps.push({
-        updateOne: {
-          filter: {
-            _id: s._id,
-            $or: [
-              { rollNo: null },
-              { rollNo: "" },
-              { rollNo: { $exists: false } },
-            ],
-          },
-          update: { $set: { rollNo: rollPCM++ } },
-        },
-      })
-    );
-
-    // PCB: start from last + 1 OR 5001
-    const pcbCount = pcb.length;
-
-    let startPCB = null;
-
-    if (pcbCount > 0) {
-      const counter = await Counter.findOneAndUpdate(
-        { id: "pcbRoll" },
-        { $inc: { seq: pcbCount } },
-        { new: true, upsert: true }
-      );
-
-      startPCB = 6000 + (counter.seq - pcbCount + 1);
-    }
-
-    let rollPCB = startPCB;
-
-    pcb.forEach((s) =>
-      bulkOps.push({
-        updateOne: {
-          filter: {
-            _id: s._id,
-            $or: [
-              { rollNo: null },
-              { rollNo: "" },
-              { rollNo: { $exists: false } },
-            ],
-          },
-          update: { $set: { rollNo: rollPCB++ } },
-        },
-      })
-    );
 
     if (bulkOps.length > 0) {
       await Student.bulkWrite(bulkOps);
@@ -107,7 +121,7 @@ export const generateRollNumbers = async (req, res) => {
     return res.json({
       success: true,
       message: "Roll numbers assigned only to students without roll numbers.",
-      assigned: { PCM: pcm.length, PCB: pcb.length },
+      assigned,
     });
 
   } catch (error) {
@@ -154,6 +168,7 @@ export const getDashboardStats = async (req, res) => {
       target: await groupBy("target"),
       classMoving: await groupBy("classMoving"),
       testCentre: await groupBy("testCentre"),
+      studyCentre: await groupBy("studyCentre"),
       scholarship: await groupBy("scholarshipOffered"),
     };
 
@@ -168,12 +183,18 @@ export const getSummaryStats = async (req, res) => {
     const totalStudents = await Student.countDocuments();
     const pcmCount = await Student.countDocuments({ stream: "PCM" });
     const pcbCount = await Student.countDocuments({ stream: "PCB" });
+    const class8Count = await Student.countDocuments({ classMoving: "Class 8" });
+    const class9Count = await Student.countDocuments({ classMoving: "Class 9" });
+    const class10Count = await Student.countDocuments({ classMoving: "Class 10" });
     const admitCardGenerated = await Student.countDocuments({ admitCardGenerated: true });
 
     res.status(200).json({
       totalStudents,
       pcmCount,
       pcbCount,
+      class8Count,
+      class9Count,
+      class10Count,
       admitCardGenerated,
     });
   } catch (error) {
@@ -206,7 +227,7 @@ export const getExamSettings = async (req, res) => {
 // Update exam date
 export const updateExamSettings = async (req, res) => {
   try {
-    const { examDate, lastDateToRegister, resultDate, registrationOpen } = req.body;
+    const { examDate, lastDateToRegister, resultDate, registrationOpen, formMode } = req.body;
 
     // Find existing settings first
     let settings = await Settings.findOne();
@@ -217,6 +238,7 @@ export const updateExamSettings = async (req, res) => {
     if (lastDateToRegister !== undefined) updateData.lastDateToRegister = lastDateToRegister;
     if (resultDate !== undefined) updateData.resultDate = resultDate;
     if (registrationOpen !== undefined) updateData.registrationOpen = registrationOpen;
+    if (formMode !== undefined) updateData.formMode = formMode;
 
     const updated = await Settings.findOneAndUpdate(
       {},
@@ -254,7 +276,7 @@ export const deleteStudent = async (req, res) => {
     }
 
     // 2️⃣ Delete from correct Google Sheet tab
-    await deleteStudentFromSheet(studentId, student.stream);
+    await deleteStudentFromSheet(studentId, student.stream, student.classMoving);
 
     return res.json({
       success: true,
@@ -272,13 +294,40 @@ export const deleteStudent = async (req, res) => {
 };
 
 
-// REMOVE ROLL NUMBERS FOR A STREAM
+// REMOVE ROLL NUMBERS FOR A STREAM OR CLASS
 // =============================
 export const removeRollNumbers = async (req, res) => {
   try {
-    const { stream } = req.body;
+    const { stream, classGroup } = req.body;
 
-    // Validate stream
+    // Junior mode: remove by class
+    if (classGroup) {
+      const validClasses = ["Class 8", "Class 9", "Class 10"];
+      if (!validClasses.includes(classGroup)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid class. Must be Class 8, Class 9, or Class 10.",
+        });
+      }
+
+      const result = await Student.updateMany(
+        { classMoving: classGroup, stream: null },
+        { $set: { rollNo: null } }
+      );
+
+      const counterMap = { "Class 8": "class8Roll", "Class 9": "class9Roll", "Class 10": "class10Roll" };
+      await Counter.findOneAndUpdate({ id: counterMap[classGroup] }, { seq: 0 }, { upsert: true });
+
+      await clearRollNumbersFromClassSheet(classGroup);
+
+      return res.json({
+        success: true,
+        message: `Roll numbers removed for ${classGroup}.`,
+        updated: result.modifiedCount,
+      });
+    }
+
+    // Senior mode: remove by stream
     if (!stream || !["PCM", "PCB"].includes(stream)) {
       return res.status(400).json({
         success: false,
@@ -286,17 +335,14 @@ export const removeRollNumbers = async (req, res) => {
       });
     }
 
-    // Clear roll numbers in database for the stream
     const result = await Student.updateMany(
       { stream },
       { $set: { rollNo: null } }
     );
 
-    // Reset the roll number counter for this stream
     const counterId = stream === "PCM" ? "pcmRoll" : "pcbRoll";
     await Counter.findOneAndUpdate({ id: counterId }, { seq: 0 }, { upsert: true });
 
-    // Clear roll numbers in Google Sheet for the stream
     await clearRollNumbersFromSheet(stream);
 
     return res.json({

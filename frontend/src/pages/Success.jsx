@@ -22,7 +22,7 @@ export default function Success() {
         </p>
 
         <p className="text-xl mt-2 mb-8 font-semibold">
-          Student ID: <span className="text-blue-600 font-mono">{studentId}</span>
+          Student ID: <span className="text-[#00afd0] font-mono">{studentId}</span>
         </p>
 
         <Link to="/">

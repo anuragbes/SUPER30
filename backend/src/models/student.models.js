@@ -27,7 +27,7 @@ const studentSchema = new mongoose.Schema({
     },
     classMoving: {
         type: String,
-        enum: ["10th to 11th", "11th to 12th"],
+        enum: ["Class 8", "Class 9", "Class 10", "10th to 11th", "11th to 12th"],
         required: true
     },
     dateOfBirth: {
@@ -37,11 +37,13 @@ const studentSchema = new mongoose.Schema({
     stream: {
         type: String,
         enum: ["PCM", "PCB"],
-        required: true
+        required: function () {
+            return this.classMoving === "10th to 11th" || this.classMoving === "11th to 12th";
+        }
     },
     target: {
         type: String,
-        enum: ["JEE", "NEET", "CBSE Board"],
+        enum: ["JEE", "NEET", "CBSE Board", "JEE Mains/ Advanced / Olympiads", "CBSE - Board"],
         required: true
     },
     fatherName: {
@@ -94,8 +96,11 @@ const studentSchema = new mongoose.Schema({
     },
     testCentre: {
         type: String,
-        default: "British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)",
         required: true
+    },
+    studyCentre: {
+        type: String,
+        default: null
     },
     scholarshipOffered: {
         type: Boolean,

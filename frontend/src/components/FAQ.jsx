@@ -1,7 +1,7 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { HelpCircle } from "lucide-react"
 
-const faqItems = [
+const seniorFaqItems = [
   {
     id: "item-1",
     question: "What is SBTSE and what does it offer?",
@@ -34,7 +34,53 @@ const faqItems = [
   },
 ]
 
-export default function FAQ() {
+// Replace with actual junior FAQ content when provided
+const juniorFaqItems = [
+  {
+    id: "item-1",
+    question: "What is UDAAN and what does it offer?",
+    answer:
+      "UDAAN is a pre-foundation scholarship programme by British English School offering scholarships of up to 100% for students of Classes 8, 9, and 10 who aspire to excel in JEE Advanced, JEE Main, Olympiads such as IOQM and INPhO, and NEET (UG).",
+  },
+  {
+    id: "item-2",
+    question: "Who is eligible to appear for UDAAN?",
+    answer:
+      "Students currently studying in Class 8th, 9th, or 10th in any school/coaching are eligible to appear for the UDAAN exam.",
+  },
+  {
+    id: "item-3",
+    question: "Is there any fee for the UDAAN exam?",
+    answer:
+      "No, the UDAAN exam is completely free. You can register online and appear for the exam on the given date.",
+  },
+  {
+    id: "item-4",
+    question: "What are the benefits of taking UDAAN?",
+    answer:
+      "Students are eligible for upto 100% scholarships (Tution Fee or Advanced Study + Hostel Fee), making it an excellent opportunity to access top-notch education in a school system.",
+  },
+  {
+    id: "item-5",
+    question: "What is the syllabus for the junior exam?",
+    answer:
+      "For Class 8th -> Syllabus of Maths and Science of Class 7th.\n For Class 9th -> Syllabus of Maths and Science of Class 8th.\n For Class 10th -> Syllabus of Maths and Science of Class 9th.",
+  },
+  {
+    id: "item-6",
+    question: "When will the commencement of classes take place?",
+    answer:
+      "Classes commmences from 1st week of July, and separate faculties for Science and Math will be provided for advanced study which will help in obtaining best ranks.\n Separate materials will be provided according to JEE, NEET and Olympiads.",
+  },
+  {
+    id: "item-7",
+    question: "Are there any prizes in addition to scholarships?",
+    answer: "Top performers will be rewarded with exciting prizes like Smartwatches, Tablets etc. making it a unique and early launchpad for future engineers, doctors and scientists."
+  }
+]
+
+export default function FAQ({ mode = "senior" }) {
+  const faqItems = mode === "junior" ? juniorFaqItems : seniorFaqItems;
   return (
     <section className="py-6 sm:py-12 bg-gray-50">
       <div className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8">

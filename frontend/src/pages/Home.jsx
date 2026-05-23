@@ -80,6 +80,13 @@ const formatDateForDisplay = (dateString) => {
   return `${day}-${month}-${year}`;
 };
 
+const getDayOfWeek = (dateString) => {
+  if (!dateString) return "";
+  const [year, month, day] = dateString.split("-");
+  const date = new Date(year, month - 1, day);
+  return date.toLocaleDateString('en-US', { weekday: 'long' });
+};
+
 export default function Home() {
   const navigate = useNavigate();
   const backendURL = import.meta.env.VITE_BACKEND_URL;
@@ -186,15 +193,27 @@ export default function Home() {
       </div>
 
       {/* ---- Hero Section ---- */}
-      <section className="min-h-[70vh] flex items-center pt-20 bg-gray-100 border-t border-gray-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:pr-8 lg:pl-0 py-8 w-full">
+      <section className={settings?.formMode === "junior"
+        ? "min-h-[70vh] flex items-center pt-8 bg-gray-100 border-t border-gray-300"
+        : "min-h-[70vh] flex items-center pt-20 bg-gray-100 border-t border-gray-300"
+      }>
+        <div className={settings?.formMode === "junior"
+          ? "max-w-7xl mx-auto px-2 sm:px-4 lg:pr-8 lg:pl-0 py-4 w-full"
+          : "max-w-7xl mx-auto px-4 sm:px-6 lg:pr-8 lg:pl-0 py-8 w-full"
+        }>
           <div className="grid grid-cols-1 lg:grid-cols-[7fr_3fr] gap-0 lg:gap-6 items-center">
             {/* Left Image */}
-            <div className="flex justify-center lg:justify-start">
+            <div className={settings?.formMode === "junior"
+              ? "flex justify-center lg:justify-start lg:-ml-4"
+              : "flex justify-center lg:justify-start"
+            }>
               <img
-                src="/images/hero.webp"
+                src={settings?.formMode === "junior" ? "/images/hero-junior.webp" : "/images/hero.webp"}
                 alt="SUPER30 Poster"
-                className="w-full max-w-xl sm:max-w-xl lg:max-w-xl object-contain"
+                className={settings?.formMode === "junior"
+                  ? "w-full max-w-3xl object-contain"
+                  : "w-full max-w-xl sm:max-w-xl lg:max-w-xl object-contain"
+                }
               />
             </div>
 
@@ -226,9 +245,6 @@ export default function Home() {
                     >
                       Registration Closed
                     </Button>
-                    <p className="text-center text-sm text-gray-500 mt-3">
-                      The exam has been conducted for this year
-                    </p>
                   </>
                 ) : (
                   <div className="w-full">
@@ -245,7 +261,7 @@ export default function Home() {
                             },
                           })
                         }
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+                        className="w-full bg-[#00afd0] hover:bg-[#0295b3] text-white font-semibold"
                       >
                         Register
                       </Button>
@@ -254,15 +270,11 @@ export default function Home() {
                     <SignedIn>
                       <Button
                         onClick={() => navigate("/register")}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+                        className="w-full bg-[#00afd0] hover:bg-[#0295b3] text-white font-semibold"
                       >
                         Continue to Registration
                       </Button>
                     </SignedIn>
-
-                    <p className="text-center text-sm text-gray-500 mt-3">
-                      The exam has been conducted for this year
-                    </p>
                   </div>
                 )}
               </div>
@@ -295,9 +307,9 @@ export default function Home() {
                     title: "Eligibility",
                     text: (
                       <>
-                      To Be Announced
-                        {/* Class 10th to 11th Moving Students
-                        <br />
+                      {/* To Be Announced */}
+                        Class 8th, 9th and 10th
+                        {/* <br />
                         Class 11th to 12th Moving Students */}
                       </>
                     ),
@@ -305,23 +317,36 @@ export default function Home() {
                   {
                     icon: <Target className="w-10 h-10 text-[#00afd0]" />,
                     title: "Target",
-                    text: "To Be Announced",
+                    // text: "To Be Announced",
                     // text: "JEE Main/Advanced, NEET (UG) - 2027 / 2028",
+                    text: (
+                      <>
+                        JEE Main/Advanced
+                        <br />
+                        Olympiads / NEET (UG)
+                      </>
+                    ),
                   },
                   {
                     icon: <CalendarDays className="w-10 h-10 text-[#00afd0]" />,
                     title: "Exam Date",
-                    text:
-                      formatDateForDisplay(settings?.examDate) ||
-                      "To Be Announced",
+                    text: settings?.examDate ? (
+                      <>
+                        {formatDateForDisplay(settings.examDate)}
+                        <br />
+                        <span className="text-sm">({getDayOfWeek(settings.examDate)})</span>
+                      </>
+                    ) : (
+                      "To Be Announced"
+                    ),
                   },
                   {
                     icon: <Clock className="w-10 h-10 text-[#00afd0]" />,
                     title: "Exam Time & Mode",
                     text: (
                       <>
-                      To Be Announced
-                        {/* 10:00 AM • Offline (At Center) */}
+                      {/* To Be Announced */}
+                        09:00 AM - 11:00 AM • Offline (At Center)
                         {/* <br />
                         <span className="text-sm text-muted-foreground">
                           Reporting Time: 09:00 AM
@@ -356,7 +381,7 @@ export default function Home() {
       </section>
 
       {/* ---- FAQ Section ---- */}
-      <FAQ />
+      <FAQ mode={settings?.formMode || "senior"} />
 
       {/* ---- Footer ---- */}
       <Footer />
