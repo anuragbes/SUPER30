@@ -624,11 +624,11 @@ export default function RegisterStudent() {
                     <SelectTrigger className="border border-slate-200 rounded-lg bg-white w-full text-left" style={{ whiteSpace: "normal", lineHeight: "1.3" }}>
                       <SelectValue placeholder="Select Test Centre" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)">
+                    <SelectContent className="max-w-[90vw] sm:max-w-none w-[var(--radix-select-trigger-width)]">
+                      <SelectItem className="whitespace-normal break-words py-2 text-left" value="British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)">
                         British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)
                       </SelectItem>
-                      <SelectItem value="British English School, Gere, Manpur, Gaya (Bihar)">
+                      <SelectItem className="whitespace-normal break-words py-2 text-left" value="British English School, Gere, Manpur, Gaya (Bihar)">
                         British English School, Gere, Manpur, Gaya (Bihar)
                       </SelectItem>
                     </SelectContent>
@@ -638,8 +638,8 @@ export default function RegisterStudent() {
                     <SelectTrigger className="bg-gray-100 cursor-not-allowed text-slate-700 border border-slate-200 rounded-lg opacity-70 w-full text-left" style={{ whiteSpace: "normal", lineHeight: "1.3" }} >
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)">
+                    <SelectContent className="max-w-[90vw] sm:max-w-none w-[var(--radix-select-trigger-width)]">
+                      <SelectItem className="whitespace-normal break-words py-2 text-left" value="British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)">
                         British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)
                       </SelectItem>
                     </SelectContent>
@@ -659,11 +659,11 @@ export default function RegisterStudent() {
                     <SelectTrigger className="border border-slate-200 rounded-lg bg-white w-full text-left" style={{ whiteSpace: "normal", lineHeight: "1.3" }}>
                       <SelectValue placeholder="Select Study Centre" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)">
+                    <SelectContent className="max-w-[90vw] sm:max-w-none w-[var(--radix-select-trigger-width)]">
+                      <SelectItem className="whitespace-normal break-words py-2 text-left" value="British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)">
                         British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)
                       </SelectItem>
-                      <SelectItem value="British English School, Gere, Manpur, Gaya (Bihar)">
+                      <SelectItem className="whitespace-normal break-words py-2 text-left" value="British English School, Gere, Manpur, Gaya (Bihar)">
                         British English School, Gere, Manpur, Gaya (Bihar)
                       </SelectItem>
                     </SelectContent>
