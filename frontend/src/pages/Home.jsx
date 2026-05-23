@@ -207,14 +207,18 @@ export default function Home() {
               ? "flex justify-center lg:justify-start lg:-ml-4"
               : "flex justify-center lg:justify-start"
             }>
-              <img
-                src={settings?.formMode === "junior" ? "/images/hero-junior.webp" : "/images/hero.webp"}
-                alt="SUPER30 Poster"
-                className={settings?.formMode === "junior"
-                  ? "w-full max-w-3xl object-contain"
-                  : "w-full max-w-xl sm:max-w-xl lg:max-w-xl object-contain"
-                }
-              />
+              {loading ? (
+                <div className="w-full max-w-xl h-64 sm:h-80 md:h-[400px] animate-pulse bg-gray-200 rounded-2xl mx-auto lg:mx-0"></div>
+              ) : (
+                <img
+                  src={settings?.formMode === "junior" ? "/images/hero-junior.webp" : "/images/hero.webp"}
+                  alt="SUPER30 Poster"
+                  className={settings?.formMode === "junior"
+                    ? "w-full max-w-3xl object-contain"
+                    : "w-full max-w-xl sm:max-w-xl lg:max-w-xl object-contain"
+                  }
+                />
+              )}
             </div>
 
             {/* Registration Card */}
