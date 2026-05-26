@@ -3,15 +3,17 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import RegisterStudent from "./pages/RegisterStudent";
 import Success from "./pages/Success";
-import Dashboard from "./pages/Dashboard";
-import StudentsList from "./pages/StudentsList";
+import Dashboard from "./pages/admin/Dashboard";
+import StudentsList from "./pages/admin/StudentsList";
 import AdminLogin from "./pages/admin/adminLogin";
 import AdminRoute from "./auth/AdminRoute";
 import ClerkAuthRoute from "./auth/ClerkAuthRoute";
 
 import { Toaster } from "sonner";
 import Home from "./pages/Home";
-import Announcements from "./pages/Announcements";
+import Announcements from "./pages/admin/Announcements";
+import Posters from "./pages/admin/Posters";
+import AdminLayout from "./components/AdminLayout";
 
 export default function App() {
   return (
@@ -33,9 +35,12 @@ export default function App() {
 
           {/* Admin Protected Routes */}
           <Route element={<AdminRoute />}>
-            <Route path="/admin/dashboard" element={<Dashboard />} />
-            <Route path="/admin/students" element={<StudentsList />} />
-            <Route path="/admin/announcements" element={<Announcements />} />
+            <Route element={<AdminLayout />}>
+              <Route path="/admin/dashboard" element={<Dashboard />} />
+              <Route path="/admin/students" element={<StudentsList />} />
+              <Route path="/admin/announcements" element={<Announcements />} />
+              <Route path="/admin/posters" element={<Posters />} />
+            </Route>
           </Route>
 
         </Routes>

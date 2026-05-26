@@ -32,24 +32,24 @@ import {
 } from "@clerk/clerk-react";
 import AnnouncementSection from "@/components/AnnouncementSection";
 
-const images = [
-  "/images/poster15.webp",
-  "/images/poster10.webp",
-  "/images/poster11.webp",
-  "/images/poster12.webp",
-  "/images/poster13.webp",
-  "/images/poster14.webp",
-  "/images/poster9.webp",
-  "/images/poster8.webp",
-  "/images/poster1.webp",
-  "/images/poster2.webp",
-  "/images/poster3.webp",
-  "/images/poster4.jpg",
-  "/images/poster5.jpg",
-  "/images/poster6.jpg",
-];
-
 export function AutoSlider() {
+  const [images, setImages] = useState([]);
+  const backendURL = import.meta.env.VITE_BACKEND_URL;
+
+  useEffect(() => {
+    const fetchPosters = async () => {
+      try {
+        const res = await axios.get(`${backendURL}/api/admin/posters`);
+        if (res.data?.data?.length > 0) {
+          setImages(res.data.data.map((p) => p.imageUrl));
+        }
+      } catch {
+        // Silently fall back to default images
+      }
+    };
+    fetchPosters();
+  }, [backendURL]);
+
   return (
     <Carousel
       plugins={[

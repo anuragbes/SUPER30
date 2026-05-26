@@ -13,11 +13,21 @@ cloudinary.config({
 
 const storage = new CloudinaryStorage({
   cloudinary,
-  params: (req, file) => ({
-    folder: file.fieldname === "passportPhoto" ? "super30/passport" : "super30/identity",
-    public_id: `student_${Date.now()}`,
-  }),
+  params: (req, file) => {
+    let folder = "super30/identity";
+    let publicId = `student_${Date.now()}`;
+
+    if (file.fieldname === "passportPhoto") {
+      folder = "super30/passport";
+    } else if (file.fieldname === "poster") {
+      folder = "super30/posters";
+      publicId = `poster_${Date.now()}`;
+    }
+
+    return { folder, public_id: publicId };
+  },
 });
 
 const upload = multer({ storage });
+export { cloudinary };
 export default upload;

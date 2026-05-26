@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import Navbar from "../components/Navbar";
+
 import { toast } from "sonner";
 import { CheckCheck, FileText, Mail, Search, Trash } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -276,8 +276,7 @@ export default function StudentsList() {
 
   return (
     <div>
-      <Navbar />
-      <div className="w-full min-h-screen bg-background pt-20 sm:pt-24 px-4 sm:px-6 md:px-8 pb-8">
+      <div className="w-full min-h-screen bg-background p-4 sm:p-6 md:p-8 pb-8">
         <div className="w-full max-w-7xl mx-auto space-y-6">
           <div className="space-y-2">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground tracking-tight">

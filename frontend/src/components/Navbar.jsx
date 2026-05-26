@@ -18,16 +18,17 @@ export default function Navbar() {
     { name: "Dashboard", path: "/admin/dashboard" },
     { name: "Students List", path: "/admin/students" },
     { name: "Announcements", path: "/admin/announcements" },
+    { name: "Posters", path: "/admin/posters" },
   ];
 
   return (
     <header
       className="fixed top-0 left-0 w-full z-50 bg-card border-b border-border transition-all duration-300"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex justify-between items-center">
+      <div className="max-w-7xl mx-auto px-6 sm:px-10 py-3 flex justify-between items-center">
         {/* Logo / Title */}
         <div
-          className="flex items-center gap-2 cursor-pointer"
+          className="flex items-center gap-3 cursor-pointer pl-1 sm:pl-2"
           onClick={() => navigate("/")}>
           
           <img

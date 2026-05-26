@@ -1,12 +1,12 @@
 import axios from "axios";
-import Navbar from "../components/Navbar";
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import "../App.css";
+import "../../App.css";
 import {
   Users,
   BookOpen,
@@ -25,7 +25,8 @@ import {
   List,
   Settings,
   Shield,
-  GraduationCap
+  GraduationCap,
+  Image
 } from "lucide-react";
 import ActionCard from "@/components/ActionCard";
 import { SkeletonStatCard, SkeletonChart } from "@/components/SkeletonCard";
@@ -304,8 +305,7 @@ export default function Dashboard() {
 
   return (
     <div>
-      <Navbar />
-      <div className="w-full min-h-screen bg-background pt-20 sm:pt-24 px-4 sm:px-6 md:px-8 pb-12 space-y-8">
+      <div className="w-full min-h-screen bg-background p-4 sm:p-6 md:p-8 pb-12 space-y-8">
         <div className="w-full max-w-7xl mx-auto space-y-10">
           
           {/* 1. GLOBAL STATUS HEADER */}
@@ -460,20 +460,20 @@ export default function Dashboard() {
           </div>
 
           {/* 3. QUICK ACTIONS SECTION */}
-          <div className="flex flex-wrap items-center gap-3">
+          {/* <div className="flex flex-wrap items-center gap-3">
             <Button onClick={() => navigate("/admin/students")} className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
               <Users size={16} /> View Students
             </Button>
             <Button onClick={() => window.open(googleSheetURL, "_blank")} variant="outline" className="gap-2 border-border text-foreground">
               <Download size={16} /> Export Data
             </Button>
-            <Button onClick={() => navigate("/register")} variant="outline" className="gap-2 border-border text-foreground">
-              <ArrowUpRight size={16} /> Registration Form
+            <Button onClick={() => navigate("/admin/posters")} variant="outline" className="gap-2 border-border text-foreground">
+              <Image size={16} /> Manage Posters
             </Button>
             <Button onClick={fetchDashboardData} variant="secondary" className="gap-2 bg-muted text-foreground hover:bg-muted/80">
               <RotateCcw size={16} /> Refresh
             </Button>
-          </div>
+          </div> */}
 
           {/* 4. MANAGEMENT TOOLS SECTION */}
           <div className="pt-6">
@@ -625,7 +625,7 @@ export default function Dashboard() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <ActionCard
                     title={formMode === "junior" ? "Switch to Senior" : "Switch to Junior"}
-                    description="Toggle between Junior (8-10) and Senior (11-12)"
+                    description="Switch between Junior (8-10) and Senior (11-12)"
                     buttonLabel={formMode === "junior" ? "Switch to Senior" : "Switch to Junior"}
                     onClick={async () => {
                       const newMode = formMode === "junior" ? "senior" : "junior";

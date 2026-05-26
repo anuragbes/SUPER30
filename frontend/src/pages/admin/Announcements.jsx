@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import Navbar from "@/components/Navbar";
 import { Bell, Trash2, Edit2, X, Pin } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_BACKEND_URL;
@@ -172,8 +171,7 @@ const Announcements = () => {
 
   return (
     <div>
-      <Navbar />
-      <div className="w-full min-h-screen bg-gray-50 pt-20 sm:pt-24 px-4 sm:px-6 md:px-8 pb-8 space-y-6 sm:space-y-8">
+      <div className="w-full min-h-screen bg-gray-50 p-4 sm:p-6 md:p-8 pb-8 space-y-6 sm:space-y-8">
         <div className="w-full max-w-7xl mx-auto">
           <h1 className="text-2xl sm:text-3xl pb-6 sm:pb-8 font-bold text-foreground lg:text-4xl">Announcements</h1>
 

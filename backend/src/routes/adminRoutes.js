@@ -4,6 +4,8 @@ import { deleteAllStudents, deleteStudent, generateRollNumbers, getDashboardStat
 import { adminAuth } from "../middlewares/adminAuth.js";
 import { bulkGenerateAdmitCards, bulkSendAdmitCards } from "../controllers/bulkAdmitController.js";
 import { createAnnouncement, deleteAnnouncement, getActiveAnnouncements, getAllAnnouncements, toggleAnnouncementPin, toggleAnnouncementStatus, updateAnnouncement } from "../controllers/announcementController.js";
+import { uploadPoster, getAllPosters, getActivePosters, togglePosterStatus, reorderPosters, deletePoster } from "../controllers/posterController.js";
+import upload from "../middlewares/upload.js";
 import { loginLimiter, bulkOperationLimiter, emailLimiter } from "../middlewares/rateLimiter.js";
 
 
@@ -18,6 +20,9 @@ router.get("/exam-settings", getExamSettings);
 
 // Announcements (Public - needed for Home page)
 router.get("/announcements", getActiveAnnouncements);
+
+// Posters (Public - needed for Home page AutoSlider)
+router.get("/posters", getActivePosters);
 
 
 // ====== PROTECTED ROUTES ======
@@ -49,6 +54,13 @@ router.patch("/announcements/:id", adminAuth, updateAnnouncement);
 router.patch("/announcements/:id/toggle", adminAuth, toggleAnnouncementStatus);
 router.patch("/announcements/:id/pin", adminAuth, toggleAnnouncementPin);
 router.delete("/announcements/:id", adminAuth, deleteAnnouncement);
+
+// Poster Management
+router.post("/posters", adminAuth, upload.array("poster", 20), uploadPoster);
+router.get("/posters/all", adminAuth, getAllPosters);
+router.patch("/posters/reorder", adminAuth, reorderPosters);
+router.patch("/posters/:id/toggle", adminAuth, togglePosterStatus);
+router.delete("/posters/:id", adminAuth, deletePoster);
 
 
 
