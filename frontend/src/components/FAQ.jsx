@@ -58,7 +58,7 @@ const juniorFaqItems = [
     id: "item-4",
     question: "What are the benefits of taking UDAAN?",
     answer:
-      "Students are eligible for upto 100% scholarships (Tution Fee for Advanced Study + Hostel Fee), making it an excellent opportunity to access top-notch education in a school system.",
+      "Students are eligible for upto 100% scholarships (Tuition Fee for Advanced Study + Hostel Fee), making it an excellent opportunity to access top-notch education in a school system.",
   },
   {
     id: "item-5",
