@@ -219,7 +219,7 @@ export default function Home() {
                 className="absolute -bottom-12 -right-2 sm:-bottom-12 sm:-right-8 lg:-bottom-18 lg:-right-40 flex items-center gap-1.5 sm:gap-2 bg-white/95 backdrop-blur-md shadow-xl border border-[#00afd0]/20 px-3 py-1.5 sm:px-6 sm:py-3 rounded-full text-[#00afd0] hover:bg-[#00afd0] hover:text-white transition-all duration-300 z-10 font-semibold text-[11px] sm:text-sm group"
               >
                 <span>Go to registration form</span>
-                <ChevronDown strokeWidth={2.5} className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:translate-y-0.5 transition-transform" />
+                <ChevronDown strokeWidth={2.5} className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform" />
               </button>
             </div>
           )}

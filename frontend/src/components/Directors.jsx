@@ -11,7 +11,7 @@ const directors = [
     name: "Anurag Raj",
     designation: "Director",
     image: "/images/director1.png",
-    qualification: "Integrated M.Tech.",
+    qualification: "Int. M.Tech.",
     institution: "IIT Roorkee",
     position: "Head of Department (Mathematics)",
   },
@@ -190,7 +190,7 @@ export default function Directors() {
       </p>
       <p className="text-neutral-900 text-lg font-medium leading-snug">
         <span className="block">{director.qualification}</span>
-        <span className="block text-base text-neutral-500 font-normal mt-0.5">
+        <span className="text-neutral-900 text-lg font-medium leading-snug">
           {director.institution}
         </span>
       </p>
