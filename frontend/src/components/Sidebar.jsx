@@ -30,7 +30,10 @@ export default function Sidebar({ isOpen, setIsOpen, isCollapsed, setIsCollapsed
     { name: "Posters", path: "/admin/posters", icon: ImageIcon },
   ];
 
-  const SidebarContent = () => (
+  const SidebarContent = ({ isMobile = false }) => {
+    const collapsed = isMobile ? false : isCollapsed;
+    
+    return (
     <div className="flex flex-col h-full bg-card border-r border-border text-foreground transition-all duration-300">
       {/* Mobile-only Header */}
       <div className="flex md:hidden items-center justify-between p-4 border-b border-border h-16 shrink-0">
@@ -51,16 +54,16 @@ export default function Sidebar({ isOpen, setIsOpen, isCollapsed, setIsCollapsed
           to="/"
           className={`
             flex items-center rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all duration-300 mb-4 w-full h-12 px-3.5 mx-auto
-            ${isCollapsed ? "max-w-12" : "max-w-[232px] md:max-w-full"}
+            ${collapsed ? "max-w-12" : "max-w-[232px] md:max-w-full"}
           `}
-          title={isCollapsed ? "Back to Home" : undefined}
+          title={collapsed ? "Back to Home" : undefined}
           onClick={() => setIsOpen(false)} // Close mobile menu if open
         >
           <Home size={20} className="shrink-0" />
           <span 
             className={`
               whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out font-medium
-              ${isCollapsed ? "max-w-0 opacity-0 ml-0 pointer-events-none" : "max-w-48 opacity-100 ml-3"}
+              ${collapsed ? "max-w-0 opacity-0 ml-0 pointer-events-none" : "max-w-48 opacity-100 ml-3"}
             `}
           >
             Back to Home
@@ -74,10 +77,10 @@ export default function Sidebar({ isOpen, setIsOpen, isCollapsed, setIsCollapsed
               key={link.name}
               to={link.path}
               onClick={() => setIsOpen(false)} // Close mobile menu on click
-              title={isCollapsed ? link.name : undefined}
+              title={collapsed ? link.name : undefined}
               className={`
                 flex items-center rounded-lg transition-all duration-300 w-full h-12 px-3.5 mx-auto
-                ${isCollapsed ? "max-w-12" : "max-w-[232px] md:max-w-full"}
+                ${collapsed ? "max-w-12" : "max-w-[232px] md:max-w-full"}
                 ${isActive 
                   ? "bg-primary/10 text-primary font-semibold" 
                   : "text-muted-foreground hover:bg-muted hover:text-foreground font-medium"
@@ -88,7 +91,7 @@ export default function Sidebar({ isOpen, setIsOpen, isCollapsed, setIsCollapsed
               <span 
                 className={`
                   whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out
-                  ${isCollapsed ? "max-w-0 opacity-0 ml-0 pointer-events-none" : "max-w-48 opacity-100 ml-3"}
+                  ${collapsed ? "max-w-0 opacity-0 ml-0 pointer-events-none" : "max-w-48 opacity-100 ml-3"}
                 `}
               >
                 {link.name}
@@ -105,15 +108,15 @@ export default function Sidebar({ isOpen, setIsOpen, isCollapsed, setIsCollapsed
           variant="destructive"
           className={`
             flex items-center justify-center transition-all duration-300 w-full h-12 mx-auto
-            ${isCollapsed ? "max-w-12 p-0 rounded-lg" : "max-w-[232px] md:max-w-full px-3.5 rounded-lg"}
+            ${collapsed ? "max-w-12 p-0 rounded-lg" : "max-w-[232px] md:max-w-full px-3.5 rounded-lg"}
           `}
-          title={isCollapsed ? "Logout" : undefined}
+          title={collapsed ? "Logout" : undefined}
         >
           <LogOut size={18} className="shrink-0" />
           <span 
             className={`
               whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out font-medium
-              ${isCollapsed ? "max-w-0 opacity-0 ml-0 pointer-events-none" : "max-w-48 opacity-100 ml-2"}
+              ${collapsed ? "max-w-0 opacity-0 ml-0 pointer-events-none" : "max-w-48 opacity-100 ml-2"}
             `}
           >
             Logout
@@ -121,7 +124,8 @@ export default function Sidebar({ isOpen, setIsOpen, isCollapsed, setIsCollapsed
         </Button>
       </div>
     </div>
-  );
+    );
+  };
 
   return (
     <>
@@ -148,7 +152,7 @@ export default function Sidebar({ isOpen, setIsOpen, isCollapsed, setIsCollapsed
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <SidebarContent />
+        <SidebarContent isMobile={true} />
       </aside>
     </>
   );

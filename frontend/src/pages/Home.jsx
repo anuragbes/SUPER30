@@ -12,9 +12,8 @@ import {
   Target,
   TrendingUp,
   Users,
+  ChevronDown,
 } from "lucide-react";
-import RegisterIcon from "@/assets/register.svg";
-import FAQ from "@/components/FAQ";
 import {
   Carousel,
   CarouselContent,
@@ -22,15 +21,11 @@ import {
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import Footer from "@/components/Footer";
-import Result from "@/assets/result.svg";
-import {
-  SignedIn,
-  SignedOut,
-  SignIn,
-  useAuth,
-  useClerk,
-} from "@clerk/clerk-react";
+import FAQ from "@/components/FAQ";
+import { useAuth } from "@clerk/clerk-react";
 import AnnouncementSection from "@/components/AnnouncementSection";
+import UdaanSection from "@/components/UdaanSection";
+import Directors from "@/components/Directors";
 
 export function AutoSlider() {
   const [images, setImages] = useState([]);
@@ -80,6 +75,16 @@ const formatDateForDisplay = (dateString) => {
   return `${day}-${month}-${year}`;
 };
 
+const formatDateWithOrdinal = (dateString) => {
+  if (!dateString) return "To Be Announced";
+  const [year, month, day] = dateString.split("-");
+  const date = new Date(year, month - 1, day);
+  const d = date.getDate();
+  const ordinal = (d > 3 && d < 21) ? 'th' : ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th'][d % 10];
+  const monthName = date.toLocaleDateString('en-US', { month: 'long' });
+  return `${d}${ordinal} ${monthName}, ${year}`;
+};
+
 const getDayOfWeek = (dateString) => {
   if (!dateString) return "";
   const [year, month, day] = dateString.split("-");
@@ -95,8 +100,6 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   const { isSignedIn } = useAuth();
-  const { openSignIn } = useClerk();
-
   useEffect(() => {
     if (isSignedIn) {
       navigate("/register");
@@ -193,99 +196,42 @@ export default function Home() {
       </div>
 
       {/* ---- Hero Section ---- */}
-      <section className={settings?.formMode === "junior"
-        ? "min-h-[70vh] flex items-center pt-8 bg-gray-100 border-t border-gray-300"
-        : "min-h-[70vh] flex items-center pt-20 bg-gray-100 border-t border-gray-300"
-      }>
-        <div className={settings?.formMode === "junior"
-          ? "max-w-7xl mx-auto px-2 sm:px-4 lg:pr-8 lg:pl-0 py-4 w-full"
-          : "max-w-7xl mx-auto px-4 sm:px-6 lg:pr-8 lg:pl-0 py-8 w-full"
-        }>
-          <div className="grid grid-cols-1 lg:grid-cols-[7fr_3fr] gap-0 lg:gap-6 items-center">
-            {/* Left Image */}
-            <div className={settings?.formMode === "junior"
-              ? "flex justify-center lg:justify-start lg:-ml-4"
-              : "flex justify-center lg:justify-start"
-            }>
-              {loading ? (
-                <div className="w-full max-w-xl h-64 sm:h-80 md:h-[400px] animate-pulse bg-gray-200 rounded-2xl mx-auto lg:mx-0"></div>
-              ) : (
-                <img
-                  src={settings?.formMode === "junior" ? "/images/hero-junior.webp" : "/images/hero.webp"}
-                  alt="SUPER30 Poster"
-                  className={settings?.formMode === "junior"
-                    ? "w-full max-w-3xl object-contain"
-                    : "w-full max-w-xl sm:max-w-xl lg:max-w-xl object-contain"
-                  }
-                />
-              )}
+      <section className="relative flex items-center bg-gray-100 border-t border-gray-300 pt-6 pb-8 sm:pt-10 sm:pb-12">
+        <div className="w-full px-4 sm:px-6 flex justify-center relative">
+          {loading ? (
+            <div className="w-full max-w-xs sm:max-w-md md:max-w-2xl h-48 sm:h-64 md:h-80 animate-pulse bg-gray-200 rounded-2xl" />
+          ) : (
+            <div className="relative inline-block">
+              <img
+                src={settings?.formMode === "junior" ? "/images/hero-junior.webp" : "/images/hero.webp"}
+                alt="SUPER30 Poster"
+                className={
+                  settings?.formMode === "junior"
+                    ? "w-full max-w-xs sm:max-w-lg md:max-w-2xl lg:max-w-4xl h-auto object-contain"
+                    : "w-full max-w-xs sm:max-w-sm md:max-w-lg lg:max-w-2xl h-auto object-contain"
+                }
+              />
+              <button
+                onClick={() => {
+                  const el = document.getElementById("register-cta");
+                  if (el) el.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="absolute -bottom-12 -right-2 sm:-bottom-12 sm:-right-8 lg:-bottom-18 lg:-right-40 flex items-center gap-1.5 sm:gap-2 bg-white/95 backdrop-blur-md shadow-xl border border-[#00afd0]/20 px-3 py-1.5 sm:px-6 sm:py-3 rounded-full text-[#00afd0] hover:bg-[#00afd0] hover:text-white transition-all duration-300 z-10 font-semibold text-[11px] sm:text-sm group"
+              >
+                <span>Go to registration form</span>
+                <ChevronDown strokeWidth={2.5} className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:translate-y-0.5 transition-transform" />
+              </button>
             </div>
-
-            {/* Registration Card */}
-            <div className="flex justify-center lg:justify-end mt-8 mb-1 lg:mt-0 lg:mb-0">
-              <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-sm border border-slate-300 shadow-md">
-                {/* Icon */}
-                <div className="flex justify-center mb-4 sm:mb-6">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center">
-                    <img
-                      src={RegisterIcon}
-                      alt="Register Icon"
-                      className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
-                    />
-                  </div>
-                </div>
-
-                <h3 className="text-xl sm:text-xl font-bold text-gray-700 text-center mb-2 sm:mb-3">
-                  Register for SUPER30
-                </h3>
-
-                {loading ? (
-                  <p className="text-center text-gray-500">Loading...</p>
-                ) : !settings?.registrationOpen ? (
-                  <>
-                    <Button
-                      disabled
-                      className="w-full bg-gray-200 text-gray-700 cursor-not-allowed"
-                    >
-                      Registration Closed
-                    </Button>
-                  </>
-                ) : (
-                  <div className="w-full">
-                    <SignedOut>
-                      <Button
-                        onClick={() =>
-                          openSignIn({
-                            routing: "virtual",
-                            signUpUrl: null,
-                            appearance: {
-                              elements: {
-                                footerAction: "hidden",
-                              },
-                            },
-                          })
-                        }
-                        className="w-full bg-[#00afd0] hover:bg-[#0295b3] text-white font-semibold"
-                      >
-                        Register
-                      </Button>
-                    </SignedOut>
-
-                    <SignedIn>
-                      <Button
-                        onClick={() => navigate("/register")}
-                        className="w-full bg-[#00afd0] hover:bg-[#0295b3] text-white font-semibold"
-                      >
-                        Continue to Registration
-                      </Button>
-                    </SignedIn>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </section>
+
+      {/* ---- About UDAAN Section ---- */}
+      <UdaanSection 
+        registrationOpen={settings?.registrationOpen} 
+        loading={loading}
+        examDate={settings?.examDate ? formatDateWithOrdinal(settings.examDate) : "To Be Announced"}
+      />
 
       {/* ---- Exam Details Section ---- */}
       <section className="py-12 bg-white border-y border-gray-300">
@@ -386,6 +332,9 @@ export default function Home() {
 
       {/* ---- FAQ Section ---- */}
       <FAQ mode={settings?.formMode || "senior"} />
+
+      {/* ---- Directors Section ---- */}
+      <Directors />
 
       {/* ---- Footer ---- */}
       <Footer />
