@@ -188,7 +188,7 @@ export default function Directors() {
       <p className="text-[10px] uppercase tracking-[0.25em] text-neutral-400 font-bold mb-1.5">
         Education
       </p>
-      <p className="text-neutral-900 text-lg font-medium leading-snug">
+      <p className="text-neutral-900 text-10px font-small leading-snug">
         <span className="block">{director.qualification}</span>
         <span className="text-neutral-900 text-lg font-medium leading-snug">
           {director.institution}
