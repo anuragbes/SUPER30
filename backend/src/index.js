@@ -13,6 +13,10 @@ import { apiLimiter } from './middlewares/rateLimiter.js';
 // initialise express app
 const app = express();
 
+// Trust the first proxy (Render, Vercel, Nginx, etc.)
+// Without this, the rate limiter thinks all requests come from the same proxy IP
+app.set("trust proxy", 1);
+
 app.use(
   cors({
     origin: [

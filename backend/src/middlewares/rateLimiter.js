@@ -10,10 +10,10 @@ export const apiLimiter = rateLimit({
   skip: (req) => req.headers["x-admin-bypass"] === "true", // Skip for admins
 });
 
-// Student registration limiter - 5 requests per 1 hour per IP
+// Student registration limiter - 10 requests per 1 hour per IP
 export const registrationLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 5,
+  max: 10,
   message: "Too many registrations from this IP. Please try again later.",
   standardHeaders: true,
   legacyHeaders: false,
