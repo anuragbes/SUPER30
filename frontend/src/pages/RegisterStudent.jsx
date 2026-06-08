@@ -496,7 +496,7 @@ export default function RegisterStudent() {
                   }}
                 >
                   <SelectTrigger className="border border-slate-200 rounded-lg bg-white w-full">
-                    <SelectValue placeholder="Select Previous School" />
+                    <SelectValue placeholder="Select Current School" />
                   </SelectTrigger>
 
                   <SelectContent>

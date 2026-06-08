@@ -94,7 +94,7 @@ export const getAllStudents = async (req, res) => {
 
     // 🧾 Paginated result
     const students = await Student.find(query)
-      .sort({ createdAt: -1 })
+      .sort({ studentId: 1 })
       .skip(skip)
       .limit(limit);
 

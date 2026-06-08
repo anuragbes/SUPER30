@@ -227,8 +227,8 @@ export default function Home() {
       </section>
 
       {/* ---- About UDAAN Section ---- */}
-      <UdaanSection 
-        registrationOpen={settings?.registrationOpen} 
+      <UdaanSection
+        registrationOpen={settings?.registrationOpen}
         loading={loading}
         examDate={settings?.examDate ? formatDateWithOrdinal(settings.examDate) : "To Be Announced"}
       />
@@ -249,83 +249,83 @@ export default function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {loading
               ? Array(6)
-                  .fill(0)
-                  .map((_, i) => <SkeletonDetailsCard key={i} />)
+                .fill(0)
+                .map((_, i) => <SkeletonDetailsCard key={i} />)
               : [
-                  {
-                    icon: <Users className="w-10 h-10 text-[#00afd0]" />,
-                    title: "Eligibility",
-                    text: (
-                      <>
+                {
+                  icon: <Users className="w-10 h-10 text-[#00afd0]" />,
+                  title: "Eligibility",
+                  text: (
+                    <>
                       {/* To Be Announced */}
-                        Class 8th, 9th and 10th
-                        {/* <br />
+                      Class 8th, 9th and 10th
+                      {/* <br />
                         Class 11th to 12th Moving Students */}
-                      </>
-                    ),
-                  },
-                  {
-                    icon: <Target className="w-10 h-10 text-[#00afd0]" />,
-                    title: "Target",
-                    // text: "To Be Announced",
-                    // text: "JEE Main/Advanced, NEET (UG) - 2027 / 2028",
-                    text: (
-                      <>
-                        JEE Main/Advanced
-                        <br />
-                        Olympiads / NEET (UG)
-                      </>
-                    ),
-                  },
-                  {
-                    icon: <CalendarDays className="w-10 h-10 text-[#00afd0]" />,
-                    title: "Exam Date",
-                    text: settings?.examDate ? (
-                      <>
-                        {formatDateForDisplay(settings.examDate)}
-                        <br />
-                        <span className="text-sm">({getDayOfWeek(settings.examDate)})</span>
-                      </>
-                    ) : (
-                      "To Be Announced"
-                    ),
-                  },
-                  {
-                    icon: <Clock className="w-10 h-10 text-[#00afd0]" />,
-                    title: "Exam Time & Mode",
-                    text: (
-                      <>
+                    </>
+                  ),
+                },
+                {
+                  icon: <Target className="w-10 h-10 text-[#00afd0]" />,
+                  title: "Target",
+                  // text: "To Be Announced",
+                  // text: "JEE Main/Advanced, NEET (UG) - 2027 / 2028",
+                  text: (
+                    <>
+                      JEE Main/Advanced
+                      <br />
+                      Olympiads / NEET (UG)
+                    </>
+                  ),
+                },
+                {
+                  icon: <CalendarDays className="w-10 h-10 text-[#00afd0]" />,
+                  title: "Exam Date",
+                  text: settings?.examDate ? (
+                    <>
+                      {formatDateForDisplay(settings.examDate)}
+                      <br />
+                      <span className="text-sm">({getDayOfWeek(settings.examDate)})</span>
+                    </>
+                  ) : (
+                    "To Be Announced"
+                  ),
+                },
+                {
+                  icon: <Clock className="w-10 h-10 text-[#00afd0]" />,
+                  title: "Exam Time & Mode",
+                  text: (
+                    <>
                       {/* To Be Announced */}
-                        09:00 AM - 11:00 AM • Offline (At Center)
-                        {/* <br />
+                      09:00 AM - 11:00 AM • Offline (At Center)
+                      {/* <br />
                         <span className="text-sm text-muted-foreground">
                           Reporting Time: 09:00 AM
                         </span> */}
-                      </>
-                    ),
-                  },
-                  {
-                    icon: <TrendingUp className="w-10 h-10 text-[#00afd0]" />,
-                    title: "Last Date to Register",
-                    text:
-                      formatDateForDisplay(settings?.lastDateToRegister) ||
-                      "To Be Announced",
-                  },
-                  {
-                    icon: <FileCheck className="w-10 h-10 text-[#00afd0]" />,
-                    title: "Result Date",
-                    text:
-                      formatDateForDisplay(settings?.resultDate) ||
-                      "To Be Announced",
-                  },
-                ].map((card, i) => (
-                  <DetailsCard
-                    key={i}
-                    icon={card.icon}
-                    title={card.title}
-                    text={card.text}
-                  />
-                ))}
+                    </>
+                  ),
+                },
+                {
+                  icon: <TrendingUp className="w-10 h-10 text-[#00afd0]" />,
+                  title: "Last Date to Register",
+                  text:
+                    formatDateForDisplay(settings?.lastDateToRegister) ||
+                    "To Be Announced",
+                },
+                {
+                  icon: <FileCheck className="w-10 h-10 text-[#00afd0]" />,
+                  title: "Result Date",
+                  text:
+                    formatDateForDisplay(settings?.resultDate) ||
+                    "To Be Announced",
+                },
+              ].map((card, i) => (
+                <DetailsCard
+                  key={i}
+                  icon={card.icon}
+                  title={card.title}
+                  text={card.text}
+                />
+              ))}
           </div>
         </div>
       </section>
