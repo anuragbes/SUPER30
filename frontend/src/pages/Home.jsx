@@ -122,6 +122,12 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      {/* Eagerly preload both hero images so they are ready the moment `loading` becomes false */}
+      <div style={{ display: 'none' }}>
+        <img src="/images/hero-junior.webp" alt="preload" />
+        <img src="/images/hero.webp" alt="preload" />
+      </div>
+
       {/* ---- Under Maintenance Tag ---- */}
       {/* <div className="fixed top-2 right-2 sm:top-4 sm:right-4 z-50 bg-red-500 text-white py-1 px-2 sm:py-2 sm:px-4 rounded-md sm:rounded-lg font-semibold text-[10px] sm:text-sm shadow-md">
         🚧 Under Maintenance

@@ -149,11 +149,8 @@ export default function StudentsList() {
             ),
           );
         } catch (error) {
-          const msg =
-            error.response?.data?.message ||
-            error.message ||
-            "Failed to generate admit card.";
-
+          console.error("Generate admit card error:", error);
+          const msg = error.response?.data?.message || error.response?.data?.error || "Failed to generate admit card. Please try again later.";
           toast.error(msg);
           break;
         }

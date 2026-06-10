@@ -19,16 +19,28 @@ export default function RegisterStudent() {
   const { user } = useUser();
   const { getToken, signOut } = useAuth();
 
-  const [customSchool, setCustomSchool] = useState("");
-  const [formMode, setFormMode] = useState("senior");
+  // Load draft from local storage
+  const getInitialDraft = () => {
+    try {
+      const saved = localStorage.getItem("studentRegistrationDraft");
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      console.error("Failed to parse saved draft", e);
+      return null;
+    }
+  };
 
+  const draft = getInitialDraft();
+
+  const [customSchool, setCustomSchool] = useState(draft?.customSchool || "");
+  const [formMode, setFormMode] = useState("senior");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState(draft?.formData || {
     permanentAddress: "",
     presentAddress: "",
     studentMobile: "", // Initialize
   });
-  const [scholarship, setScholarship] = useState(false);
+  const [scholarship, setScholarship] = useState(draft?.scholarship || false);
   const [passportPhoto, setPassportPhoto] = useState(null);
   const [identityPhoto, setIdentityPhoto] = useState(null);
 
@@ -54,17 +66,27 @@ export default function RegisterStudent() {
   }, [backendURL]);
 
   useEffect(() => {
-  if (!user) return;
+    if (!user) return;
 
-  const email = user.primaryEmailAddress?.emailAddress || "";
+    const email = user.primaryEmailAddress?.emailAddress || "";
 
-  setFormData((prev) => ({
-    ...prev,
-    classMoving: formMode === "junior" ? "Class 8" : "10th to 11th",
-    testCentre: formMode === "junior" ? "" : "British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)",
-    email,
-  }));
-}, [user, formMode]);
+    setFormData((prev) => ({
+      ...prev,
+      classMoving: prev.classMoving || (formMode === "junior" ? "Class 8" : "10th to 11th"),
+      testCentre: prev.testCentre || (formMode === "junior" ? "" : "British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)"),
+      email,
+    }));
+  }, [user, formMode]);
+
+  // Auto-save draft to local storage whenever data changes
+  useEffect(() => {
+    const draftData = {
+      formData,
+      customSchool,
+      scholarship
+    };
+    localStorage.setItem("studentRegistrationDraft", JSON.stringify(draftData));
+  }, [formData, customSchool, scholarship]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -93,6 +115,63 @@ export default function RegisterStudent() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // --- Validation Checks ---
+    const requiredFields = [
+      { key: 'studentName', label: 'Student Name' },
+      { key: 'dateOfBirth', label: 'Date of Birth' },
+      { key: 'gender', label: 'Gender' },
+      { key: 'fatherName', label: 'Father Name' },
+      { key: 'motherName', label: 'Mother Name' },
+      { key: 'parentMobile', label: 'Parent Mobile No.' },
+      { key: 'studentMobile', label: 'Student Mobile No.' },
+      { key: 'permanentAddress', label: 'Permanent Address' },
+      { key: 'presentAddress', label: 'Present Address' },
+      { key: 'classMoving', label: 'Class' },
+      { key: 'target', label: 'Target' },
+      { key: 'previousResultPercentage', label: 'Previous Result Percentage' },
+      { key: 'previousSchool', label: 'Current School Name' },
+      { key: 'testCentre', label: 'Test Centre' },
+    ];
+
+    for (const field of requiredFields) {
+      if (!formData[field.key]) {
+        toast.error(`Please provide ${field.label}.`);
+        return;
+      }
+    }
+
+    if (formMode !== "junior" && !formData.stream) {
+      toast.error("Please select a Stream.");
+      return;
+    }
+
+    if (formMode === "junior" && !formData.studyCentre) {
+      toast.error("Please select a Study Centre.");
+      return;
+    }
+
+    if (formData.previousSchool === "Other" && !customSchool) {
+      toast.error("Please enter your Custom School Name.");
+      return;
+    }
+
+    if (scholarship && !formData.scholarshipDetails) {
+      toast.error("Please enter Scholarship Details.");
+      return;
+    }
+
+    if (!passportPhoto) {
+      toast.error("Please upload your Passport Size Photo.");
+      return;
+    }
+
+    if (!identityPhoto) {
+      toast.error("Please upload your Identity Proof (Aadhar Card).");
+      return;
+    }
+    // --- End Validation ---
+
     setIsSubmitting(true);
 
     try {
@@ -130,6 +209,8 @@ export default function RegisterStudent() {
         }
       );
 
+      // Clear the draft once submission is successful
+      localStorage.removeItem("studentRegistrationDraft");
 
       toast.success("Registration Successful!", {
         description: `Student ID: ${res.data.studentId}`,
@@ -140,8 +221,9 @@ export default function RegisterStudent() {
       });
 
     } catch (error) {
+      console.error("Registration Error:", error);
       toast.error("Registration Failed", {
-        description: error.response?.data?.error || error.message,
+        description: error.response?.data?.error || "Please check your inputs and try again, or contact support if the issue persists.",
       });
     } finally {
       setIsSubmitting(false);
@@ -184,6 +266,7 @@ export default function RegisterStudent() {
                 <Input className="border border-slate-200 rounded-lg bg-white w-full"
                   name="studentName"
                   placeholder="Enter Your Full Name"
+                  value={formData.studentName || ""}
                   onChange={handleChange}
                   required
                 />
@@ -196,6 +279,7 @@ export default function RegisterStudent() {
                 <Input className="border border-slate-200 rounded-lg bg-white w-full"
                   type="date"
                   name="dateOfBirth"
+                  value={formData.dateOfBirth || ""}
                   onChange={handleChange}
                   required
                 />
@@ -206,7 +290,7 @@ export default function RegisterStudent() {
                   Gender<span className="text-red-500"> *</span>
                 </FieldLabel>
 
-                <Select name="gender" onValueChange={(value) => handleChange({ target: { name: "gender", value } })} required>
+                <Select value={formData.gender || ""} name="gender" onValueChange={(value) => handleChange({ target: { name: "gender", value } })} required>
                   <SelectTrigger className="border border-slate-200 rounded-lg bg-white w-full">
                     <SelectValue placeholder="Select Gender" />
                   </SelectTrigger>
@@ -246,6 +330,7 @@ export default function RegisterStudent() {
                 <Input
                   name="fatherName"
                   placeholder="Enter Father's Full Name"
+                  value={formData.fatherName || ""}
                   onChange={handleChange}
                   className="border border-slate-200 rounded-lg bg-white w-full"
                   required
@@ -260,6 +345,7 @@ export default function RegisterStudent() {
                 <Input
                   name="motherName"
                   placeholder="Enter Mother's Full Name"
+                  value={formData.motherName || ""}
                   onChange={handleChange}
                   className="border border-slate-200 rounded-lg bg-white w-full"
                   required
@@ -280,6 +366,7 @@ export default function RegisterStudent() {
                     type="tel"
                     name="parentMobile"
                     placeholder="Enter Mobile Number"
+                    value={formData.parentMobile || ""}
                     maxLength="10"
                     onChange={handleChange}
                     required
@@ -301,6 +388,7 @@ export default function RegisterStudent() {
                     type="tel"
                     name="whatsappMobile"
                     placeholder="Enter WhatsApp Number"
+                    value={formData.whatsappMobile || ""}
                     maxLength="10"
                     onChange={handleChange}
                   />
@@ -321,6 +409,7 @@ export default function RegisterStudent() {
                     type="tel"
                     name="studentMobile"
                     placeholder="Enter Mobile Number"
+                    value={formData.studentMobile || ""}
                     maxLength="10"
                     onChange={handleChange}
                     required
@@ -385,7 +474,7 @@ export default function RegisterStudent() {
           </FormSection>
 
           {/* ACADEMIC INFORMATION */}
-          <FormSection title="Academic Information" description="Select your academic preferences and previous school details">
+          <FormSection title="Academic Information" description="Select your academic preferences and school details">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
               <Field>
@@ -474,6 +563,7 @@ export default function RegisterStudent() {
                 <Input
                   name="previousResultPercentage"
                   placeholder="Enter Percentage"
+                  value={formData.previousResultPercentage || ""}
                   type="number"
                   step="0.01"
                   min="0"
@@ -708,6 +798,7 @@ export default function RegisterStudent() {
                 <textarea
                   name="scholarshipDetails"
                   placeholder="Enter Scholarship Details"
+                  value={formData.scholarshipDetails || ""}
                   onChange={handleChange}
                   disabled={!scholarship}
                   className={`border rounded-lg p-3 min-h-20 w-full placeholder:text-xs md:placeholder:text-sm ${!scholarship ? "bg-slate-100 cursor-not-allowed" : "bg-white"

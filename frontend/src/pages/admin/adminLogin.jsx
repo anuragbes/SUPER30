@@ -42,8 +42,9 @@ export default function AdminLogin() {
 
       navigate("/admin/dashboard");
     } catch (error) {
-      console.log(error);
-      toast.error(error.response?.data?.error || "Login failed");
+      console.error("Login error:", error);
+      const msg = error.response?.data?.error || error.response?.data?.message || "Login failed. Please check your credentials.";
+      toast.error(msg);
     }
 
     setLoading(false);
