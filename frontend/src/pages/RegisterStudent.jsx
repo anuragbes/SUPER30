@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "../App.css";
@@ -35,10 +35,11 @@ export default function RegisterStudent() {
   const [customSchool, setCustomSchool] = useState(draft?.customSchool || "");
   const [formMode, setFormMode] = useState("senior");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmittingRef = useRef(false);
   const [formData, setFormData] = useState(draft?.formData || {
     permanentAddress: "",
     presentAddress: "",
-    studentMobile: "", // Initialize
+    studentMobile: "",
   });
   const [scholarship, setScholarship] = useState(draft?.scholarship || false);
   const [passportPhoto, setPassportPhoto] = useState(null);
@@ -116,6 +117,8 @@ export default function RegisterStudent() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (isSubmittingRef.current || isSubmitting) return;
+
     // --- Validation Checks ---
     const requiredFields = [
       { key: 'studentName', label: 'Student Name' },
@@ -172,6 +175,7 @@ export default function RegisterStudent() {
     }
     // --- End Validation ---
 
+    isSubmittingRef.current = true;
     setIsSubmitting(true);
 
     try {
@@ -226,6 +230,7 @@ export default function RegisterStudent() {
         description: error.response?.data?.error || "Please check your inputs and try again, or contact support if the issue persists.",
       });
     } finally {
+      isSubmittingRef.current = false;
       setIsSubmitting(false);
     }
   };

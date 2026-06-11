@@ -48,6 +48,9 @@ export const registerStudent = async (req, res) => {
 
   } catch (error) {
     console.error("❌ ERROR in registerStudent:", error);
+    if (error.code === 11000) {
+      return res.status(400).json({ error: "You have already registered for this exam. Multiple submissions are not allowed." });
+    }
     res.status(500).json({ error: error.message });
   }
 };
