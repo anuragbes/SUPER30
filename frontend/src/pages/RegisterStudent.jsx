@@ -42,6 +42,7 @@ export default function RegisterStudent() {
     studentMobile: "",
   });
   const [scholarship, setScholarship] = useState(draft?.scholarship || false);
+  const [sameAsPermanent, setSameAsPermanent] = useState(draft?.sameAsPermanent || false);
   const [passportPhoto, setPassportPhoto] = useState(null);
   const [identityPhoto, setIdentityPhoto] = useState(null);
 
@@ -84,10 +85,11 @@ export default function RegisterStudent() {
     const draftData = {
       formData,
       customSchool,
-      scholarship
+      scholarship,
+      sameAsPermanent
     };
     localStorage.setItem("studentRegistrationDraft", JSON.stringify(draftData));
-  }, [formData, customSchool, scholarship]);
+  }, [formData, customSchool, scholarship, sameAsPermanent]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -112,6 +114,29 @@ export default function RegisterStudent() {
         await signOut();
         navigate("/");
         toast.success("Logged out successfully");
+  };
+
+  const handleClearForm = () => {
+    if (window.confirm("Are you sure you want to clear the form? All entered data will be lost.")) {
+      localStorage.removeItem("studentRegistrationDraft");
+      setCustomSchool("");
+      setScholarship(false);
+      setSameAsPermanent(false);
+      setPassportPhoto(null);
+      setIdentityPhoto(null);
+      
+      const email = user?.primaryEmailAddress?.emailAddress || "";
+      setFormData({
+        permanentAddress: "",
+        presentAddress: "",
+        studentMobile: "",
+        classMoving: formMode === "junior" ? "Class 8" : "10th to 11th",
+        testCentre: formMode === "junior" ? "" : "British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)",
+        email,
+      });
+      
+      toast.success("Form cleared successfully.");
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -435,9 +460,14 @@ export default function RegisterStudent() {
                 <textarea
                   name="permanentAddress"
                   value={formData.permanentAddress}
-                  onChange={(e) =>
-                    setFormData({ ...formData, permanentAddress: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFormData((prev) => ({
+                      ...prev,
+                      permanentAddress: val,
+                      ...(sameAsPermanent ? { presentAddress: val } : {})
+                    }));
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault(); // block new line
@@ -451,6 +481,25 @@ export default function RegisterStudent() {
                   {formData.permanentAddress.length} / 110
                 </p>
               </Field>
+
+              <div className="col-span-2 flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="sameAsPermanent"
+                  checked={sameAsPermanent}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setSameAsPermanent(checked);
+                    if (checked) {
+                      setFormData((prev) => ({ ...prev, presentAddress: prev.permanentAddress }));
+                    }
+                  }}
+                  className="w-4 h-4 text-slate-800 border-slate-300 rounded focus:ring-slate-800"
+                />
+                <label htmlFor="sameAsPermanent" className="text-sm font-medium text-slate-700 cursor-pointer">
+                  Same as Permanent Address
+                </label>
+              </div>
 
               <Field className="col-span-2">
                 <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
@@ -468,7 +517,8 @@ export default function RegisterStudent() {
                     }
                   }}
                   maxLength={110}
-                  className="border rounded-lg p-3 w-full"
+                  disabled={sameAsPermanent}
+                  className={`border rounded-lg p-3 w-full ${sameAsPermanent ? "bg-slate-100 text-slate-500 cursor-not-allowed" : "bg-white"}`}
                 />
 
                 <p className="text-xs text-right">
@@ -841,19 +891,31 @@ export default function RegisterStudent() {
             </div>
           </FormSection>
 
-          <Button
-            disabled={isSubmitting}
-            type="submit"
-            className="w-full sm:w-fit flex items-center justify-center gap-2"
-          >
-            {isSubmitting ? (
-              <>
-                <Spinner /> Submitting...
-              </>
-            ) : (
-              "Submit"
-            )}
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 items-center mt-2">
+            <Button
+              disabled={isSubmitting}
+              type="submit"
+              className="w-full sm:w-fit flex items-center justify-center gap-2"
+            >
+              {isSubmitting ? (
+                <>
+                  <Spinner /> Submitting...
+                </>
+              ) : (
+                "Submit"
+              )}
+            </Button>
+
+            <Button
+              disabled={isSubmitting}
+              type="button"
+              variant="outline"
+              onClick={handleClearForm}
+              className="w-full sm:w-fit"
+            >
+              Clear Form
+            </Button>
+          </div>
 
         </form>
       </div>
