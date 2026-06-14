@@ -12,6 +12,7 @@ export const verifyClerkToken = async (req, res, next) => {
   try {
     const payload = await verifyToken(token, {
       secretKey: process.env.CLERK_SECRET_KEY,
+      clockSkewInMs: 60 * 1000, // 60 seconds of leeway for clock sync issues
     });
 
     // 🔑 single source of truth
@@ -19,7 +20,11 @@ export const verifyClerkToken = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.error("Clerk token verification failed:", error);
+    console.error("Clerk token verification failed:", JSON.stringify({
+      message: error.message,
+      reason: error.reason,
+      action: error.action,
+    }, null, 2));
     return res.status(401).json({ error: "Unauthorized: Invalid token" });
   }
 };
