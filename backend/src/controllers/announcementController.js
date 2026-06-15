@@ -1,4 +1,5 @@
 import Announcement from "../models/announcement.models.js";
+import { logError, logActivity } from "../utils/logger.js";
 
 /**
  * @desc    Create a new announcement (Admin)
@@ -21,13 +22,14 @@ export const createAnnouncement = async (req, res) => {
       message,
     });
 
+    logActivity("AnnouncementCreated", { announcementId: announcement._id }, req);
     res.status(201).json({
       success: true,
       message: "Announcement created successfully",
       data: announcement,
     });
   } catch (error) {
-    console.error("Failed to create announcement:", error);
+    logError("[AnnouncementController] createAnnouncement", error);
     res.status(500).json({
       success: false,
       message: "Failed to create announcement",
@@ -51,10 +53,10 @@ export const getAllAnnouncements = async (req, res) => {
       data: announcements,
     });
   } catch (error) {
+    logError("[AnnouncementController] getAllAnnouncements", error);
     res.status(500).json({
       success: false,
       message: "Failed to fetch announcements",
-      error: error.message,
     });
   }
 };
@@ -80,18 +82,17 @@ export const toggleAnnouncementStatus = async (req, res) => {
     announcement.isActive = !announcement.isActive;
     await announcement.save();
 
+    logActivity("AnnouncementToggled", { announcementId: id, isActive: announcement.isActive }, req);
     res.status(200).json({
       success: true,
-      message: `Announcement ${
-        announcement.isActive ? "activated" : "deactivated"
-      } successfully`,
+      message: `Announcement ${announcement.isActive ? "activated" : "deactivated"} successfully`,
       data: announcement,
     });
   } catch (error) {
+    logError("[AnnouncementController] toggleAnnouncementStatus", error);
     res.status(500).json({
       success: false,
       message: "Failed to update announcement status",
-      error: error.message,
     });
   }
 };
@@ -126,16 +127,17 @@ export const updateAnnouncement = async (req, res) => {
       });
     }
 
+    logActivity("AnnouncementUpdated", { announcementId: id }, req);
     res.status(200).json({
       success: true,
       message: "Announcement updated successfully",
       data: announcement,
     });
   } catch (error) {
+    logError("[AnnouncementController] updateAnnouncement", error);
     res.status(500).json({
       success: false,
       message: "Failed to update announcement",
-      error: error.message,
     });
   }
 };
@@ -158,15 +160,16 @@ export const deleteAnnouncement = async (req, res) => {
       });
     }
 
+    logActivity("AnnouncementDeleted", { announcementId: id }, req);
     res.status(200).json({
       success: true,
       message: "Announcement deleted successfully",
     });
   } catch (error) {
+    logError("[AnnouncementController] deleteAnnouncement", error);
     res.status(500).json({
       success: false,
       message: "Failed to delete announcement",
-      error: error.message,
     });
   }
 };
@@ -192,18 +195,17 @@ export const toggleAnnouncementPin = async (req, res) => {
     announcement.isPinned = !announcement.isPinned;
     await announcement.save();
 
+    logActivity("AnnouncementPinToggled", { announcementId: id, isPinned: announcement.isPinned }, req);
     res.status(200).json({
       success: true,
-      message: `Announcement ${
-        announcement.isPinned ? "pinned" : "unpinned"
-      } successfully`,
+      message: `Announcement ${announcement.isPinned ? "pinned" : "unpinned"} successfully`,
       data: announcement,
     });
   } catch (error) {
+    logError("[AnnouncementController] toggleAnnouncementPin", error);
     res.status(500).json({
       success: false,
       message: "Failed to update announcement pin status",
-      error: error.message,
     });
   }
 };
@@ -225,10 +227,10 @@ export const getActiveAnnouncements = async (req, res) => {
       data: announcements,
     });
   } catch (error) {
+    logError("[AnnouncementController] getActiveAnnouncements", error);
     res.status(500).json({
       success: false,
       message: "Failed to fetch announcements",
-      error: error.message,
     });
   }
 };

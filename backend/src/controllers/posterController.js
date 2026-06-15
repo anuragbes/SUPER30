@@ -1,5 +1,6 @@
 import Poster from "../models/poster.models.js";
 import { cloudinary } from "../middlewares/upload.js";
+import { logError, logActivity } from "../utils/logger.js";
 
 /**
  * @desc    Upload one or more posters (Admin)
@@ -29,13 +30,14 @@ export const uploadPoster = async (req, res) => {
       posters.push(poster);
     }
 
+    logActivity("PostersUploaded", { count: posters.length, posterIds: posters.map(p => p._id) }, req);
     res.status(201).json({
       success: true,
       message: `${posters.length} poster(s) uploaded successfully`,
       data: posters,
     });
   } catch (error) {
-    console.error("Failed to upload poster:", error);
+    logError("[PosterController] uploadPoster", error);
     res.status(500).json({
       success: false,
       message: "Failed to upload poster",
@@ -57,10 +59,10 @@ export const getAllPosters = async (req, res) => {
       data: posters,
     });
   } catch (error) {
+    logError("[PosterController] getAllPosters", error);
     res.status(500).json({
       success: false,
       message: "Failed to fetch posters",
-      error: error.message,
     });
   }
 };
@@ -79,10 +81,10 @@ export const getActivePosters = async (req, res) => {
       data: posters,
     });
   } catch (error) {
+    logError("[PosterController] getActivePosters", error);
     res.status(500).json({
       success: false,
       message: "Failed to fetch posters",
-      error: error.message,
     });
   }
 };
@@ -108,16 +110,17 @@ export const togglePosterStatus = async (req, res) => {
     poster.isActive = !poster.isActive;
     await poster.save();
 
+    logActivity("PosterStatusToggled", { posterId: id, isActive: poster.isActive }, req);
     res.status(200).json({
       success: true,
       message: `Poster ${poster.isActive ? "activated" : "deactivated"} successfully`,
       data: poster,
     });
   } catch (error) {
+    logError("[PosterController] togglePosterStatus", error);
     res.status(500).json({
       success: false,
       message: "Failed to update poster status",
-      error: error.message,
     });
   }
 };
@@ -150,16 +153,17 @@ export const reorderPosters = async (req, res) => {
 
     const posters = await Poster.find().sort({ order: 1 });
 
+    logActivity("PostersReordered", { count: orderedIds.length }, req);
     res.status(200).json({
       success: true,
       message: "Posters reordered successfully",
       data: posters,
     });
   } catch (error) {
+    logError("[PosterController] reorderPosters", error);
     res.status(500).json({
       success: false,
       message: "Failed to reorder posters",
-      error: error.message,
     });
   }
 };
@@ -186,21 +190,22 @@ export const deletePoster = async (req, res) => {
     try {
       await cloudinary.uploader.destroy(poster.publicId);
     } catch (cloudErr) {
-      console.error("Failed to delete from Cloudinary:", cloudErr);
+      logError("[PosterController] deletePoster - Cloudinary", cloudErr);
       // Continue with DB deletion even if Cloudinary fails
     }
 
     await Poster.findByIdAndDelete(id);
 
+    logActivity("PosterDeleted", { posterId: id }, req);
     res.status(200).json({
       success: true,
       message: "Poster deleted successfully",
     });
   } catch (error) {
+    logError("[PosterController] deletePoster", error);
     res.status(500).json({
       success: false,
       message: "Failed to delete poster",
-      error: error.message,
     });
   }
 };

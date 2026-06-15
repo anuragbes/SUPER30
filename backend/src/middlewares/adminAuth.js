@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { logError } from "../utils/logger.js";
 
 
 export function adminAuth(req, res, next) {
@@ -11,6 +12,7 @@ export function adminAuth(req, res, next) {
     req.admin = decoded;
     next();
   } catch (error) {
+    logError("[AdminAuth] JWT verification failed", error);
     res.status(401).json({ error: "Invalid or expired token" });
   }
 };

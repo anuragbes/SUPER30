@@ -3,6 +3,7 @@ import Settings from "../models/settings.models.js";
 import { createAdmitCardBuffer } from "./admitCardController.js";
 import { formatDateDDMMYYYY } from "../utils/googleSheets.js";
 import { Resend } from "resend";
+import { logError, logActivity } from "../utils/logger.js";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -45,6 +46,7 @@ export const bulkGenerateAdmitCards = async (req, res) => {
       generatedStudents.push(student.studentId);
     }
 
+    logActivity("BulkAdmitCardsGenerated", { count: generatedStudents.length, studentIds: generatedStudents }, req);
     return res.status(200).json({
       success: true,
       message:
@@ -54,11 +56,10 @@ export const bulkGenerateAdmitCards = async (req, res) => {
       generatedStudents,
     });
   } catch (error) {
-    console.error("❌ Error in bulkGenerateAdmitCards:", error);
+    logError("[BulkAdmitController] bulkGenerateAdmitCards", error);
     return res.status(500).json({
       success: false,
-      message: "An error occurred while generating admit cards.",
-      error: error.message,
+      message: "An unexpected error occurred while generating admit cards.",
     });
   }
 };
@@ -146,18 +147,19 @@ export const bulkSendAdmitCards = async (req, res) => {
           // Mark as sent in database
           student.admitCardSent = true;
           await student.save();
-          
+
           sentList.push(student.studentId);
+          logActivity("AdmitCardEmailSent", { studentId: student.studentId }, req);
           console.log(`Email sent to ${student.studentName} (${student.email})`);
           
           return { success: true, studentId: student.studentId };
         } catch (mailError) {
-          console.error(`Failed to send email to ${student.studentName}:`, mailError.message);
-          skippedList.push({ 
-            id: student.studentId, 
+          logError(`[BulkAdmitController] sendEmail - ${student.studentName}`, mailError);
+          skippedList.push({
+            id: student.studentId,
             name: student.studentName,
             email: student.email,
-            reason: mailError.message 
+            reason: mailError.message
           });
           return { success: false, studentId: student.studentId };
         }
@@ -185,11 +187,10 @@ export const bulkSendAdmitCards = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error("❌ Error in bulkSendAdmitCards:", error);
+    logError("[BulkAdmitController] bulkSendAdmitCards", error);
     res.status(500).json({
       success: false,
       message: "An unexpected error occurred while sending admit cards.",
-      error: error.message,
     });
   }
 };

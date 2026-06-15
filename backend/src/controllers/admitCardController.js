@@ -4,6 +4,7 @@ import Student from "../models/student.models.js";
 import Settings from "../models/settings.models.js";
 import { formatDateDDMMYYYY } from "../utils/googleSheets.js";
 import path from "path";
+import { logError, logActivity } from "../utils/logger.js";
 
 const bannerPath = path.resolve("assets/banner.png"); // backend/assets/banner.png
 const addTextWatermark = (doc, text = "UDAAN") => {       // blueprint for the watermark
@@ -189,6 +190,8 @@ export const generateAdmitCard = async (req, res) => {
 
     await Student.updateOne({ studentId }, { admitCardGenerated: true });
 
+    logActivity("AdmitCardGenerated", { studentId }, req);
+
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
@@ -196,7 +199,7 @@ export const generateAdmitCard = async (req, res) => {
     );
     return res.send(pdfBuffer);
   } catch (error) {
-    console.error("❌ generateAdmitCard error:", error);
-    return res.status(500).json({ error: error.message });
+    logError("[AdmitCardController] generateAdmitCard", error);
+    return res.status(500).json({ error: "Failed to generate admit card. Please try again." });
   }
 };

@@ -2,6 +2,7 @@ import "dotenv/config";
 import Student from "../models/student.models.js";
 import Counter from "../models/counter.models.js";
 import { appendToGoogleSheet } from "../utils/googleSheets.js";
+import { logError, logActivity } from "../utils/logger.js";
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID;
 
@@ -41,17 +42,26 @@ export const registerStudent = async (req, res) => {
     await newStudent.save();
     await appendToGoogleSheet(newStudent);
 
+    logActivity("StudentRegistered", {
+      studentId: newStudent.studentId,
+      stream:    newStudent.stream    || null,
+      class:     newStudent.classMoving || null,
+      target:    newStudent.target    || null,
+    }, req);
+
     res.status(201).json({
       message: "✅ Registration successful",
       studentId: newStudent.studentId,
     });
 
   } catch (error) {
-    console.error("❌ ERROR in registerStudent:", error);
+    const errorDetails = error.message || JSON.stringify(error);
+    logError("[StudentController] registerStudent", error);
+
     if (error.code === 11000) {
       return res.status(400).json({ error: "You have already registered for this exam. Multiple submissions are not allowed." });
     }
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "Registration failed due to a server error. Please try again or contact support." });
   }
 };
 
@@ -109,8 +119,8 @@ export const getAllStudents = async (req, res) => {
       currentPage: Number(page),
     });
   } catch (error) {
-    console.error("❌ Error fetching students:", error);
-    res.status(500).json({ success: false, message: error.message });
+    logError("[StudentController] getAllStudents", error);
+    res.status(500).json({ success: false, message: "Failed to load students. Please try again." });
   }
 };
 
@@ -127,7 +137,7 @@ export const resetStudentIdCounter = async (req, res) => {
 
     res.status(200).json({ message: "Student ID counter has been reset to STU0001" });
   } catch (error) {
-    console.log("Error resetting counter:", error);
+    logError("[StudentController] resetStudentIdCounter", error);
     res.status(500).json({ error: "Failed to reset ID counter" });
   }
 };

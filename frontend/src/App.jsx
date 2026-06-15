@@ -23,11 +23,11 @@ export default function App() {
 
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
+          <Route path="/success/:studentId" element={<Success />} />
 
           {/* Protected Routes (Clerk auth or Admin) */}
           <Route element={<ClerkAuthRoute />}>
             <Route path="/register" element={<RegisterStudent />} />
-            <Route path="/success/:studentId" element={<Success />} />
           </Route>
 
           {/* Admin Login Route */}

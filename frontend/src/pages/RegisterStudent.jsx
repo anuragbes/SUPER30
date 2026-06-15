@@ -105,7 +105,26 @@ export default function RegisterStudent() {
     setFormData({ ...formData, [name]: value });
   };
 
+  const MAX_FILE_SIZE_MB = 5;
+  const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
   const handleFileChange = (name, file) => {
+    if (!file) return;
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      toast.error("Invalid file type", {
+        description: "Only JPEG, PNG, and WebP images are allowed.",
+      });
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      toast.error("File too large", {
+        description: `Maximum allowed size is ${MAX_FILE_SIZE_MB} MB. Your file is ${(file.size / (1024 * 1024)).toFixed(1)} MB.`,
+      });
+      return;
+    }
+
     if (name === "passportPhoto") setPassportPhoto(file);
     if (name === "identityPhoto") setIdentityPhoto(file);
   };
@@ -244,6 +263,9 @@ export default function RegisterStudent() {
       toast.success("Registration Successful!", {
         description: `Student ID: ${res.data.studentId}`,
       });
+
+      // Automatically log out the user
+      await signOut();
 
       navigate(`/success/${res.data.studentId}`, {
         state: { studentName: formData.studentName }
@@ -873,7 +895,8 @@ export default function RegisterStudent() {
                 </FieldLabel>
                 <FileUpload
                   name="passportPhoto"
-                  accept="image/*"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  file={passportPhoto}
                   onFileSelect={handleFileChange}
                 />
               </Field>
@@ -884,12 +907,23 @@ export default function RegisterStudent() {
                 </FieldLabel>
                 <FileUpload
                   name="identityPhoto"
-                  accept="image/*"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  file={identityPhoto}
                   onFileSelect={handleFileChange}
                 />
               </Field>
             </div>
           </FormSection>
+
+          {isSubmitting && (
+            <div className="mt-4 mb-4 p-4 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg text-sm flex items-start gap-3">
+              <span className="text-lg">⚠️</span>
+              <div>
+                <p className="font-semibold mb-1">Please do not close or refresh this page!</p>
+                <p>We are processing your application. This may take up to a minute depending on your internet connection.</p>
+              </div>
+            </div>
+          )}
 
           <div className="flex flex-col sm:flex-row gap-4 items-center mt-2">
             <Button

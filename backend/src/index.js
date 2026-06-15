@@ -3,11 +3,13 @@ dotenv.config({ path: '.env' })
 
 
 import express from 'express';
+import morgan from 'morgan';
 import studentRoutes from './routes/studentRoutes.js';
 import connectDB from './db/index.js'
 import cors from "cors";
 import adminRoutes from "./routes/adminRoutes.js";
 import { apiLimiter } from './middlewares/rateLimiter.js';
+import { logError } from './utils/logger.js';
 
 
 // initialise express app
@@ -39,6 +41,14 @@ connectDB()
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// HTTP request logging — skips /health to reduce noise
+morgan.token('date-ist', () => new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }));
+app.use(
+  morgan(':date-ist | :method :url | :status | :response-time ms | IP: :remote-addr', {
+    skip: (req) => req.path === '/health',
+  })
+);
+
 // Apply global API rate limiting
 app.use('/api/', apiLimiter);
 
@@ -54,6 +64,13 @@ app.get("/health", (req, res) => {
   res.status(200).json({ status: "OK" });
 });
 
+// Global error handler
+app.use((err, req, res, next) => {
+  logError(`[GlobalErrorHandler] ${req.method} ${req.path}`, err);
+  res.status(err.status || 500).json({
+    error: err.message || "An unexpected server error occurred.",
+  });
+});
 
 const PORT = process.env.PORT || 8000;
 

@@ -28,6 +28,31 @@ const storage = new CloudinaryStorage({
   },
 });
 
-const upload = multer({ storage });
-export { cloudinary };
+const ALLOWED_MIME_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+const MAX_FILE_SIZE_MB = 5;
+
+const fileFilter = (req, file, cb) => {
+  if (ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(
+      Object.assign(new Error("Invalid file type. Only JPEG, PNG, and WebP images are allowed."), {
+        code: "INVALID_FILE_TYPE",
+        status: 400,
+      }),
+      false
+    );
+  }
+};
+
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: MAX_FILE_SIZE_MB * 1024 * 1024, // 5 MB
+  },
+  fileFilter,
+});
+
+export { cloudinary, MAX_FILE_SIZE_MB };
 export default upload;
+

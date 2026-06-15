@@ -1,5 +1,6 @@
 import { google } from "googleapis";
 import Student from "../models/student.models.js";
+import { logError } from "./logger.js";
 
 // Format DD/MM/YYYY
 export const formatDateDDMMYYYY = (dateString) => {
@@ -105,7 +106,7 @@ export const ensureSheetExists = async (sheetName) => {
 
     console.log(`🆕 Created sheet: ${sheetName}`);
   } catch (err) {
-    console.error("❌ ensureSheetExists ERROR:", err.message);
+    logError("[GoogleSheets] ensureSheetExists", err);
   }
 };
 
@@ -168,7 +169,7 @@ export const appendToGoogleSheet = async (student) => {
 
     console.log(`🟢 Appended student to ${targetSheet}`);
   } catch (error) {
-    console.error("❌ appendToGoogleSheet ERROR:", error.message);
+    logError("[GoogleSheets] appendToGoogleSheet", error);
   }
 };
 
@@ -232,7 +233,7 @@ export const updatePCMAndPCB = async () => {
 
     console.log("🟢 All sheets updated");
   } catch (error) {
-    console.error("❌ updatePCMAndPCB ERROR:", error.message);
+    logError("[GoogleSheets] updatePCMAndPCB", error);
   }
 };
 
@@ -292,7 +293,7 @@ export const deleteStudentFromSheet = async (studentId, stream, classMoving) => 
     console.log(`🗑️ Deleted student ${studentId} from sheet ${sheetName}`);
 
   } catch (error) {
-    console.error("❌ deleteStudentFromSheet ERROR:", error.message);
+    logError("[GoogleSheets] deleteStudentFromSheet", error);
   }
 };
 
@@ -354,7 +355,7 @@ export const clearRollNumbersFromSheet = async (stream) => {
 
     console.log(`🟢 Cleared roll numbers for ${stream} stream in Google Sheet`);
   } catch (error) {
-    console.error("❌ clearRollNumbersFromSheet ERROR:", error.message);
+    logError("[GoogleSheets] clearRollNumbersFromSheet", error);
   }
 };
 
@@ -409,6 +410,6 @@ export const clearRollNumbersFromClassSheet = async (classGroup) => {
 
     console.log(`🟢 Cleared roll numbers for ${classGroup} in Google Sheet`);
   } catch (error) {
-    console.error("❌ clearRollNumbersFromClassSheet ERROR:", error.message);
+    logError("[GoogleSheets] clearRollNumbersFromClassSheet", error);
   }
 };

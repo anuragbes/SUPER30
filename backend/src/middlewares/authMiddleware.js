@@ -1,10 +1,11 @@
 import { verifyToken } from "@clerk/clerk-sdk-node";
+import { logError } from "../utils/logger.js";
 
 export const verifyClerkToken = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "Unauthorized: No token provided" });
+    return res.status(401).json({ error: "Unauthorized" });
   }
 
   const token = authHeader.replace("Bearer ", "");
@@ -15,16 +16,12 @@ export const verifyClerkToken = async (req, res, next) => {
       clockSkewInMs: 60 * 1000, // 60 seconds of leeway for clock sync issues
     });
 
-    // 🔑 single source of truth
+    // single source of truth
     req.clerkUserId = payload.sub;
 
     next();
   } catch (error) {
-    console.error("Clerk token verification failed:", JSON.stringify({
-      message: error.message,
-      reason: error.reason,
-      action: error.action,
-    }, null, 2));
-    return res.status(401).json({ error: "Unauthorized: Invalid token" });
+    logError("[AuthMiddleware] Clerk token verification failed", error);
+    return res.status(401).json({ error: "Unauthorized" });
   }
 };

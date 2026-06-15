@@ -3,16 +3,19 @@
 import React, { useState } from "react";
 import { Upload } from "lucide-react";
 
-export function FileUpload({ name, accept = "*", onFileSelect }) {
-  const [fileName, setFileName] = useState("");
+export function FileUpload({ name, accept = "image/jpeg,image/jpg,image/png,image/webp", onFileSelect, file }) {
   const [isDragging, setIsDragging] = useState(false);
 
+  // Derive the display name purely from the prop
+  const displayFileName = file?.name || "";
+
   const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFileName(file.name);
-      onFileSelect && onFileSelect(name, file);  // send name + file
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      onFileSelect && onFileSelect(name, selectedFile);
     }
+    // Always clear the input value so the same file can be selected again
+    e.target.value = '';
   };
 
   const handleDragOver = (e) => {
@@ -24,10 +27,9 @@ export function FileUpload({ name, accept = "*", onFileSelect }) {
     e.preventDefault();
     setIsDragging(false);
 
-    const file = e.dataTransfer.files?.[0];
-    if (file) {
-      setFileName(file.name);
-      onFileSelect && onFileSelect(name, file);  // send name + file
+    const selectedFile = e.dataTransfer.files?.[0];
+    if (selectedFile) {
+      onFileSelect && onFileSelect(name, selectedFile);
     }
   };
 
@@ -55,10 +57,10 @@ export function FileUpload({ name, accept = "*", onFileSelect }) {
 
         <div className="text-center">
           <p className="text-sm font-medium text-foreground">
-            {fileName || "Click or drag file here"}
+            {displayFileName || "Click or drag file here"}
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            {fileName ? "File uploaded" : "Supported formats: .jpeg, .jpg, .png"}
+            {displayFileName ? "File selected" : "JPEG, PNG or WebP • Max 5 MB"}
           </p>
         </div>
       </div>
