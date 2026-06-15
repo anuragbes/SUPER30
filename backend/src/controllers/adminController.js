@@ -147,9 +147,11 @@ export const deleteAllStudents = async (req, res) => {
     // Reset roll number counters
     await Counter.findOneAndUpdate({ id: "pcmRoll" }, { seq: 0 }, { upsert: true });
     await Counter.findOneAndUpdate({ id: "pcbRoll" }, { seq: 0 }, { upsert: true });
+    await updatePCMAndPCB();
 
-    logActivity("AllStudentsDeleted", {}, req);
-    res.status(200).json({ message: "All student data cleared successfully" });
+    logActivity("DatabaseCleared", {}, req);
+    
+    return res.json({ message: "All student data cleared successfully" });
   } catch (error) {
     logError("[AdminController] deleteAllStudents", error);
     res.status(500).json({ error: "An unexpected error occurred while clearing student data." });
@@ -320,16 +322,17 @@ export const removeRollNumbers = async (req, res) => {
       }
 
       const result = await Student.updateMany(
-        { classMoving: classGroup, stream: null },
-        { $set: { rollNo: null } }
+        { classMoving: classGroup },
+        { $unset: { rollNo: "" } }
       );
+
+      logActivity("RollNumbersCleared", { classGroup, count: result.modifiedCount }, req);
 
       const counterMap = { "Class 8": "class8Roll", "Class 9": "class9Roll", "Class 10": "class10Roll" };
       await Counter.findOneAndUpdate({ id: counterMap[classGroup] }, { seq: 0 }, { upsert: true });
 
       await clearRollNumbersFromClassSheet(classGroup);
 
-      logActivity("RollNumbersRemoved", { classGroup, count: result.modifiedCount }, req);
       return res.json({
         success: true,
         message: `Roll numbers removed for ${classGroup}.`,
@@ -347,15 +350,16 @@ export const removeRollNumbers = async (req, res) => {
 
     const result = await Student.updateMany(
       { stream },
-      { $set: { rollNo: null } }
+      { $unset: { rollNo: "" } }
     );
+
+    logActivity("RollNumbersCleared", { stream, count: result.modifiedCount }, req);
 
     const counterId = stream === "PCM" ? "pcmRoll" : "pcbRoll";
     await Counter.findOneAndUpdate({ id: counterId }, { seq: 0 }, { upsert: true });
 
     await clearRollNumbersFromSheet(stream);
 
-    logActivity("RollNumbersRemoved", { stream, count: result.modifiedCount }, req);
     return res.json({
       success: true,
       message: `Roll numbers removed for ${stream} stream.`,

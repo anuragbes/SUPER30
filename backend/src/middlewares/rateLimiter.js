@@ -1,4 +1,10 @@
 import rateLimit from "express-rate-limit";
+import { logSecurity } from "../utils/logger.js";
+
+const limitHandler = (req, res, next, options) => {
+  logSecurity("RateLimitHit", { path: req.originalUrl, limit: options.max }, req);
+  res.status(options.statusCode).send({ error: options.message });
+};
 
 // General API rate limiter - 100 requests per 15 minutes per IP
 export const apiLimiter = rateLimit({
@@ -8,6 +14,7 @@ export const apiLimiter = rateLimit({
   standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
   legacyHeaders: false, // Disable `X-RateLimit-*` headers
   skip: (req) => req.headers["x-admin-bypass"] === "true", // Skip for admins
+  handler: limitHandler,
 });
 
 // Student registration limiter - 10 requests per 1 hour per IP
@@ -17,6 +24,7 @@ export const registrationLimiter = rateLimit({
   message: "Too many registrations from this IP. Please try again later.",
   standardHeaders: true,
   legacyHeaders: false,
+  handler: limitHandler,
 });
 
 // Admin login limiter - 5 attempts per 15 minutes per IP (brute force protection)
@@ -27,6 +35,7 @@ export const loginLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: true, // Only count failed attempts
+  handler: limitHandler,
 });
 
 // Email sending limiter - 10 requests per 1 hour per IP, but bypass admin users
@@ -41,6 +50,7 @@ export const emailLimiter = rateLimit({
     // Skip rate limiting for authenticated admin users
     return req.admin !== undefined;
   },
+  handler: limitHandler,
 });
 
 // Bulk operations limiter - 3 requests per 1 hour per IP, bypass admin users
@@ -55,4 +65,5 @@ export const bulkOperationLimiter = rateLimit({
     // Skip rate limiting for authenticated admin users
     return req.admin !== undefined;
   },
+  handler: limitHandler,
 });

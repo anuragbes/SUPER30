@@ -8,64 +8,59 @@
 export const logError = (context, error) => {
   try {
     const errorInfo = {
-      name: error?.name || "UnknownError",
       message: error?.message || String(error),
-      code: error?.code || "N/A",
-      status: error?.status || error?.statusCode || "N/A",
-      reason: error?.reason || "N/A",
-      action: error?.action || "N/A",
-      stack: error?.stack || "No stack available",
+      code: error?.code,
+      status: error?.status || error?.statusCode,
+      reason: error?.reason,
+      action: error?.action,
+      stack: process.env.NODE_ENV !== "production" ? error?.stack : undefined,
     };
 
-    console.error(
-      `${context}\n${JSON.stringify(errorInfo, null, 2)}`
-    );
-
-    // Optional: Keep raw error for debugging unknown issues
-    if (
-      process.env.NODE_ENV !== "production" ||
-      !error?.message
-    ) {
-      console.error("Raw Error Object:", error);
-    }
-  } catch (loggerError) {
-    console.error(`${context}: Failed to log error`);
-    console.error("Original Error:", error);
-    console.error("Logger Error:", loggerError);
+    console.error(`❌ [${context}] ${JSON.stringify(errorInfo)}`);
+  } catch (err) {
+    console.error(`❌ [LoggerError] Failed to log: ${err.message}`);
   }
 };
 
-/**
- * Activity logger for state-changing business events.
- *
- * Usage:
- *   logActivity("StudentRegistered", { studentId, stream }, req);
- *   logActivity("StudentDeleted",    { studentId },         req);  // admin actor auto-extracted
- *
- * Rules:
- *  - NO full PII: never log name, email, phone, address, DOB, parent names
- *  - studentId and stream/class are safe system identifiers
- *  - For admin actions, actor is extracted from req.admin (set by adminAuth JWT middleware)
- */
+const formatLogData = (data = {}) => {
+  const { 
+    studentName, email, parentMobile, studentMobile, whatsappMobile,
+    title, content, posterName, identityPhotoURL, passportPhotoURL, 
+    username, password, fatherName, motherName, permanentAddress, presentAddress, ...safeData 
+  } = data;
+
+  return Object.entries(safeData)
+    .filter(([_, v]) => v !== undefined && v !== null && v !== "")
+    .map(([k, v]) => `${k}=${v}`)
+    .join(" ");
+};
+
+const getActor = (req) => {
+  return req?.admin?.adminId 
+    ? `admin:${req.admin.adminId}` 
+    : req?.clerkUserId 
+    ? `user:${req.clerkUserId}` 
+    : "system";
+};
+
 export const logActivity = (event, data = {}, req = null) => {
   const timestamp = new Date().toISOString();
-
-  // Extract actor for admin actions (from JWT payload set by adminAuth)
-  const actor = req?.admin?.adminId
-    ? `admin:${req.admin.adminId}`
-    : req?.clerkUserId
-    ? `user:${req.clerkUserId}`
-    : "system";
-
+  const actor = getActor(req);
   const ip = req?.ip || req?.headers?.["x-forwarded-for"] || "unknown";
+  
+  const dataString = formatLogData(data);
+  const meta = `actor=${actor} ip=${ip}`;
+  
+  console.log(`📋 [${event}] timestamp=${timestamp} ${dataString} ${meta}`.trim());
+};
 
-  const entry = {
-    timestamp,
-    event,
-    actor,
-    ip,
-    ...data,
-  };
-
-  console.log(`📋 [ACTIVITY] ${JSON.stringify(entry)}`);
+export const logSecurity = (event, data = {}, req = null) => {
+  const timestamp = new Date().toISOString();
+  const actor = getActor(req);
+  const ip = req?.ip || req?.headers?.["x-forwarded-for"] || "unknown";
+  
+  const dataString = formatLogData(data);
+  const meta = `actor=${actor} ip=${ip}`;
+  
+  console.log(`🔐 [${event}] timestamp=${timestamp} ${dataString} ${meta}`.trim());
 };

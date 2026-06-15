@@ -1,10 +1,11 @@
 import { verifyToken } from "@clerk/clerk-sdk-node";
-import { logError } from "../utils/logger.js";
+import { logError, logSecurity } from "../utils/logger.js";
 
 export const verifyClerkToken = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    logSecurity("UnauthorizedAccess", { reason: "MissingOrInvalidHeader" }, req);
     return res.status(401).json({ error: "Unauthorized" });
   }
 
@@ -22,6 +23,7 @@ export const verifyClerkToken = async (req, res, next) => {
     next();
   } catch (error) {
     logError("[AuthMiddleware] Clerk token verification failed", error);
+    logSecurity("UnauthorizedAccess", { reason: "InvalidToken" }, req);
     return res.status(401).json({ error: "Unauthorized" });
   }
 };

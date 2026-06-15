@@ -41,11 +41,10 @@ connectDB()
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// HTTP request logging — skips /health to reduce noise
-morgan.token('date-ist', () => new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }));
+// HTTP request logging — skips /health and successful requests to reduce noise
 app.use(
-  morgan(':date-ist | :method :url | :status | :response-time ms | IP: :remote-addr', {
-    skip: (req) => req.path === '/health',
+  morgan('❌ :method :url | :status', {
+    skip: (req, res) => req.path === '/health' || res.statusCode < 400,
   })
 );
 
