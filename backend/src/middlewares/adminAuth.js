@@ -1,13 +1,14 @@
 import jwt from "jsonwebtoken";
 import { logError, logSecurity } from "../utils/logger.js";
+import { rejectRequest } from "../utils/rejectRequest.js";
 
 
 export function adminAuth(req, res, next) {
   const token = req.headers.authorization?.split(" ")[1];
 
   if (!token) {
-    logSecurity("UnauthorizedAccess", { reason: "MissingToken" }, req);
-    return res.status(401).json({ error: "Unauthorized access" });
+    logSecurity("UNAUTHORIZED_ACCESS", { reason: "MissingToken" }, req);
+    return rejectRequest(req, res, 401, "missing_token", "Unauthorized access");
   }
 
   try {
@@ -15,8 +16,12 @@ export function adminAuth(req, res, next) {
     req.admin = decoded;
     next();
   } catch (error) {
-    logError("[AdminAuth] JWT verification failed", error);
-    logSecurity("UnauthorizedAccess", { reason: "InvalidToken" }, req);
-    res.status(401).json({ error: "Invalid or expired token" });
+    const isExpired = error.name === "TokenExpiredError";
+    const event = isExpired ? "TOKEN_EXPIRED" : "TOKEN_INVALID";
+    const reason = isExpired ? "TokenExpired" : "InvalidSignature";
+
+    logError("[AdminAuth] JWT verification failed", error, req);
+    logSecurity(event, { reason }, req);
+    return rejectRequest(req, res, 401, reason.toLowerCase(), "Invalid or expired token");
   }
 };

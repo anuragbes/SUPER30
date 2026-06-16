@@ -5,6 +5,7 @@ import Settings from "../models/settings.models.js";
 import { formatDateDDMMYYYY } from "../utils/googleSheets.js";
 import path from "path";
 import { logError, logActivity } from "../utils/logger.js";
+import { rejectRequest } from "../utils/rejectRequest.js";
 
 const bannerPath = path.resolve("assets/banner.png"); // backend/assets/banner.png
 const addTextWatermark = (doc, text = "UDAAN") => {       // blueprint for the watermark
@@ -26,7 +27,7 @@ const addTextWatermark = (doc, text = "UDAAN") => {       // blueprint for the w
   doc.restore(); // restore state
 };
 
-// 🔹 Helper: create PDF buffer in memory
+// Helper: create PDF buffer in memory
 export const createAdmitCardBuffer = (student, examDate) => {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ size: "A4", margin: 20 });
@@ -181,7 +182,9 @@ export const generateAdmitCard = async (req, res) => {
   try {
     const { studentId } = req.params;
     const student = await Student.findOne({ studentId });
-    if (!student) return res.status(404).json({ message: "Student not found" });
+    if (!student) {
+      return rejectRequest(req, res, 404, "student_not_found", "Student not found");
+    }
 
     const settings = await Settings.findOne();
     const examDate = formatDateDDMMYYYY(settings?.examDate || "Not Set");
@@ -199,7 +202,7 @@ export const generateAdmitCard = async (req, res) => {
     );
     return res.send(pdfBuffer);
   } catch (error) {
-    logError("[AdmitCardController] generateAdmitCard", error);
+    logError("[AdmitCardController] generateAdmitCard", error, req);
     return res.status(500).json({ error: "Failed to generate admit card. Please try again." });
   }
 };

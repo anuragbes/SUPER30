@@ -2,6 +2,7 @@ import Admin from "../models/admin.models.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { logError, logSecurity } from "../utils/logger.js";
+import { rejectRequest } from "../utils/rejectRequest.js";
 
 export const adminLogin = async (req, res) => {
   try {
@@ -10,14 +11,14 @@ export const adminLogin = async (req, res) => {
 
     const admin = await Admin.findOne({ username });
     if (!admin) {
-      logSecurity("AdminLoginFailed", { reason: "InvalidCredentials", userAgent }, req);
-      return res.status(404).json({ error: "Admin not found" });
+      logSecurity("LOGIN_FAILED", { reason: "InvalidCredentials", userAgent }, req);
+      return rejectRequest(req, res, 401, "invalid_credentials", "Invalid credentials");
     }
 
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) {
-      logSecurity("AdminLoginFailed", { reason: "InvalidCredentials", userAgent }, req);
-      return res.status(401).json({ error: "Invalid credentials" });
+      logSecurity("LOGIN_FAILED", { reason: "InvalidCredentials", userAgent }, req);
+      return rejectRequest(req, res, 401, "invalid_credentials", "Invalid credentials");
     }
 
     const token = jwt.sign(
@@ -29,12 +30,11 @@ export const adminLogin = async (req, res) => {
     // Temporarily attach admin info to req so logSecurity can accurately extract the actor ID
     req.admin = { adminId: admin._id };
     
-    logSecurity("AdminLoginSuccess", { userAgent }, req);
+    logSecurity("LOGIN_SUCCESS", { userAgent }, req);
     res.json({ message: "Login successful", token });
 
   } catch (error) {
-    logError("[AdminAuthController] adminLogin", error);
+    logError("[AdminAuthController] adminLogin", error, req);
     res.status(500).json({ error: "An unexpected error occurred during login. Please try again." });
   }
 };
-

@@ -1,5 +1,6 @@
 import Announcement from "../models/announcement.models.js";
 import { logError, logActivity } from "../utils/logger.js";
+import { rejectRequest } from "../utils/rejectRequest.js";
 
 /**
  * @desc    Create a new announcement (Admin)
@@ -11,10 +12,7 @@ export const createAnnouncement = async (req, res) => {
     const { title, message } = req.body;
 
     if (!title || !message) {
-      return res.status(400).json({
-        success: false,
-        message: "Title and message are required",
-      });
+      return rejectRequest(req, res, 400, "missing_fields", "Title and message are required");
     }
 
     const announcement = await Announcement.create({
@@ -29,7 +27,7 @@ export const createAnnouncement = async (req, res) => {
       data: announcement,
     });
   } catch (error) {
-    logError("[AnnouncementController] createAnnouncement", error);
+    logError("[AnnouncementController] createAnnouncement", error, req);
     res.status(500).json({
       success: false,
       message: "Failed to create announcement",
@@ -53,7 +51,7 @@ export const getAllAnnouncements = async (req, res) => {
       data: announcements,
     });
   } catch (error) {
-    logError("[AnnouncementController] getAllAnnouncements", error);
+    logError("[AnnouncementController] getAllAnnouncements", error, req);
     res.status(500).json({
       success: false,
       message: "Failed to fetch announcements",
@@ -73,10 +71,7 @@ export const toggleAnnouncementStatus = async (req, res) => {
     const announcement = await Announcement.findById(id);
 
     if (!announcement) {
-      return res.status(404).json({
-        success: false,
-        message: "Announcement not found",
-      });
+      return rejectRequest(req, res, 404, "announcement_not_found", "Announcement not found");
     }
 
     announcement.isActive = !announcement.isActive;
@@ -89,7 +84,7 @@ export const toggleAnnouncementStatus = async (req, res) => {
       data: announcement,
     });
   } catch (error) {
-    logError("[AnnouncementController] toggleAnnouncementStatus", error);
+    logError("[AnnouncementController] toggleAnnouncementStatus", error, req);
     res.status(500).json({
       success: false,
       message: "Failed to update announcement status",
@@ -108,10 +103,7 @@ export const updateAnnouncement = async (req, res) => {
     const { title, message } = req.body;
 
     if (!title || !message) {
-      return res.status(400).json({
-        success: false,
-        message: "Title and message are required",
-      });
+      return rejectRequest(req, res, 400, "missing_fields", "Title and message are required");
     }
 
     const announcement = await Announcement.findByIdAndUpdate(
@@ -121,10 +113,7 @@ export const updateAnnouncement = async (req, res) => {
     );
 
     if (!announcement) {
-      return res.status(404).json({
-        success: false,
-        message: "Announcement not found",
-      });
+      return rejectRequest(req, res, 404, "announcement_not_found", "Announcement not found");
     }
 
     logActivity("AnnouncementUpdated", { announcementId: id }, req);
@@ -134,7 +123,7 @@ export const updateAnnouncement = async (req, res) => {
       data: announcement,
     });
   } catch (error) {
-    logError("[AnnouncementController] updateAnnouncement", error);
+    logError("[AnnouncementController] updateAnnouncement", error, req);
     res.status(500).json({
       success: false,
       message: "Failed to update announcement",
@@ -154,10 +143,7 @@ export const deleteAnnouncement = async (req, res) => {
     const announcement = await Announcement.findByIdAndDelete(id);
 
     if (!announcement) {
-      return res.status(404).json({
-        success: false,
-        message: "Announcement not found",
-      });
+      return rejectRequest(req, res, 404, "announcement_not_found", "Announcement not found");
     }
 
     logActivity("AnnouncementDeleted", { announcementId: id }, req);
@@ -166,7 +152,7 @@ export const deleteAnnouncement = async (req, res) => {
       message: "Announcement deleted successfully",
     });
   } catch (error) {
-    logError("[AnnouncementController] deleteAnnouncement", error);
+    logError("[AnnouncementController] deleteAnnouncement", error, req);
     res.status(500).json({
       success: false,
       message: "Failed to delete announcement",
@@ -186,10 +172,7 @@ export const toggleAnnouncementPin = async (req, res) => {
     const announcement = await Announcement.findById(id);
 
     if (!announcement) {
-      return res.status(404).json({
-        success: false,
-        message: "Announcement not found",
-      });
+      return rejectRequest(req, res, 404, "announcement_not_found", "Announcement not found");
     }
 
     announcement.isPinned = !announcement.isPinned;
@@ -202,7 +185,7 @@ export const toggleAnnouncementPin = async (req, res) => {
       data: announcement,
     });
   } catch (error) {
-    logError("[AnnouncementController] toggleAnnouncementPin", error);
+    logError("[AnnouncementController] toggleAnnouncementPin", error, req);
     res.status(500).json({
       success: false,
       message: "Failed to update announcement pin status",
@@ -227,7 +210,7 @@ export const getActiveAnnouncements = async (req, res) => {
       data: announcements,
     });
   } catch (error) {
-    logError("[AnnouncementController] getActiveAnnouncements", error);
+    logError("[AnnouncementController] getActiveAnnouncements", error, req);
     res.status(500).json({
       success: false,
       message: "Failed to fetch announcements",

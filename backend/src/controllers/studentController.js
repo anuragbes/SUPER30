@@ -3,6 +3,7 @@ import Student from "../models/student.models.js";
 import Counter from "../models/counter.models.js";
 import { appendToGoogleSheet } from "../utils/googleSheets.js";
 import { logError, logActivity } from "../utils/logger.js";
+import { rejectRequest } from "../utils/rejectRequest.js";
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID;
 
@@ -11,15 +12,18 @@ export const registerStudent = async (req, res) => {
   try {
     const clerkUserId = req.clerkUserId;
 
+    logActivity("REGISTER_ATTEMPT", {
+      requestId: req.requestId,
+    }, req);
+
     if (!clerkUserId) {
-      return res.status(401).json({ error: "Unauthorized" });
+      return rejectRequest(req, res, 401, "missing_clerk_user_id", "Unauthorized");
     }
 
     const existingStudent = await Student.findOne({ clerkUserId });
     if (existingStudent) {
-      return res.status(400).json({
-        error: "You have already registered for this exam",
-      });
+      return rejectRequest(req, res, 400, "duplicate_registration",
+        "You have already registered for this exam");
     }
 
     const newStudent = new Student({
@@ -42,7 +46,8 @@ export const registerStudent = async (req, res) => {
     await newStudent.save();
     await appendToGoogleSheet(newStudent);
 
-    logActivity("StudentRegistered", {
+    logActivity("REGISTER_SUCCESS", {
+      requestId: req.requestId,
       studentId: newStudent.studentId,
       stream:    newStudent.stream    || null,
       class:     newStudent.classMoving || null,
@@ -50,16 +55,16 @@ export const registerStudent = async (req, res) => {
     }, req);
 
     res.status(201).json({
-      message: "✅ Registration successful",
+      message: "Registration successful",
       studentId: newStudent.studentId,
     });
 
   } catch (error) {
-    const errorDetails = error.message || JSON.stringify(error);
-    logError("[StudentController] registerStudent", error);
+    logError("[StudentController] registerStudent", error, req);
 
     if (error.code === 11000) {
-      return res.status(400).json({ error: "You have already registered for this exam. Multiple submissions are not allowed." });
+      return rejectRequest(req, res, 400, "duplicate_key_violation",
+        "You have already registered for this exam. Multiple submissions are not allowed.");
     }
     res.status(500).json({ error: "Registration failed due to a server error. Please try again or contact support." });
   }
@@ -74,7 +79,7 @@ export const getAllStudents = async (req, res) => {
 
     const query = {};
 
-    // 🔍 Search
+    // Search
     if (search) {
       query.$or = [
         { studentName: { $regex: search, $options: "i" } },
@@ -82,16 +87,16 @@ export const getAllStudents = async (req, res) => {
       ];
     }
 
-    // 🎓 Stream filter
+    // Stream filter
     if (stream) query.stream = stream;
 
-    // 🏫 Class filter
+    // Class filter
     if (classMoving) query.classMoving = classMoving;
 
-    // 🎯 Target filter
+    // Target filter
     if (target) query.target = target;
 
-    // 📄 Status filter
+    // Status filter
     if (status === "Generated") {
       query.admitCardGenerated = true;
       query.admitCardSent = { $ne: true };
@@ -102,10 +107,10 @@ export const getAllStudents = async (req, res) => {
       query.admitCardSent = { $ne: true };
     }
 
-    // 🧮 Total students (for pagination)
+    // Total students (for pagination)
     const totalStudents = await Student.countDocuments(query);
 
-    // 🧾 Paginated result
+    // Paginated result
     const students = await Student.find(query)
       .sort({ studentId: 1 })
       .skip(skip)
@@ -119,7 +124,7 @@ export const getAllStudents = async (req, res) => {
       currentPage: Number(page),
     });
   } catch (error) {
-    logError("[StudentController] getAllStudents", error);
+    logError("[StudentController] getAllStudents", error, req);
     res.status(500).json({ success: false, message: "Failed to load students. Please try again." });
   }
 };
@@ -137,7 +142,7 @@ export const resetStudentIdCounter = async (req, res) => {
 
     res.status(200).json({ message: "Student ID counter has been reset to STU0001" });
   } catch (error) {
-    logError("[StudentController] resetStudentIdCounter", error);
+    logError("[StudentController] resetStudentIdCounter", error, req);
     res.status(500).json({ error: "Failed to reset ID counter" });
   }
 };

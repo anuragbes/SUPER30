@@ -4,22 +4,23 @@ import { createAdmitCardBuffer } from "./admitCardController.js";
 import { formatDateDDMMYYYY } from "../utils/googleSheets.js";
 import { Resend } from "resend";
 import { logError, logActivity } from "../utils/logger.js";
+import { rejectRequest } from "../utils/rejectRequest.js";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // ------------------------------------------------------
-//  BULK GENERATE ADMIT CARDS (SAME AS BEFORE)
+//  BULK GENERATE ADMIT CARDS
 // ------------------------------------------------------
 export const bulkGenerateAdmitCards = async (req, res) => {
   const { selectedStudents } = req.body;
 
   if (!selectedStudents?.length) {
-    return res.status(400).json({ success: false, message: "No students selected" });
+    return rejectRequest(req, res, 400, "no_students_selected", "No students selected");
   }
 
   const settings = await Settings.findOne();
   if (!settings?.examDate) {
-    return res.status(400).json({ success: false, message: "Please set the exam date." });
+    return rejectRequest(req, res, 400, "exam_date_not_set", "Please set the exam date.");
   }
   const examDate = formatDateDDMMYYYY(settings.examDate);
 
@@ -28,10 +29,8 @@ export const bulkGenerateAdmitCards = async (req, res) => {
 
     const missingRoll = students.filter((s) => !s.rollNo);
     if (missingRoll.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Cannot generate admit cards. Please generate roll numbers first.",
-      });
+      return rejectRequest(req, res, 400, "missing_roll_numbers",
+        "Cannot generate admit cards. Please generate roll numbers first.");
     }
 
     const generatedStudents = [];
@@ -56,7 +55,7 @@ export const bulkGenerateAdmitCards = async (req, res) => {
       generatedStudents,
     });
   } catch (error) {
-    logError("[BulkAdmitController] bulkGenerateAdmitCards", error);
+    logError("[BulkAdmitController] bulkGenerateAdmitCards", error, req);
     return res.status(500).json({
       success: false,
       message: "An unexpected error occurred while generating admit cards.",
@@ -71,7 +70,7 @@ export const bulkSendAdmitCards = async (req, res) => {
   const { selectedStudents } = req.body;
   
   if (!selectedStudents?.length) {
-    return res.status(400).json({ success: false, message: "No students selected" });
+    return rejectRequest(req, res, 400, "no_students_selected", "No students selected");
   }
 
   try {
@@ -81,14 +80,14 @@ export const bulkSendAdmitCards = async (req, res) => {
     const students = await Student.find({ studentId: { $in: selectedStudents } });
 
     if (!students.length) {
-      return res.status(404).json({ success: false, message: "No matching students found." });
+      return rejectRequest(req, res, 404, "no_matching_students", "No matching students found.");
     }
 
     const sentList = [];
     const skippedList = [];
     const currentYear = new Date().getFullYear();
 
-    // ✅ Process in batches to avoid rate limits and improve speed
+    // Process in batches to avoid rate limits and improve speed
     const BATCH_SIZE = 5; // Send 5 emails at a time
     const DELAY_BETWEEN_BATCHES = 1000; // 1 second delay between batches
 
@@ -105,8 +104,6 @@ export const bulkSendAdmitCards = async (req, res) => {
         if (student.admitCardSent) {
           skippedList.push({
             id: student.studentId,
-            name: student.studentName,
-            email: student.email,
             reason: "Admit card already sent"
           });
           return null;
@@ -116,8 +113,8 @@ export const bulkSendAdmitCards = async (req, res) => {
           // Generate PDF buffer
           const pdfBuffer = await createAdmitCardBuffer(student, examDate);
 
-          // Send email with timeout protection
-          const emailPromise = await resend.emails.send({
+          // Send email
+          await resend.emails.send({
             from: `British School - Gurukul <noreply@bsgurukul.com>`,
             to: student.email,
             subject: `Admit Card for UDAAN ${currentYear}`,
@@ -143,22 +140,18 @@ export const bulkSendAdmitCards = async (req, res) => {
             ],
           });
 
-
           // Mark as sent in database
           student.admitCardSent = true;
           await student.save();
 
           sentList.push(student.studentId);
           logActivity("AdmitCardEmailSent", { studentId: student.studentId }, req);
-          console.log(`Email sent to ${student.studentName} (${student.email})`);
           
           return { success: true, studentId: student.studentId };
         } catch (mailError) {
-          logError(`[BulkAdmitController] sendEmail - ${student.studentName}`, mailError);
+          logError(`[BulkAdmitController] sendEmail ${student.studentId}`, mailError, req);
           skippedList.push({
             id: student.studentId,
-            name: student.studentName,
-            email: student.email,
             reason: mailError.message
           });
           return { success: false, studentId: student.studentId };
@@ -170,7 +163,6 @@ export const bulkSendAdmitCards = async (req, res) => {
 
       // Add delay between batches (except for the last batch)
       if (i + BATCH_SIZE < students.length) {
-        console.log(`Waiting ${DELAY_BETWEEN_BATCHES}ms before next batch...`);
         await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES));
       }
     }
@@ -187,7 +179,7 @@ export const bulkSendAdmitCards = async (req, res) => {
       }
     });
   } catch (error) {
-    logError("[BulkAdmitController] bulkSendAdmitCards", error);
+    logError("[BulkAdmitController] bulkSendAdmitCards", error, req);
     res.status(500).json({
       success: false,
       message: "An unexpected error occurred while sending admit cards.",

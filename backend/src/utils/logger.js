@@ -1,11 +1,79 @@
 /**
- * Central error logger for the backend.
+ * Production-grade logger for the backend.
  *
- * Logs structured error details to the server console only.
- * Nothing from here should be sent directly to frontend users.
+ * Features:
+ * - Safe serialization (handles circular references)
+ * - Automatic field redaction (passwords, tokens, PII)
+ * - Request correlation via requestId
+ * - Never crashes during logging
  */
 
-export const logError = (context, error) => {
+// Fields that must never appear in logs
+const REDACTED_FIELDS = new Set([
+  // PII
+  "studentName", "parentMobile", "studentMobile", "whatsappMobile",
+  "title", "content", "posterName", "identityPhotoURL", "passportPhotoURL",
+  "fatherName", "motherName", "permanentAddress", "presentAddress",
+  // Security
+  "password", "token", "accessToken", "refreshToken", "otp", "secret", "authorization",
+]);
+
+/**
+ * Safely stringify any value, handling circular references and redacting sensitive fields.
+ */
+const safeStringify = (obj) => {
+  try {
+    const seen = new WeakSet();
+    return JSON.stringify(obj, (key, value) => {
+      if (REDACTED_FIELDS.has(key)) return "[REDACTED]";
+      if (typeof value === "object" && value !== null) {
+        if (seen.has(value)) return "[Circular]";
+        seen.add(value);
+      }
+      return value;
+    });
+  } catch {
+    return "[Unserializable]";
+  }
+};
+
+/**
+ * Format log data as key=value pairs, stripping out redacted fields.
+ */
+const formatLogData = (data = {}) => {
+  try {
+    return Object.entries(data)
+      .filter(([key, v]) => !REDACTED_FIELDS.has(key) && v !== undefined && v !== null && v !== "")
+      .map(([k, v]) => {
+        if (typeof v === "object") return `${k}=${safeStringify(v)}`;
+        return `${k}=${v}`;
+      })
+      .join(" ");
+  } catch {
+    return "[FormatError]";
+  }
+};
+
+/**
+ * Extract actor identity from request.
+ */
+const getActor = (req) => {
+  try {
+    return req?.admin?.adminId
+      ? `admin:${req.admin.adminId}`
+      : req?.clerkUserId
+      ? `user:${req.clerkUserId}`
+      : "system";
+  } catch {
+    return "system";
+  }
+};
+
+/**
+ * Structured error logger.
+ * Logs to stderr only. Nothing from here is sent to frontend users.
+ */
+export const logError = (context, error, req = null) => {
   try {
     const errorInfo = {
       message: error?.message || String(error),
@@ -16,51 +84,53 @@ export const logError = (context, error) => {
       stack: process.env.NODE_ENV !== "production" ? error?.stack : undefined,
     };
 
-    console.error(`❌ [${context}] ${JSON.stringify(errorInfo)}`);
+    const requestId = req?.requestId || "";
+    const ridPart = requestId ? ` requestId=${requestId}` : "";
+
+    console.error(`[ERROR] [${context}]${ridPart} ${safeStringify(errorInfo)}`);
   } catch (err) {
-    console.error(`❌ [LoggerError] Failed to log: ${err.message}`);
+    console.error(`[ERROR] [LoggerError] Failed to log: ${err?.message || "unknown"}`);
   }
 };
 
-const formatLogData = (data = {}) => {
-  const { 
-    studentName, email, parentMobile, studentMobile, whatsappMobile,
-    title, content, posterName, identityPhotoURL, passportPhotoURL, 
-    username, password, fatherName, motherName, permanentAddress, presentAddress, ...safeData 
-  } = data;
-
-  return Object.entries(safeData)
-    .filter(([_, v]) => v !== undefined && v !== null && v !== "")
-    .map(([k, v]) => `${k}=${v}`)
-    .join(" ");
-};
-
-const getActor = (req) => {
-  return req?.admin?.adminId 
-    ? `admin:${req.admin.adminId}` 
-    : req?.clerkUserId 
-    ? `user:${req.clerkUserId}` 
-    : "system";
-};
-
+/**
+ * Business activity logger.
+ * Use for state-changing operations (registrations, deletions, settings updates).
+ */
 export const logActivity = (event, data = {}, req = null) => {
-  const timestamp = new Date().toISOString();
-  const actor = getActor(req);
-  const ip = req?.ip || req?.headers?.["x-forwarded-for"] || "unknown";
-  
-  const dataString = formatLogData(data);
-  const meta = `actor=${actor} ip=${ip}`;
-  
-  console.log(`📋 [${event}] timestamp=${timestamp} ${dataString} ${meta}`.trim());
+  try {
+    const timestamp = new Date().toISOString();
+    const actor = getActor(req);
+    const ip = req?.ip || req?.headers?.["x-forwarded-for"] || "unknown";
+    const requestId = req?.requestId || "";
+
+    const dataString = formatLogData(data);
+    const ridPart = requestId ? `requestId=${requestId} ` : "";
+    const meta = `actor=${actor} ip=${ip}`;
+
+    console.log(`[ACTIVITY] [${event}] timestamp=${timestamp} ${ridPart}${dataString} ${meta}`.trim());
+  } catch (err) {
+    console.error(`[ERROR] [LoggerError] logActivity failed: ${err?.message || "unknown"}`);
+  }
 };
 
+/**
+ * Security event logger.
+ * Use for auth failures, login attempts, rate limits, and request rejections.
+ */
 export const logSecurity = (event, data = {}, req = null) => {
-  const timestamp = new Date().toISOString();
-  const actor = getActor(req);
-  const ip = req?.ip || req?.headers?.["x-forwarded-for"] || "unknown";
-  
-  const dataString = formatLogData(data);
-  const meta = `actor=${actor} ip=${ip}`;
-  
-  console.log(`🔐 [${event}] timestamp=${timestamp} ${dataString} ${meta}`.trim());
+  try {
+    const timestamp = new Date().toISOString();
+    const actor = getActor(req);
+    const ip = req?.ip || req?.headers?.["x-forwarded-for"] || "unknown";
+    const requestId = req?.requestId || "";
+
+    const dataString = formatLogData(data);
+    const ridPart = requestId ? `requestId=${requestId} ` : "";
+    const meta = `actor=${actor} ip=${ip}`;
+
+    console.log(`[SECURITY] [${event}] timestamp=${timestamp} ${ridPart}${dataString} ${meta}`.trim());
+  } catch (err) {
+    console.error(`[ERROR] [LoggerError] logSecurity failed: ${err?.message || "unknown"}`);
+  }
 };

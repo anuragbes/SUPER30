@@ -2,7 +2,7 @@ import rateLimit from "express-rate-limit";
 import { logSecurity } from "../utils/logger.js";
 
 const limitHandler = (req, res, next, options) => {
-  logSecurity("RateLimitHit", { path: req.originalUrl, limit: options.max }, req);
+  logSecurity("RATE_LIMIT_EXCEEDED", { requestId: req.requestId, path: req.originalUrl, limit: options.max }, req);
   res.status(options.statusCode).send({ error: options.message });
 };
 

@@ -40,7 +40,7 @@ export default function StudentsList() {
   const token = localStorage.getItem("adminToken");
   const backendURL = import.meta.env.VITE_BACKEND_URL;
 
-  // ✅ Fetch students with filters
+  // Fetch students with filters
   const fetchStudents = async () => {
     try {
       setLoading(true);
@@ -114,7 +114,7 @@ export default function StudentsList() {
     }
   };
 
-  // ✅ Generate Admit Cards (progress)
+  // Generate Admit Cards (progress)
   const generateAdmitCards = async () => {
     if (selectedStudents.length === 0) {
       toast.error("No students selected");
@@ -165,7 +165,7 @@ export default function StudentsList() {
     }
   };
 
-  // ✅ Send Admit Cards (progress)
+  // Send Admit Cards (progress)
   const sendAdmitCardEmails = async () => {
     if (selectedStudents.length === 0) {
       toast.error("No students selected");
@@ -206,7 +206,7 @@ export default function StudentsList() {
     }
   };
 
-  // ✅ Download single admit card
+  // Download single admit card
   const handleDownloadAdmitCard = async (studentId) => {
     try {
       const res = await axios.get(

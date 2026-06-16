@@ -3,6 +3,7 @@ import Counter from "../models/counter.models.js";
 import Settings from "../models/settings.models.js";
 import { updatePCMAndPCB, deleteStudentFromSheet, clearRollNumbersFromSheet, clearRollNumbersFromClassSheet } from "../utils/googleSheets.js";
 import { logError, logActivity } from "../utils/logger.js";
+import { rejectRequest } from "../utils/rejectRequest.js";
 
 export const generateRollNumbers = async (req, res) => {
   try {
@@ -119,16 +120,16 @@ export const generateRollNumbers = async (req, res) => {
     // Sync updated roll numbers to Google Sheets
     await updatePCMAndPCB();
 
+    logActivity("RollNumbersGenerated", { order, assigned }, req);
+
     return res.json({
       success: true,
       message: "Roll numbers assigned only to students without roll numbers.",
       assigned,
     });
 
-    logActivity("RollNumbersGenerated", { order, assigned }, req);
-
   } catch (error) {
-    logError("[AdminController] generateRollNumbers", error);
+    logError("[AdminController] generateRollNumbers", error, req);
     res.status(500).json({ error: "Failed to generate roll numbers" });
   }
 };
@@ -153,7 +154,7 @@ export const deleteAllStudents = async (req, res) => {
     
     return res.json({ message: "All student data cleared successfully" });
   } catch (error) {
-    logError("[AdminController] deleteAllStudents", error);
+    logError("[AdminController] deleteAllStudents", error, req);
     res.status(500).json({ error: "An unexpected error occurred while clearing student data." });
   }
 };
@@ -181,7 +182,7 @@ export const getDashboardStats = async (req, res) => {
 
     res.status(200).json(stats);
   } catch (error) {
-    logError("[AdminController] getDashboardStats", error);
+    logError("[AdminController] getDashboardStats", error, req);
     res.status(500).json({ message: "Failed to load dashboard statistics." });
   }
 };
@@ -206,7 +207,7 @@ export const getSummaryStats = async (req, res) => {
       admitCardGenerated,
     });
   } catch (error) {
-    logError("[AdminController] getSummaryStats", error);
+    logError("[AdminController] getSummaryStats", error, req);
     res.status(500).json({ message: "Failed to load summary statistics." });
   }
 };
@@ -228,7 +229,7 @@ export const getExamSettings = async (req, res) => {
     }
     res.status(200).json(settings);
   } catch (error) {
-    logError("[AdminController] getExamSettings", error);
+    logError("[AdminController] getExamSettings", error, req);
     res.status(500).json({ message: "Failed to load exam settings." });
   }
 };
@@ -263,7 +264,7 @@ export const updateExamSettings = async (req, res) => {
       settings: updated,
     });
   } catch (error) {
-    logError("[AdminController] updateExamSettings", error);
+    logError("[AdminController] updateExamSettings", error, req);
     res.status(500).json({ message: "Failed to update exam settings." });
   }
 };
@@ -276,17 +277,14 @@ export const deleteStudent = async (req, res) => {
   const { studentId } = req.params;
 
   try {
-    // 1️⃣ Delete from DB
+    // Delete from DB
     const student = await Student.findOneAndDelete({ studentId });
 
     if (!student) {
-      return res.status(404).json({
-        success: false,
-        message: "Student not found",
-      });
+      return rejectRequest(req, res, 404, "student_not_found", "Student not found");
     }
 
-    // 2️⃣ Delete from correct Google Sheet tab
+    // Delete from correct Google Sheet tab
     await deleteStudentFromSheet(studentId, student.stream, student.classMoving);
 
     logActivity("StudentDeleted", { studentId }, req);
@@ -296,7 +294,7 @@ export const deleteStudent = async (req, res) => {
     });
 
   } catch (error) {
-    logError("[AdminController] deleteStudent", error);
+    logError("[AdminController] deleteStudent", error, req);
     res.status(500).json({
       success: false,
       message: "An unexpected error occurred while deleting the student.",
@@ -313,12 +311,8 @@ export const removeRollNumbers = async (req, res) => {
 
     // Junior mode: remove by class
     if (classGroup) {
-      const validClasses = ["Class 8", "Class 9", "Class 10"];
-      if (!validClasses.includes(classGroup)) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid class. Must be Class 8, Class 9, or Class 10.",
-        });
+      if (!["Class 8", "Class 9", "Class 10"].includes(classGroup)) {
+        return rejectRequest(req, res, 400, "invalid_class_group", "A valid classGroup is required.");
       }
 
       const result = await Student.updateMany(
@@ -342,10 +336,7 @@ export const removeRollNumbers = async (req, res) => {
 
     // Senior mode: remove by stream
     if (!stream || !["PCM", "PCB"].includes(stream)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid stream. Must be PCM or PCB.",
-      });
+      return rejectRequest(req, res, 400, "invalid_stream", "A valid stream is required.");
     }
 
     const result = await Student.updateMany(
@@ -367,7 +358,7 @@ export const removeRollNumbers = async (req, res) => {
     });
 
   } catch (error) {
-    logError("[AdminController] removeRollNumbers", error);
+    logError("[AdminController] removeRollNumbers", error, req);
     res.status(500).json({
       success: false,
       message: "Failed to remove roll numbers. Please try again.",

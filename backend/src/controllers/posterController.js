@@ -1,6 +1,7 @@
 import Poster from "../models/poster.models.js";
 import { cloudinary } from "../middlewares/upload.js";
 import { logError, logActivity } from "../utils/logger.js";
+import { rejectRequest } from "../utils/rejectRequest.js";
 
 /**
  * @desc    Upload one or more posters (Admin)
@@ -10,10 +11,7 @@ import { logError, logActivity } from "../utils/logger.js";
 export const uploadPoster = async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Please upload at least one image",
-      });
+      return rejectRequest(req, res, 400, "no_files_uploaded", "Please upload at least one image");
     }
 
     // Get the highest current order value
@@ -37,7 +35,7 @@ export const uploadPoster = async (req, res) => {
       data: posters,
     });
   } catch (error) {
-    logError("[PosterController] uploadPoster", error);
+    logError("[PosterController] uploadPoster", error, req);
     res.status(500).json({
       success: false,
       message: "Failed to upload poster",
@@ -59,7 +57,7 @@ export const getAllPosters = async (req, res) => {
       data: posters,
     });
   } catch (error) {
-    logError("[PosterController] getAllPosters", error);
+    logError("[PosterController] getAllPosters", error, req);
     res.status(500).json({
       success: false,
       message: "Failed to fetch posters",
@@ -81,7 +79,7 @@ export const getActivePosters = async (req, res) => {
       data: posters,
     });
   } catch (error) {
-    logError("[PosterController] getActivePosters", error);
+    logError("[PosterController] getActivePosters", error, req);
     res.status(500).json({
       success: false,
       message: "Failed to fetch posters",
@@ -101,10 +99,7 @@ export const togglePosterStatus = async (req, res) => {
     const poster = await Poster.findById(id);
 
     if (!poster) {
-      return res.status(404).json({
-        success: false,
-        message: "Poster not found",
-      });
+      return rejectRequest(req, res, 404, "poster_not_found", "Poster not found");
     }
 
     poster.isActive = !poster.isActive;
@@ -117,7 +112,7 @@ export const togglePosterStatus = async (req, res) => {
       data: poster,
     });
   } catch (error) {
-    logError("[PosterController] togglePosterStatus", error);
+    logError("[PosterController] togglePosterStatus", error, req);
     res.status(500).json({
       success: false,
       message: "Failed to update poster status",
@@ -135,10 +130,7 @@ export const reorderPosters = async (req, res) => {
     const { orderedIds } = req.body;
 
     if (!orderedIds || !Array.isArray(orderedIds)) {
-      return res.status(400).json({
-        success: false,
-        message: "orderedIds array is required",
-      });
+      return rejectRequest(req, res, 400, "invalid_ordered_ids", "orderedIds array is required");
     }
 
     // Update order for each poster
@@ -160,7 +152,7 @@ export const reorderPosters = async (req, res) => {
       data: posters,
     });
   } catch (error) {
-    logError("[PosterController] reorderPosters", error);
+    logError("[PosterController] reorderPosters", error, req);
     res.status(500).json({
       success: false,
       message: "Failed to reorder posters",
@@ -180,17 +172,14 @@ export const deletePoster = async (req, res) => {
     const poster = await Poster.findById(id);
 
     if (!poster) {
-      return res.status(404).json({
-        success: false,
-        message: "Poster not found",
-      });
+      return rejectRequest(req, res, 404, "poster_not_found", "Poster not found");
     }
 
     // Delete from Cloudinary
     try {
       await cloudinary.uploader.destroy(poster.publicId);
     } catch (cloudErr) {
-      logError("[PosterController] deletePoster - Cloudinary", cloudErr);
+      logError("[PosterController] deletePoster - Cloudinary", cloudErr, req);
       // Continue with DB deletion even if Cloudinary fails
     }
 
@@ -202,7 +191,7 @@ export const deletePoster = async (req, res) => {
       message: "Poster deleted successfully",
     });
   } catch (error) {
-    logError("[PosterController] deletePoster", error);
+    logError("[PosterController] deletePoster", error, req);
     res.status(500).json({
       success: false,
       message: "Failed to delete poster",

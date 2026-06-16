@@ -10,6 +10,7 @@ import cors from "cors";
 import adminRoutes from "./routes/adminRoutes.js";
 import { apiLimiter } from './middlewares/rateLimiter.js';
 import { logError } from './utils/logger.js';
+import { generateRequestId } from './utils/requestId.js';
 
 
 // initialise express app
@@ -41,9 +42,17 @@ connectDB()
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// HTTP request logging — skips /health and successful requests to reduce noise
+// Assign a unique requestId to every incoming request
+app.use((req, res, next) => {
+  req.requestId = generateRequestId();
+  req.startTime = Date.now();
+  next();
+});
+
+// HTTP request logging — only logs 4xx/5xx failures with requestId correlation
+morgan.token("id", (req) => req.requestId);
 app.use(
-  morgan('❌ :method :url | :status', {
+  morgan('[HTTP_ERROR] requestId=:id :method :url :status :response-time ms', {
     skip: (req, res) => req.path === '/health' || res.statusCode < 400,
   })
 );
@@ -65,7 +74,7 @@ app.get("/health", (req, res) => {
 
 // Global error handler
 app.use((err, req, res, next) => {
-  logError(`[GlobalErrorHandler] ${req.method} ${req.path}`, err);
+  logError(`GlobalErrorHandler ${req.method} ${req.path}`, err, req);
   res.status(err.status || 500).json({
     error: err.message || "An unexpected server error occurred.",
   });
@@ -74,7 +83,15 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 8000;
 
 app.listen(PORT, () => {
-  console.log(`✅ Server started on http://localhost:${PORT}`);
+  console.log(`Server started on http://localhost:${PORT}`);
 });
 
+// Crash protection — catch fatal errors that bypass Express
+process.on("uncaughtException", (error) => {
+  logError("UNCAUGHT_EXCEPTION", error);
+  process.exit(1);
+});
 
+process.on("unhandledRejection", (reason) => {
+  logError("UNHANDLED_REJECTION", reason instanceof Error ? reason : new Error(String(reason)));
+});

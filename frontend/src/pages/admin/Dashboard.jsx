@@ -218,10 +218,10 @@ export default function Dashboard() {
       await axios.delete(`${backendURL}/api/admin/clear-database`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      toast.success("✅ All student data cleared!");
+      toast.success("All student data cleared!");
       fetchDashboardData();
     } catch {
-      toast.error("❌ Failed to clear data.");
+      toast.error("Failed to clear data.");
     } finally {
       setLoading(false);
     }
