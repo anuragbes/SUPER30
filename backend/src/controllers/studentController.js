@@ -14,6 +14,7 @@ export const registerStudent = async (req, res) => {
 
     logActivity("REGISTER_ATTEMPT", {
       requestId: req.requestId,
+      email: req.body?.email,
     }, req);
 
     if (!clerkUserId) {
@@ -22,6 +23,11 @@ export const registerStudent = async (req, res) => {
 
     const existingStudent = await Student.findOne({ clerkUserId });
     if (existingStudent) {
+      logActivity("DUPLICATE_REGISTRATION_ATTEMPT", {
+        requestId: req.requestId,
+        email: req.body?.email,
+        clerkUserId
+      }, req);
       return rejectRequest(req, res, 400, "duplicate_registration",
         "You have already registered for this exam");
     }
@@ -49,6 +55,7 @@ export const registerStudent = async (req, res) => {
     logActivity("REGISTER_SUCCESS", {
       requestId: req.requestId,
       studentId: newStudent.studentId,
+      email: newStudent.email,
       stream:    newStudent.stream    || null,
       class:     newStudent.classMoving || null,
       target:    newStudent.target    || null,
