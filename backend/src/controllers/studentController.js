@@ -12,26 +12,36 @@ export const registerStudent = async (req, res) => {
   try {
     const clerkUserId = req.clerkUserId;
 
-    logActivity("REGISTER_ATTEMPT", {
-      requestId: req.requestId,
-      email: req.body?.email,
-    }, req);
-
     if (!clerkUserId) {
       return rejectRequest(req, res, 401, "missing_clerk_user_id", "Unauthorized");
     }
 
-    const existingStudent = await Student.findOne({ clerkUserId });
-    if (existingStudent) {
-      logActivity("DUPLICATE_REGISTRATION_ATTEMPT", {
-        requestId: req.requestId,
-        email: req.body?.email,
-        clerkUserId
-      }, req);
-      return rejectRequest(req, res, 400, "duplicate_registration",
-        "You have already registered for this exam");
+    const duplicateConditions = [];
+
+    if (req.body?.studentMobile) {
+      duplicateConditions.push({ studentMobile: req.body.studentMobile });
     }
 
+    if (req.body?.studentName && req.body?.fatherName && req.body?.dateOfBirth) {
+      duplicateConditions.push({
+        studentName: { $regex: new RegExp(`^${req.body.studentName.trim()}$`, "i") },
+        fatherName: { $regex: new RegExp(`^${req.body.fatherName.trim()}$`, "i") },
+        dateOfBirth: new Date(req.body.dateOfBirth)
+      });
+    }
+
+    if (duplicateConditions.length > 0) {
+      const existingStudent = await Student.findOne({ $or: duplicateConditions });
+      if (existingStudent) {
+        logActivity("DUPLICATE_REGISTRATION_ATTEMPT", {
+          requestId: req.requestId,
+          email: req.body?.email,
+          clerkUserId
+        }, req);
+        return rejectRequest(req, res, 400, "duplicate_registration",
+          "You have already registered for this exam");
+      }
+    }
     const newStudent = new Student({
       ...req.body,
       clerkUserId,
@@ -56,9 +66,9 @@ export const registerStudent = async (req, res) => {
       requestId: req.requestId,
       studentId: newStudent.studentId,
       email: newStudent.email,
-      stream:    newStudent.stream    || null,
-      class:     newStudent.classMoving || null,
-      target:    newStudent.target    || null,
+      stream: newStudent.stream || null,
+      class: newStudent.classMoving || null,
+      target: newStudent.target || null,
     }, req);
 
     res.status(201).json({
@@ -151,5 +161,24 @@ export const resetStudentIdCounter = async (req, res) => {
   } catch (error) {
     logError("[StudentController] resetStudentIdCounter", error, req);
     res.status(500).json({ error: "Failed to reset ID counter" });
+  }
+};
+
+export const getMyRegistrations = async (req, res) => {
+  try {
+    const clerkUserId = req.clerkUserId;
+    if (!clerkUserId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    const students = await Student.find({ clerkUserId }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: students
+    });
+  } catch (error) {
+    logError("[StudentController] getMyRegistrations", error, req);
+    res.status(500).json({ success: false, message: "Failed to load your registrations." });
   }
 };

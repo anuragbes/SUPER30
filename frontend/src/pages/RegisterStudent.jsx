@@ -45,6 +45,7 @@ export default function RegisterStudent() {
   const [sameAsPermanent, setSameAsPermanent] = useState(draft?.sameAsPermanent || false);
   const [passportPhoto, setPassportPhoto] = useState(null);
   const [identityPhoto, setIdentityPhoto] = useState(null);
+  const [registeredStudents, setRegisteredStudents] = useState([]);
 
   const backendURL = import.meta.env.VITE_BACKEND_URL;
 
@@ -53,6 +54,22 @@ export default function RegisterStudent() {
       navigate("/");
     }
   }, [user, navigate]);
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchRegistrations = async () => {
+      try {
+        const token = await getToken();
+        const res = await axios.get(`${backendURL}/api/students/my-registrations`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setRegisteredStudents(res.data.data || []);
+      } catch (error) {
+        console.error("Failed to fetch previous registrations", error);
+      }
+    };
+    fetchRegistrations();
+  }, [user, getToken, backendURL]);
 
   useEffect(() => {
     const fetchFormMode = async () => {
@@ -130,9 +147,9 @@ export default function RegisterStudent() {
   };
 
   const handleLogout = async () => {
-        await signOut();
-        navigate("/");
-        toast.success("Logged out successfully");
+    await signOut();
+    navigate("/");
+    toast.success("Logged out successfully");
   };
 
   const handleClearForm = () => {
@@ -143,7 +160,7 @@ export default function RegisterStudent() {
       setSameAsPermanent(false);
       setPassportPhoto(null);
       setIdentityPhoto(null);
-      
+
       const email = user?.primaryEmailAddress?.emailAddress || "";
       setFormData({
         permanentAddress: "",
@@ -153,7 +170,7 @@ export default function RegisterStudent() {
         testCentre: formMode === "junior" ? "" : "British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)",
         email,
       });
-      
+
       toast.success("Form cleared successfully.");
     }
   };
@@ -264,8 +281,8 @@ export default function RegisterStudent() {
         description: `Student ID: ${res.data.studentId}`,
       });
 
-      // Automatically log out the user
-      await signOut();
+      // Keep the user logged in to allow multiple registrations
+      // await signOut();
 
       navigate(`/success/${res.data.studentId}`, {
         state: { studentName: formData.studentName }
@@ -301,6 +318,22 @@ export default function RegisterStudent() {
             Logout
           </Button>
         </div>
+
+        {registeredStudents.length > 0 && (
+          <div className="mb-6 p-4 sm:p-6 bg-blue-50/50 border border-blue-100 rounded-xl shadow-sm">
+            <h2 className="text-lg font-semibold text-blue-900 mb-3">Your Previous Registrations</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {registeredStudents.map(student => (
+                <div key={student.studentId} className="bg-white p-3 rounded-lg border border-blue-100 shadow-sm flex flex-col">
+                  <p className="font-semibold text-slate-800 text-sm truncate">{student.studentName}</p>
+                  <p className="text-xs text-slate-500 mt-1">ID: <span className="font-medium text-slate-700">{student.studentId}</span></p>
+                  <p className="text-xs text-slate-500 mt-0.5">Class: <span className="font-medium text-slate-700">{student.classMoving}</span></p>
+                </div>
+              ))}
+            </div>
+            <p className="text-sm text-blue-700 mt-4">You can register another student below.</p>
+          </div>
+        )}
 
         <form
           onSubmit={handleSubmit}
@@ -583,24 +616,24 @@ export default function RegisterStudent() {
               </Field>
 
               {formMode !== "junior" && (
-              <Field>
-                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
-                  Select Stream<span className="text-red-500"> *</span>
-                </FieldLabel>
-                <Select
-                  value={formData.stream || ""}
-                  onValueChange={(value) => setFormData({ ...formData, stream: value })}
-                >
-                  <SelectTrigger className="border border-slate-200 rounded-lg bg-white w-full">
-                    <SelectValue placeholder="Select Stream" />
-                  </SelectTrigger>
+                <Field>
+                  <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
+                    Select Stream<span className="text-red-500"> *</span>
+                  </FieldLabel>
+                  <Select
+                    value={formData.stream || ""}
+                    onValueChange={(value) => setFormData({ ...formData, stream: value })}
+                  >
+                    <SelectTrigger className="border border-slate-200 rounded-lg bg-white w-full">
+                      <SelectValue placeholder="Select Stream" />
+                    </SelectTrigger>
 
-                  <SelectContent>
-                    <SelectItem value="PCM">PCM</SelectItem>
-                    <SelectItem value="PCB">PCB</SelectItem>
-                  </SelectContent>
-                </Select>
-              </Field>
+                    <SelectContent>
+                      <SelectItem value="PCM">PCM</SelectItem>
+                      <SelectItem value="PCB">PCB</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
               )}
 
               <Field>
@@ -884,7 +917,7 @@ export default function RegisterStudent() {
               </Field>
             </div>
           </FormSection>
-          
+
           {/* DOCUMENT UPLOAD */}
           <FormSection title="Document Upload" description="Upload required documents">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

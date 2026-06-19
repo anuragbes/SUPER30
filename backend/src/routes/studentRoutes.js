@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import { registerStudent, getAllStudents, resetStudentIdCounter } from "../controllers/studentController.js";
+import { registerStudent, getAllStudents, resetStudentIdCounter, getMyRegistrations } from "../controllers/studentController.js";
 import { generateAdmitCard } from "../controllers/admitCardController.js";
 import upload, { MAX_FILE_SIZE_MB } from "../middlewares/upload.js";
 import { logActivity } from "../utils/logger.js";
@@ -13,6 +13,7 @@ import { registrationLimiter } from "../middlewares/rateLimiter.js";
 const router = express.Router();
 
 router.get("/all", getAllStudents);
+router.get("/my-registrations", verifyClerkToken, getMyRegistrations);
 router.get("/admit-card/:studentId", generateAdmitCard);
 
 // Multer error handler — wraps the upload middleware so file errors return clean JSON
@@ -40,31 +41,9 @@ const handleUpload = (req, res, next) => {
   });
 };
 
-// REQUEST_START / REQUEST_END lifecycle logging — only for registration
-const registrationLifecycle = (req, res, next) => {
-  logActivity("REQUEST_START", {
-    requestId: req.requestId,
-    method: req.method,
-    path: req.originalUrl,
-  }, req);
-
-  res.on("finish", () => {
-    const durationMs = Date.now() - req.startTime;
-    logActivity("REQUEST_END", {
-      requestId: req.requestId,
-      method: req.method,
-      path: req.originalUrl,
-      statusCode: res.statusCode,
-      durationMs,
-    }, req);
-  });
-
-  next();
-};
-
+// Removed request start/end lifecycle logging
 router.post(
   "/register",
-  registrationLifecycle,  // Log request lifecycle
   registrationLimiter,    // Rate limit registrations
   verifyClerkToken,       // Protect this route
   handleUpload,           // Upload files with error handling

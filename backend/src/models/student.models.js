@@ -139,7 +139,6 @@ const studentSchema = new mongoose.Schema({
     clerkUserId: {
         type: String,
         required: true,
-        unique: true,
         index: true,
     },
 }, { timestamps: true })
