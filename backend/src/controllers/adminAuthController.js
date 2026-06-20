@@ -32,10 +32,11 @@ export const adminLogin = async (req, res) => {
     
     logSecurity("LOGIN_SUCCESS", { userAgent }, req);
     
+    const isProduction = process.env.NODE_ENV === "production";
     res.cookie("adminToken", token, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
 
@@ -48,10 +49,11 @@ export const adminLogin = async (req, res) => {
 };
 
 export const adminLogout = (req, res) => {
+  const isProduction = process.env.NODE_ENV === "production";
   res.clearCookie("adminToken", {
     httpOnly: true,
-    secure: true,
-    sameSite: "none",
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
   });
   res.json({ message: "Logout successful" });
 };
