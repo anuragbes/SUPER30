@@ -18,10 +18,6 @@ export const registerStudent = async (req, res) => {
 
     const duplicateConditions = [];
 
-    if (req.body?.studentMobile) {
-      duplicateConditions.push({ studentMobile: req.body.studentMobile });
-    }
-
     if (req.body?.studentName && req.body?.fatherName && req.body?.dateOfBirth) {
       duplicateConditions.push({
         studentName: { $regex: new RegExp(`^${req.body.studentName.trim()}$`, "i") },
