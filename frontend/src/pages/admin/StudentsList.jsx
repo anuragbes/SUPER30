@@ -233,7 +233,7 @@ export default function StudentsList() {
     setFilterClass("");
     setFilterTarget("");
     setFilterStatus("");
-    fetchStudents();
+    setPage(1);
   };
 
   const handleDeleteStudent = async (studentId) => {
@@ -284,7 +284,7 @@ export default function StudentsList() {
               type="text"
               placeholder="Search by Name or ID..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               className="pl-10 bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20"
             />
           </div>
@@ -296,7 +296,7 @@ export default function StudentsList() {
                 {formMode === "junior" ? (
                   <Select
                     value={filterClass}
-                    onValueChange={(value) => setFilterClass(value)}
+                    onValueChange={(value) => { setFilterClass(value); setPage(1); }}
                   >
                     <SelectTrigger className="bg-background border-border text-foreground w-full">
                       <SelectValue placeholder="Select Class" />
@@ -311,7 +311,7 @@ export default function StudentsList() {
                 ) : (
                   <Select
                     value={filterStream}
-                    onValueChange={(value) => setFilterStream(value)}
+                    onValueChange={(value) => { setFilterStream(value); setPage(1); }}
                   >
                     <SelectTrigger className="bg-background border-border text-foreground w-full">
                       <SelectValue placeholder="Select Stream" />
@@ -328,16 +328,26 @@ export default function StudentsList() {
               <div className="flex flex-col gap-1 w-full sm:w-auto sm:flex-1">
                 <Select
                   value={filterTarget}
-                  onValueChange={(value) => setFilterTarget(value)}
+                  onValueChange={(value) => { setFilterTarget(value); setPage(1); }}
                 >
                   <SelectTrigger className="bg-background border-border text-foreground w-full">
                     <SelectValue placeholder="Select Target" />
                   </SelectTrigger>
 
                   <SelectContent>
-                    <SelectItem value="JEE">JEE</SelectItem>
-                    <SelectItem value="NEET">NEET</SelectItem>
-                    <SelectItem value="CBSE Board">CBSE Board</SelectItem>
+                    {formMode === "junior" ? (
+                      <>
+                        <SelectItem value="JEE Mains/ Advanced / Olympiads">JEE Mains/ Advanced / Olympiads</SelectItem>
+                        <SelectItem value="NEET">NEET</SelectItem>
+                        <SelectItem value="CBSE - Board">CBSE Board</SelectItem>
+                      </>
+                    ) : (
+                      <>
+                        <SelectItem value="JEE">JEE</SelectItem>
+                        <SelectItem value="NEET">NEET</SelectItem>
+                        <SelectItem value="CBSE Board">CBSE Board</SelectItem>
+                      </>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -345,9 +355,10 @@ export default function StudentsList() {
               <div className="flex flex-col gap-1 w-full sm:w-auto sm:flex-1">
                 <Select
                   value={filterStatus || "all"}
-                  onValueChange={(value) =>
-                    setFilterStatus(value === "all" ? "" : value)
-                  }
+                  onValueChange={(value) => {
+                    setFilterStatus(value === "all" ? "" : value);
+                    setPage(1);
+                  }}
                 >
                   <SelectTrigger className="bg-background border-border text-foreground w-full">
                     <SelectValue placeholder="Select Status" />
