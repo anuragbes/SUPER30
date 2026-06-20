@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import { axiosInstance } from "@/lib/axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,7 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const backendURL = import.meta.env.VITE_BACKEND_URL;
+
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -30,15 +30,9 @@ export default function AdminLogin() {
     setLoading(true);
 
     try {
-      const res = await axios.post(
-        `${backendURL}/api/admin/login`,
-        formData
-      );
+      const res = await axiosInstance.post("/api/admin/login", formData);
 
       toast.success("Login Successful!");
-
-      // Save token
-      localStorage.setItem("adminToken", res.data.token);
 
       navigate("/admin/dashboard");
     } catch (error) {

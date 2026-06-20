@@ -1,11 +1,10 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import axios from "axios";
+import { axiosInstance } from "@/lib/axios";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Image, Trash2, Eye, EyeOff, ArrowUp, ArrowDown, Upload, GripVertical } from "lucide-react";
 
-const API_URL = import.meta.env.VITE_BACKEND_URL;
 
 const Posters = () => {
   const [posters, setPosters] = useState([]);
@@ -13,14 +12,11 @@ const Posters = () => {
   const [loading, setLoading] = useState({ type: null, id: null });
   const fileInputRef = useRef(null);
 
-  const token = localStorage.getItem("adminToken");
 
   // Fetch All Posters
   const fetchPosters = useCallback(async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/admin/posters/all`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axiosInstance.get(`/api/admin/posters/all`);
       if (res.data && res.data.data) {
         setPosters(res.data.data);
       }
@@ -57,9 +53,8 @@ const Posters = () => {
 
     setUploading(true);
     try {
-      await axios.post(`${API_URL}/api/admin/posters`, formData, {
+      await axiosInstance.post(`/api/admin/posters`, formData, {
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
         },
       });
@@ -80,10 +75,9 @@ const Posters = () => {
   const toggleStatus = useCallback(async (id) => {
     try {
       setLoading({ type: "toggle", id });
-      await axios.patch(
-        `${API_URL}/api/admin/posters/${id}/toggle`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
+      await axiosInstance.patch(
+        `/api/admin/posters/${id}/toggle`,
+        {}
       );
 
       setPosters((prev) =>
@@ -107,9 +101,7 @@ const Posters = () => {
 
     try {
       setLoading({ type: "delete", id });
-      await axios.delete(`${API_URL}/api/admin/posters/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axiosInstance.delete(`/api/admin/posters/${id}`);
       toast.success("Poster deleted successfully!");
       fetchPosters();
     } catch (err) {
@@ -135,10 +127,9 @@ const Posters = () => {
 
     try {
       const orderedIds = newPosters.map((p) => p._id);
-      await axios.patch(
-        `${API_URL}/api/admin/posters/reorder`,
-        { orderedIds },
-        { headers: { Authorization: `Bearer ${token}` } }
+      await axiosInstance.patch(
+        `/api/admin/posters/reorder`,
+        { orderedIds }
       );
       toast.success("Poster order updated!");
     } catch (err) {

@@ -1,4 +1,5 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { axiosInstance } from "@/lib/axios";
 import { useState } from "react";
 import { Menu, X, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,8 +9,12 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleLogout = () => {
-    localStorage.removeItem("adminToken");
+  const handleLogout = async () => {
+    try {
+      await axiosInstance.post("/api/admin/logout");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
     navigate("/");
   };
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { axiosInstance } from "@/lib/axios";
 
 import { toast } from "sonner";
 import { CheckCheck, FileText, Mail, Search, Trash } from "lucide-react";
@@ -37,15 +37,13 @@ export default function StudentsList() {
   const [totalPages, setTotalPages] = useState(1);
   const [formMode, setFormMode] = useState("senior");
 
-  const token = localStorage.getItem("adminToken");
-  const backendURL = import.meta.env.VITE_BACKEND_URL;
+
 
   // Fetch students with filters
   const fetchStudents = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${backendURL}/api/students/all`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await axiosInstance.get(`/api/students/all`, {
         params: {
           search,
           stream: formMode === "senior" ? filterStream : "",
@@ -79,9 +77,7 @@ export default function StudentsList() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await axios.get(`${backendURL}/api/admin/exam-settings`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await axiosInstance.get(`/api/admin/exam-settings`);
         setFormMode(res.data.formMode || "senior");
       } catch (error) {
         console.error("Error fetching settings:", error);
@@ -130,10 +126,9 @@ export default function StudentsList() {
         setProgressGenerate({ current: i + 1, total: selectedStudents.length });
 
         try {
-          const res = await axios.post(
-            `${backendURL}/api/admin/bulk-generate-admit-cards`,
-            { selectedStudents: [studentId] },
-            { headers: { Authorization: `Bearer ${token}` } },
+          const res = await axiosInstance.post(
+            `/api/admin/bulk-generate-admit-cards`,
+            { selectedStudents: [studentId] }
           );
 
           if (!res.data.success) {
@@ -180,10 +175,9 @@ export default function StudentsList() {
         const studentId = selectedStudents[i];
         setProgressSend({ current: i + 1, total: selectedStudents.length });
 
-        await axios.post(
-          `${backendURL}/api/admin/bulk-send-admit-cards`,
-          { selectedStudents: [studentId] },
-          { headers: { Authorization: `Bearer ${token}` } },
+        await axiosInstance.post(
+          `/api/admin/bulk-send-admit-cards`,
+          { selectedStudents: [studentId] }
         );
 
         setStudents((prev) =>
@@ -209,8 +203,8 @@ export default function StudentsList() {
   // Download single admit card
   const handleDownloadAdmitCard = async (studentId) => {
     try {
-      const res = await axios.get(
-        `${backendURL}/api/students/admit-card/${studentId}`,
+      const res = await axiosInstance.get(
+        `/api/students/admit-card/${studentId}`,
         {
           responseType: "blob",
         },
@@ -252,9 +246,8 @@ export default function StudentsList() {
     }
 
     try {
-      const res = await axios.delete(
-        `${backendURL}/api/admin/delete-student/${studentId}`,
-        { headers: { Authorization: `Bearer ${token}` } },
+      const res = await axiosInstance.delete(
+        `/api/admin/delete-student/${studentId}`
       );
 
       if (res.data.success) {

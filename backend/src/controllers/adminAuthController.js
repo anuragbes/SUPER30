@@ -31,10 +31,40 @@ export const adminLogin = async (req, res) => {
     req.admin = { adminId: admin._id };
     
     logSecurity("LOGIN_SUCCESS", { userAgent }, req);
-    res.json({ message: "Login successful", token });
+    
+    res.cookie("adminToken", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
+    res.json({ message: "Login successful", admin: { username: admin.username } });
 
   } catch (error) {
     logError("[AdminAuthController] adminLogin", error, req);
     res.status(500).json({ error: "An unexpected error occurred during login. Please try again." });
+  }
+};
+
+export const adminLogout = (req, res) => {
+  res.clearCookie("adminToken", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+  });
+  res.json({ message: "Logout successful" });
+};
+
+export const adminMe = async (req, res) => {
+  try {
+    const admin = await Admin.findById(req.admin.adminId).select("-password");
+    if (!admin) {
+      return res.status(404).json({ error: "Admin not found" });
+    }
+    res.json({ admin: { username: admin.username } });
+  } catch (error) {
+    logError("[AdminAuthController] adminMe", error, req);
+    res.status(500).json({ error: "An unexpected error occurred." });
   }
 };

@@ -1,12 +1,11 @@
 import { useEffect, useState, useCallback } from "react";
-import axios from "axios";
+import { axiosInstance } from "@/lib/axios";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Bell, Trash2, Edit2, X, Pin } from "lucide-react";
 
-const API_URL = import.meta.env.VITE_BACKEND_URL;
 
 const Announcements = () => {
   const [formData, setFormData] = useState({ title: "", message: "" });
@@ -15,14 +14,11 @@ const Announcements = () => {
   const [editData, setEditData] = useState({ title: "", message: "" });
   const [loading, setLoading] = useState({ type: null, id: null });
 
-  const token = localStorage.getItem("adminToken");
 
   // Fetch All Announcements
   const fetchAnnouncements = useCallback(async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/admin/announcements`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axiosInstance.get(`/api/admin/announcements`);
       if (res.data && res.data.data) {
         setAnnouncements(res.data.data);
       }
@@ -43,12 +39,9 @@ const Announcements = () => {
 
     setLoading({ type: "create", id: null });
     try {
-      await axios.post(
-        `${API_URL}/api/admin/announcements`,
-        formData,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      await axiosInstance.post(
+        `/api/admin/announcements`,
+        formData
       );
 
       setFormData({ title: "", message: "" });
@@ -65,12 +58,9 @@ const Announcements = () => {
   const handleToggleField = useCallback(async (id, endpointSuffix, fieldKey, successMessage) => {
     try {
       setLoading({ type: endpointSuffix, id });
-      await axios.patch(
-        `${API_URL}/api/admin/announcements/${id}/${endpointSuffix}`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      await axiosInstance.patch(
+        `/api/admin/announcements/${id}/${endpointSuffix}`,
+        {}
       );
       
       // Optimistic update - toggle the field
@@ -103,9 +93,7 @@ const Announcements = () => {
     
     try {
       setLoading({ type: "delete", id });
-      await axios.delete(`${API_URL}/api/admin/announcements/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axiosInstance.delete(`/api/admin/announcements/${id}`);
       toast.success("Announcement deleted successfully!");
       fetchAnnouncements();
     } catch (err) {
@@ -142,12 +130,9 @@ const Announcements = () => {
 
     try {
       setLoading({ type: "save", id: editingId });
-      await axios.patch(
-        `${API_URL}/api/admin/announcements/${editingId}`,
-        editData,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      await axiosInstance.patch(
+        `/api/admin/announcements/${editingId}`,
+        editData
       );
 
       // Update local state

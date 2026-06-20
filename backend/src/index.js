@@ -8,6 +8,7 @@ import studentRoutes from './routes/studentRoutes.js';
 import connectDB from './db/index.js'
 import cors from "cors";
 import adminRoutes from "./routes/adminRoutes.js";
+import cookieParser from "cookie-parser";
 import { apiLimiter } from './middlewares/rateLimiter.js';
 import { logError } from './utils/logger.js';
 import { generateRequestId } from './utils/requestId.js';
@@ -41,6 +42,7 @@ connectDB()
 // middleware to parse JSON Body
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Assign a unique requestId to every incoming request
 app.use((req, res, next) => {

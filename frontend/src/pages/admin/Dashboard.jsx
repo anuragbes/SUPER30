@@ -1,4 +1,4 @@
-import axios from "axios";
+import { axiosInstance } from "@/lib/axios";
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -48,7 +48,7 @@ export default function Dashboard() {
   const [registrationOpen, setRegistrationOpen] = useState(true);
   const [formMode, setFormMode] = useState("senior");
 
-  const token = localStorage.getItem("adminToken");
+
   const COLORS = [
     "#0088FE",
     "#00C49F",
@@ -58,14 +58,11 @@ export default function Dashboard() {
     "#6A4C93",
   ];
 
-  const backendURL = import.meta.env.VITE_BACKEND_URL;
-  const googleSheetURL = import.meta.env.VITE_GOOGLE_SHEET_URL;
+
 
   const fetchExamSettings = async () => {
     try {
-      const res = await axios.get(`${backendURL}/api/admin/exam-settings`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axiosInstance.get(`/api/admin/exam-settings`);
 
       setExamDate(res.data.examDate || "");
       setLastDate(res.data.lastDateToRegister || "");
@@ -87,9 +84,7 @@ export default function Dashboard() {
         formMode,
       };
 
-      await axios.post(`${backendURL}/api/admin/exam-settings`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axiosInstance.post(`/api/admin/exam-settings`, payload);
 
       toast.success("Exam settings updated!");
 
@@ -104,16 +99,11 @@ export default function Dashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${backendURL}/api/admin/dashboard-stats`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axiosInstance.get(`/api/admin/dashboard-stats`);
       setStats(res.data);
 
-      const summaryRes = await axios.get(
-        `${backendURL}/api/admin/summary-stats`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
+      const summaryRes = await axiosInstance.get(
+        `/api/admin/summary-stats`
       );
       setSummary(summaryRes.data);
     } catch (error) {
@@ -138,9 +128,7 @@ export default function Dashboard() {
       return;
     try {
       setLoadingReset(true);
-      await axios.post(`${backendURL}/api/students/reset-id-counter`, null, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axiosInstance.post(`/api/students/reset-id-counter`, null);
       toast.success(
         "Counter reset successfully. Next student will be STU0001.",
       );
@@ -160,9 +148,7 @@ export default function Dashboard() {
     try {
       setLoadingRoll(true);
       const payload = { order };
-      await axios.post(`${backendURL}/api/admin/generate-rollno`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axiosInstance.post(`/api/admin/generate-rollno`, payload);
       toast.success(`Roll numbers generated (${formMode === "junior" ? "by class" : "by stream"}) — order: ${order}`);
       fetchDashboardData();
     } catch {
@@ -192,9 +178,7 @@ export default function Dashboard() {
     try {
       setLoadingRemoveRoll(true);
       const payload = isJunior ? { classGroup: removeClass } : { stream: removeStream };
-      await axios.post(`${backendURL}/api/admin/remove-rollno`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axiosInstance.post(`/api/admin/remove-rollno`, payload);
       toast.success(`Roll numbers removed for ${label}`);
       fetchDashboardData();
     } catch (error) {
@@ -215,9 +199,7 @@ export default function Dashboard() {
 
     try {
       setLoading(true);
-      await axios.delete(`${backendURL}/api/admin/clear-database`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axiosInstance.delete(`/api/admin/clear-database`);
       toast.success("All student data cleared!");
       fetchDashboardData();
     } catch {
@@ -464,7 +446,7 @@ export default function Dashboard() {
             <Button onClick={() => navigate("/admin/students")} className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
               <Users size={16} /> View Students
             </Button>
-            <Button onClick={() => window.open(googleSheetURL, "_blank")} variant="outline" className="gap-2 border-border text-foreground">
+            <Button onClick={() => window.open(import.meta.env.VITE_GOOGLE_SHEET_URL, "_blank")} variant="outline" className="gap-2 border-border text-foreground">
               <Download size={16} /> Export Data
             </Button>
             <Button onClick={() => navigate("/admin/posters")} variant="outline" className="gap-2 border-border text-foreground">
@@ -493,7 +475,7 @@ export default function Dashboard() {
                     onClick={async () => {
                       const newValue = !registrationOpen;
                       try {
-                        await axios.post(`${backendURL}/api/admin/exam-settings`, { examDate, lastDateToRegister: lastDate, resultDate, registrationOpen: newValue }, { headers: { Authorization: `Bearer ${token}` } });
+                        await axiosInstance.post(`/api/admin/exam-settings`, { examDate, lastDateToRegister: lastDate, resultDate, registrationOpen: newValue });
                         toast.success(`Registration ${newValue ? "opened" : "closed"} successfully!`);
                         setRegistrationOpen(newValue);
                         await fetchExamSettings();
@@ -630,7 +612,7 @@ export default function Dashboard() {
                     onClick={async () => {
                       const newMode = formMode === "junior" ? "senior" : "junior";
                       try {
-                        await axios.post(`${backendURL}/api/admin/exam-settings`, { formMode: newMode }, { headers: { Authorization: `Bearer ${token}` } });
+                        await axiosInstance.post(`/api/admin/exam-settings`, { formMode: newMode });
                         toast.success(`Switched to ${newMode === "junior" ? "Junior" : "Senior"} mode!`);
                         setFormMode(newMode);
                         await fetchExamSettings();
@@ -651,7 +633,7 @@ export default function Dashboard() {
                     title="Open Google Sheet"
                     description="View live student registration data"
                     buttonLabel="Open Sheet"
-                    onClick={() => window.open(googleSheetURL, "_blank")}
+                    onClick={() => window.open(import.meta.env.VITE_GOOGLE_SHEET_URL, "_blank")}
                     variant="default"
                     icon={<FileText size={20} />}
                   >

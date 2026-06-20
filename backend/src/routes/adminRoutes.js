@@ -1,5 +1,5 @@
 import express from "express";
-import { adminLogin } from "../controllers/adminAuthController.js";
+import { adminLogin, adminLogout, adminMe } from "../controllers/adminAuthController.js";
 import { deleteAllStudents, deleteStudent, generateRollNumbers, getDashboardStats, getExamSettings, getSummaryStats, updateExamSettings, removeRollNumbers } from "../controllers/adminController.js";
 import { adminAuth } from "../middlewares/adminAuth.js";
 import { bulkGenerateAdmitCards, bulkSendAdmitCards } from "../controllers/bulkAdmitController.js";
@@ -14,6 +14,8 @@ const router = express.Router();
 // ====== PUBLIC ROUTES ======
 // Admin Login
 router.post("/login", loginLimiter, adminLogin);
+router.post("/logout", adminAuth, adminLogout);
+router.get("/me", adminAuth, adminMe);
 
 // Get Exam Settings (Public - needed for Home page)
 router.get("/exam-settings", getExamSettings);

@@ -1,8 +1,30 @@
+import { useEffect, useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
+import { axiosInstance } from "@/lib/axios";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function AdminRoute() {
-  const token = localStorage.getItem("adminToken");
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
 
-  // If token exists → allow access to protected pages
-  return token ? <Outlet /> : <Navigate to="/admin/login" replace />;
+  useEffect(() => {
+    const verifySession = async () => {
+      try {
+        await axiosInstance.get("/api/admin/me");
+        setIsAuthenticated(true);
+      } catch (error) {
+        setIsAuthenticated(false);
+      }
+    };
+    verifySession();
+  }, []);
+
+  if (isAuthenticated === null) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+
+  return isAuthenticated ? <Outlet /> : <Navigate to="/admin/login" replace />;
 }

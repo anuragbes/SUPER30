@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { axiosInstance } from "@/lib/axios";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, 
@@ -18,8 +19,12 @@ export default function Sidebar({ isOpen, setIsOpen, isCollapsed, setIsCollapsed
   const location = useLocation();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    localStorage.removeItem("adminToken");
+  const handleLogout = async () => {
+    try {
+      await axiosInstance.post("/api/admin/logout");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
     navigate("/");
   };
 

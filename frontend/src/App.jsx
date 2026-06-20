@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useEffect } from "react";
 
 
 import RegisterStudent from "./pages/RegisterStudent";
@@ -16,6 +17,10 @@ import Posters from "./pages/admin/Posters";
 import AdminLayout from "./components/AdminLayout";
 
 export default function App() {
+  useEffect(() => {
+    localStorage.removeItem("adminToken");
+  }, []);
+
   return (
     <>
       <BrowserRouter>
