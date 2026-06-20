@@ -40,7 +40,7 @@ export const adminLogin = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
 
-    res.json({ message: "Login successful", admin: { username: admin.username } });
+    res.json({ message: "Login successful", token, admin: { username: admin.username } });
 
   } catch (error) {
     logError("[AdminAuthController] adminLogin", error, req);

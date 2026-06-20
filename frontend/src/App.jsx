@@ -17,9 +17,7 @@ import Posters from "./pages/admin/Posters";
 import AdminLayout from "./components/AdminLayout";
 
 export default function App() {
-  useEffect(() => {
-    localStorage.removeItem("adminToken");
-  }, []);
+
 
   return (
     <>

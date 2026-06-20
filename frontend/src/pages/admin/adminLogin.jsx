@@ -31,6 +31,9 @@ export default function AdminLogin() {
 
     try {
       const res = await axiosInstance.post("/api/admin/login", formData);
+      if (res.data.token) {
+        localStorage.setItem("adminToken", res.data.token);
+      }
 
       toast.success("Login Successful!");
 
