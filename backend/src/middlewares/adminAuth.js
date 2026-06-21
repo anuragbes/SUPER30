@@ -4,7 +4,7 @@ import { rejectRequest } from "../utils/rejectRequest.js";
 
 
 export function adminAuth(req, res, next) {
-  const token = req.cookies?.adminToken || req.headers.authorization?.split(" ")[1];
+  const token = req.headers.authorization?.split(" ")[1];
 
   if (!token) {
     logSecurity("UNAUTHORIZED_ACCESS", { reason: "MissingToken" }, req);
