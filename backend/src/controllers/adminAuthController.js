@@ -22,17 +22,28 @@ export const adminLogin = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { adminId: admin._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+  { adminId: admin._id },
+  process.env.JWT_SECRET,
+  { expiresIn: "12h" }
+);
 
-    // Temporarily attach admin info to req so logSecurity can accurately extract the actor ID
-    req.admin = { adminId: admin._id };
-    
-    logSecurity("LOGIN_SUCCESS", { userAgent }, req);
-    
-    res.json({ message: "Login successful", token, admin: { username: admin.username } });
+req.admin = { adminId: admin._id };
+
+logSecurity("LOGIN_SUCCESS", { userAgent }, req);
+
+res.cookie("adminToken", token, {
+  httpOnly: true,
+  secure: true,
+  sameSite: "none",
+  maxAge: 12 * 60 * 60 * 1000,
+});
+
+return res.json({
+  message: "Login successful",
+  admin: {
+    username: admin.username,
+  },
+});
 
   } catch (error) {
     logError("[AdminAuthController] adminLogin", error, req);
@@ -41,7 +52,14 @@ export const adminLogin = async (req, res) => {
 };
 
 export const adminLogout = (req, res) => {
-  res.json({ message: "Logout successful" });
+  res.clearCookie("adminToken", {
+  secure: true,
+  sameSite: "none",
+});
+
+  res.json({
+    message: "Logout successful",
+  });
 };
 
 export const adminMe = async (req, res) => {

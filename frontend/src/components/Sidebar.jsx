@@ -21,7 +21,6 @@ export default function Sidebar({ isOpen, setIsOpen, isCollapsed, setIsCollapsed
 
   const handleLogout = async () => {
     try {
-      localStorage.removeItem("adminToken");
       await axiosInstance.post("/api/admin/logout");
     } catch (error) {
       console.error("Logout failed:", error);
