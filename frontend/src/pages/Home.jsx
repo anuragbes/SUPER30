@@ -22,7 +22,6 @@ import {
 import Autoplay from "embla-carousel-autoplay";
 import Footer from "@/components/Footer";
 import FAQ from "@/components/FAQ";
-import { useAuth } from "@clerk/clerk-react";
 import AnnouncementSection from "@/components/AnnouncementSection";
 import UdaanSection from "@/components/UdaanSection";
 import Directors from "@/components/Directors";
@@ -98,13 +97,6 @@ export default function Home() {
 
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  const { isSignedIn } = useAuth();
-  useEffect(() => {
-    if (isSignedIn) {
-      navigate("/register");
-    }
-  }, [isSignedIn, navigate]);
 
   useEffect(() => {
     const fetchSettings = async () => {

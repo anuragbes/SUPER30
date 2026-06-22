@@ -8,6 +8,14 @@ export default function ClerkAuthRoute() {
   const [isAdmin, setIsAdmin] = useState(null);
 
   useEffect(() => {
+    if (!isClerkLoaded) return;
+
+    // If already signed in via Clerk, skip the admin check entirely
+    if (isSignedIn) {
+      setIsAdmin(false); // set to false to resolve loading state
+      return;
+    }
+
     const checkAdmin = async () => {
       try {
         await axiosInstance.get("/api/admin/me");
@@ -16,8 +24,9 @@ export default function ClerkAuthRoute() {
         setIsAdmin(false);
       }
     };
+    
     checkAdmin();
-  }, []);
+  }, [isClerkLoaded, isSignedIn]);
 
   // Show loading while Clerk is initializing or checking admin
   if (!isClerkLoaded || isAdmin === null) {
