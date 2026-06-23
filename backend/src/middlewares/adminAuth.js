@@ -6,25 +6,14 @@ export function adminAuth(req, res, next) {
   const token = req.cookies?.adminToken;
 
   if (!token) {
-    console.log("[AUTH_DEBUG] MissingToken", {
-      method: req.method,
-      path: req.path,
-      origin: req.headers.origin || "none",
-      referer: req.headers.referer || "none",
-      userAgent: req.headers["user-agent"] || "unknown",
-      cookies: Object.keys(req.cookies || {}),
-    });
-
-    logSecurity("UNAUTHORIZED_ACCESS", { reason: "MissingToken" }, req);
-
-    return rejectRequest(
-      req,
-      res,
-      401,
-      "missing_token",
-      "Unauthorized access"
-    );
-  }
+  return rejectRequest(
+    req,
+    res,
+    401,
+    "missing_token",
+    "Unauthorized access"
+  );
+}
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
