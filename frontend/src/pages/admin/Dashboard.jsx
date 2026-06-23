@@ -107,7 +107,9 @@ export default function Dashboard() {
       );
       setSummary(summaryRes.data);
     } catch (error) {
-      toast.error("Failed to load dashboard data");
+      if (error.response?.status !== 401) {
+        toast.error("Failed to load dashboard data");
+      }
       console.error(error);
     } finally {
       setLoading(false);

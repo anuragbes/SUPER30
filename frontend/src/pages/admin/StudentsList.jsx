@@ -68,7 +68,9 @@ export default function StudentsList() {
       setStudents(data);
     } catch (error) {
       console.error("Error fetching students:", error);
-      toast.error("Failed to load students");
+      if (error.response?.status !== 401) {
+        toast.error("Failed to load students");
+      }
     } finally {
       setLoading(false);
     }

@@ -22,7 +22,9 @@ const Posters = () => {
       }
     } catch (err) {
       console.error("Failed to fetch posters:", err);
-      toast.error("Failed to load posters");
+      if (err.response?.status !== 401) {
+        toast.error("Failed to load posters");
+      }
     }
   }, [token]);
 

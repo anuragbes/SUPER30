@@ -24,7 +24,9 @@ const Announcements = () => {
       }
     } catch (err) {
       console.error("Failed to fetch announcements:", err);
-      toast.error("Failed to load announcements");
+      if (err.response?.status !== 401) {
+        toast.error("Failed to load announcements");
+      }
     }
   }, [token]);
 
