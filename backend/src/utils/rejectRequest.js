@@ -11,13 +11,20 @@ import { logSecurity } from "./logger.js";
  * @param {string} message - Human-readable message sent to the client
  */
 export const rejectRequest = (req, res, statusCode, reason, message) => {
-  logSecurity("REQUEST_REJECTED", {
-    requestId: req.requestId,
-    method: req.method,
-    path: req.originalUrl,
-    statusCode,
-    reason,
-  }, req);
+  const isExpectedUnauth =
+    statusCode === 401 &&
+    reason === "missing_token" &&
+    (req.originalUrl === "/api/admin/me" || req.path === "/api/admin/me");
+
+  if (!isExpectedUnauth) {
+    logSecurity("REQUEST_REJECTED", {
+      requestId: req.requestId,
+      method: req.method,
+      path: req.originalUrl,
+      statusCode,
+      reason,
+    }, req);
+  }
 
   return res.status(statusCode).json({ error: message });
 };
