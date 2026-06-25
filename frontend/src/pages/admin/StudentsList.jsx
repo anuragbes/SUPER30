@@ -536,7 +536,7 @@ export default function StudentsList() {
 
                         <td className="px-6 py-4 flex items-center gap-3">
                           {/* View */}
-                          {student.admitCardGenerated ? (
+                          {(student.admitCardGenerated || student.admitCardSent) ? (
                             <Button
                               onClick={() =>
                                 handleDownloadAdmitCard(student.studentId)

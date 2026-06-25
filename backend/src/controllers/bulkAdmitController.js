@@ -141,6 +141,7 @@ export const bulkSendAdmitCards = async (req, res) => {
           // Mark as sent in database with failure recovery
           try {
             student.admitCardSent = true;
+            student.admitCardGenerated = true; 
             await student.save();
           } catch (dbError) {
             // Email succeeded but DB failed. Do NOT throw error or it will trigger a resend/skip.
