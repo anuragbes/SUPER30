@@ -10,7 +10,7 @@ export default function Success() {
   const studentName = location.state?.studentName;
 
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-50 px-4">
+    <div className="flex items-center justify-center h-dvh bg-gray-50 px-4">
       <div className="bg-white shadow-lg rounded-xl p-8 text-center w-full max-w-md">
 
         <CheckCircle className="text-green-600 mx-auto mb-4" size={60} />

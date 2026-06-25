@@ -32,6 +32,10 @@ export default function AdminLogin() {
     try {
       const res = await axiosInstance.post("/api/admin/login", formData);
 
+      if (res.data.token) {
+        localStorage.setItem("adminToken", res.data.token);
+      }
+
       toast.success("Login Successful!");
 
       navigate("/admin/dashboard");
@@ -45,7 +49,7 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-50">
+    <div className="flex justify-center items-center h-dvh bg-gray-50">
       <form
         onSubmit={handleSubmit}
         className="bg-white shadow-lg rounded-xl p-10 w-[380px] flex flex-col gap-6"

@@ -3,7 +3,12 @@ import { logError, logSecurity } from "../utils/logger.js";
 import { rejectRequest } from "../utils/rejectRequest.js";
 
 export function adminAuth(req, res, next) {
-  const token = req.cookies?.adminToken;
+  // Prefer Authorization header (works on Safari which blocks cross-domain cookies via ITP)
+  // Fall back to cookie for backward compatibility
+  const token =
+    req.headers.authorization?.startsWith("Bearer ")
+      ? req.headers.authorization.split(" ")[1]
+      : req.cookies?.adminToken;
 
   if (!token) {
   return rejectRequest(

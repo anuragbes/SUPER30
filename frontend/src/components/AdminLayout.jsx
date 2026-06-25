@@ -18,7 +18,7 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-background">
+    <div className="h-dvh flex flex-col overflow-hidden bg-background">
       {/* Top Navbar */}
       <header className="fixed top-0 left-0 w-full h-16 md:h-20 z-50 bg-card border-b border-border flex items-center px-0 py-3 transition-all duration-300">
         {/* Hamburger Container (aligned with Sidebar width) */}

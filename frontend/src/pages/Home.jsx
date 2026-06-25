@@ -113,7 +113,7 @@ export default function Home() {
   }, [backendURL]);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-dvh flex flex-col">
       {/* Eagerly preload both hero images so they are ready the moment `loading` becomes false */}
       <div style={{ display: 'none' }}>
         <img src="/images/hero-junior.webp" alt="preload" />

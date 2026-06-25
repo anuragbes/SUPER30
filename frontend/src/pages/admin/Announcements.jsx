@@ -158,7 +158,7 @@ const Announcements = () => {
 
   return (
     <div>
-      <div className="w-full min-h-screen bg-gray-50 p-4 sm:p-6 md:p-8 pb-8 space-y-6 sm:space-y-8">
+      <div className="w-full min-h-dvh bg-gray-50 p-4 sm:p-6 md:p-8 pb-8 space-y-6 sm:space-y-8">
         <div className="w-full max-w-7xl mx-auto">
           <h1 className="text-2xl sm:text-3xl pb-6 sm:pb-8 font-bold text-foreground lg:text-4xl">Announcements</h1>
 

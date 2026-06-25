@@ -40,6 +40,7 @@ res.cookie("adminToken", token, {
 
 return res.json({
   message: "Login successful",
+  token,
   admin: {
     username: admin.username,
   },

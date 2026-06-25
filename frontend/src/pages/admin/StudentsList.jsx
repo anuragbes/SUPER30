@@ -268,7 +268,7 @@ export default function StudentsList() {
 
   return (
     <div>
-      <div className="w-full min-h-screen bg-background p-4 sm:p-6 md:p-8 pb-8">
+      <div className="w-full min-h-dvh bg-background p-4 sm:p-6 md:p-8 pb-8">
         <div className="w-full max-w-7xl mx-auto space-y-6">
           <div className="space-y-2">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground tracking-tight">

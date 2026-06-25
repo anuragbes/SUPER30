@@ -301,7 +301,7 @@ export default function RegisterStudent() {
 
 
   return (
-    <main className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
+    <main className="min-h-dvh bg-linear-to-br from-slate-50 to-slate-100 py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <div className="mb-6 sm:mb-8 flex justify-between items-start">
           <div>

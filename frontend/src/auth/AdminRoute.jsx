@@ -20,7 +20,7 @@ export default function AdminRoute() {
 
   if (isAuthenticated === null) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-dvh items-center justify-center">
         <Spinner className="size-8" />
       </div>
     );

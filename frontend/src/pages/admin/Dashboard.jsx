@@ -289,7 +289,7 @@ export default function Dashboard() {
 
   return (
     <div>
-      <div className="w-full min-h-screen bg-background p-4 sm:p-6 md:p-8 pb-12 space-y-8">
+      <div className="w-full min-h-dvh bg-background p-4 sm:p-6 md:p-8 pb-12 space-y-8">
         <div className="w-full max-w-7xl mx-auto space-y-10">
           
           {/* 1. GLOBAL STATUS HEADER */}
