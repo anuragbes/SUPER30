@@ -2,15 +2,13 @@ import Student from "../models/student.models.js";
 import Settings from "../models/settings.models.js";
 import { createAdmitCardBuffer } from "./admitCardController.js";
 import { formatDateDDMMYYYY } from "../utils/googleSheets.js";
-import { Resend } from "resend";
+import { sendEmail } from "../services/emailService.js";
 import { logError, logActivity } from "../utils/logger.js";
 import { rejectRequest } from "../utils/rejectRequest.js";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 
-// ------------------------------------------------------
-//  BULK GENERATE ADMIT CARDS
-// ------------------------------------------------------
+//  GENERATE ADMIT CARDS
+
 export const bulkGenerateAdmitCards = async (req, res) => {
   const { selectedStudents } = req.body;
 
@@ -63,9 +61,9 @@ export const bulkGenerateAdmitCards = async (req, res) => {
   }
 };
 
-// ------------------------------------------------------
-//  OPTIMIZED BULK SEND ADMIT CARDS
-// ------------------------------------------------------
+
+//  SEND ADMIT CARDS
+
 export const bulkSendAdmitCards = async (req, res) => {
   const { selectedStudents } = req.body;
   
@@ -85,6 +83,7 @@ export const bulkSendAdmitCards = async (req, res) => {
 
     const sentList = [];
     const skippedList = [];
+    const reconciliationList = [];
     const currentYear = new Date().getFullYear();
 
     // Process in batches to avoid rate limits and improve speed
@@ -114,7 +113,7 @@ export const bulkSendAdmitCards = async (req, res) => {
           const pdfBuffer = await createAdmitCardBuffer(student, examDate);
 
           // Send email
-          await resend.emails.send({
+          const emailResult = await sendEmail({
             from: `British School - Gurukul <noreply@bsgurukul.com>`,
             to: student.email,
             subject: `Admit Card for UDAAN ${currentYear}`,
@@ -134,18 +133,33 @@ export const bulkSendAdmitCards = async (req, res) => {
               {
                 filename: `${student.studentId}.pdf`,
                 content: pdfBuffer.toString("base64"),
-                type: "application/pdf",
-                disposition: "attachment",
+                contentType: "application/pdf",
               },
             ],
-          });
+          }, student.studentId); // Pass studentId for operational logging
 
-          // Mark as sent in database
-          student.admitCardSent = true;
-          await student.save();
+          // Mark as sent in database with failure recovery
+          try {
+            student.admitCardSent = true;
+            await student.save();
+          } catch (dbError) {
+            // Email succeeded but DB failed. Do NOT throw error or it will trigger a resend/skip.
+            // Log explicitly for manual reconciliation to prevent duplicate emails.
+            logError(`[BulkAdmitController] MANUAL RECONCILIATION REQUIRED: Email sent via ${emailResult.provider} for student ${student.studentId}, but database update failed.`, dbError, req);
+            
+            reconciliationList.push({
+              id: student.studentId,
+              provider: emailResult.provider
+            });
+            return { success: false, studentId: student.studentId, reconciliation: true };
+          }
 
           sentList.push(student.studentId);
-          logActivity("AdmitCardEmailSent", { studentId: student.studentId }, req);
+          logActivity("AdmitCardEmailSent", { 
+            studentId: student.studentId,
+            provider: emailResult.provider,
+            fallback: emailResult.fallback
+          }, req);
           
           return { success: true, studentId: student.studentId };
         } catch (mailError) {
@@ -169,12 +183,14 @@ export const bulkSendAdmitCards = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: `Emails sent successfully to ${sentList.length} out of ${students.length} students.`,
+      message: `Batch processed. ${sentList.length} fully successful, ${skippedList.length} skipped, ${reconciliationList.length} need reconciliation.`,
       sentList,
       skippedList,
+      reconciliationList,
       stats: {
         total: students.length,
-        sent: sentList.length,
+        deliveredAndSaved: sentList.length,
+        deliveredNotSaved: reconciliationList.length,
         skipped: skippedList.length,
       }
     });

@@ -87,7 +87,7 @@ export const getAllStudents = async (req, res) => {
   try {
     const { search, stream, classMoving, target, status, page = 1 } = req.query;
 
-    const limit = 100;
+    const limit = 50;
     const skip = (page - 1) * limit;
 
     const query = {};
