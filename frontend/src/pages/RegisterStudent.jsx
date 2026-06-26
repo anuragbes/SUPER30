@@ -11,7 +11,7 @@ import FormSection from "@/components/FormSection";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileUpload } from "@/components/FileUpload";
 import { useUser, useAuth } from "@clerk/clerk-react";
-
+import { compressPassport, compressIdentity } from "../utils/imageCompression";
 
 export default function RegisterStudent() {
   const navigate = useNavigate();
@@ -240,6 +240,21 @@ export default function RegisterStudent() {
     setIsSubmitting(true);
 
     try {
+      // --- Image Compression ---
+      let finalPassportPhoto = passportPhoto;
+      let finalIdentityPhoto = identityPhoto;
+
+      if (passportPhoto) {
+        toast.info("Optimizing passport photo...", { id: "compress-passport", duration: 10000 });
+        finalPassportPhoto = await compressPassport(passportPhoto);
+        toast.dismiss("compress-passport");
+      }
+
+      if (identityPhoto) {
+        toast.info("Optimizing identity proof...", { id: "compress-identity", duration: 10000 });
+        finalIdentityPhoto = await compressIdentity(identityPhoto);
+        toast.dismiss("compress-identity");
+      }
 
       const finalPreviousSchool =
         formData.previousSchool === "Other"
@@ -258,8 +273,8 @@ export default function RegisterStudent() {
 
       form.append("customSchool", customSchool);
 
-      if (passportPhoto) form.append("passportPhoto", passportPhoto);
-      if (identityPhoto) form.append("identityPhoto", identityPhoto);
+      if (finalPassportPhoto) form.append("passportPhoto", finalPassportPhoto);
+      if (finalIdentityPhoto) form.append("identityPhoto", finalIdentityPhoto);
 
       const token = await getToken();
 
