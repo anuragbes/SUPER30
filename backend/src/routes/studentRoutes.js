@@ -2,7 +2,7 @@ import express from "express";
 import multer from "multer";
 import { registerStudent, getAllStudents, resetStudentIdCounter, getMyRegistrations } from "../controllers/studentController.js";
 import { generateAdmitCard } from "../controllers/admitCardController.js";
-import upload, { MAX_FILE_SIZE_MB } from "../middlewares/upload.js";
+import { memoryUpload, MAX_FILE_SIZE_MB } from "../middlewares/upload.js";
 import { logActivity } from "../utils/logger.js";
 import { rejectRequest } from "../utils/rejectRequest.js";
 
@@ -18,7 +18,7 @@ router.get("/admit-card/:studentId", generateAdmitCard);
 
 // Multer error handler — wraps the upload middleware so file errors return clean JSON
 const handleUpload = (req, res, next) => {
-  upload.fields([
+  memoryUpload.fields([
     { name: "passportPhoto", maxCount: 1 },
     { name: "identityPhoto", maxCount: 1 },
   ])(req, res, (err) => {

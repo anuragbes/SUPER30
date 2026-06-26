@@ -4,6 +4,7 @@ import Counter from "../models/counter.models.js";
 import { appendToGoogleSheet } from "../utils/googleSheets.js";
 import { logError, logActivity } from "../utils/logger.js";
 import { rejectRequest } from "../utils/rejectRequest.js";
+import { uploadBufferToCloudinary } from "../middlewares/upload.js";
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID;
 
@@ -47,11 +48,18 @@ export const registerStudent = async (req, res) => {
       newStudent.previousSchool = req.body.customSchool;
     }
 
-    if (req.files?.passportPhoto?.[0]?.path) {
+    if (req.files?.passportPhoto?.[0]?.buffer) {
+      const result = await uploadBufferToCloudinary(req.files.passportPhoto[0].buffer, "super30/passport");
+      newStudent.passportPhotoURL = result.secure_url;
+    } else if (req.files?.passportPhoto?.[0]?.path) {
+      // Fallback in case memoryStorage wasn't used correctly
       newStudent.passportPhotoURL = req.files.passportPhoto[0].path;
     }
 
-    if (req.files?.identityPhoto?.[0]?.path) {
+    if (req.files?.identityPhoto?.[0]?.buffer) {
+      const result = await uploadBufferToCloudinary(req.files.identityPhoto[0].buffer, "super30/identity");
+      newStudent.identityPhotoURL = result.secure_url;
+    } else if (req.files?.identityPhoto?.[0]?.path) {
       newStudent.identityPhotoURL = req.files.identityPhoto[0].path;
     }
 

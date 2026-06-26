@@ -54,5 +54,25 @@ const upload = multer({
 });
 
 export { cloudinary, MAX_FILE_SIZE_MB };
-export default upload;
 
+const memoryStorage = multer.memoryStorage();
+export const memoryUpload = multer({
+  storage: memoryStorage,
+  limits: { fileSize: MAX_FILE_SIZE_MB * 1024 * 1024 },
+  fileFilter,
+});
+
+export const uploadBufferToCloudinary = (buffer, folder) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      { folder },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+    uploadStream.end(buffer);
+  });
+};
+
+export default upload;

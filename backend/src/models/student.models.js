@@ -167,12 +167,16 @@ studentSchema.pre("save", function (next) {
 // Auto-increment studentID before saving (using Counter collection for unique IDs)
 studentSchema.pre("save", async function (next) {
     if (this.isNew) {                                     // checks if the student is new
-        const counter = await Counter.findOneAndUpdate(
-            { id: "studentId" },
-            { $inc: { seq: 1 } },
-            { new: true, upsert: true }
-        );
-        this.studentId = "STU" + counter.seq.toString().padStart(4, "0");
+        try {
+            const counter = await Counter.findOneAndUpdate(
+                { id: "studentId" },
+                { $inc: { seq: 1 } },
+                { new: true, upsert: true }
+            );
+            this.studentId = "STU" + counter.seq.toString().padStart(4, "0");
+        } catch (error) {
+            return next(error);
+        }
     }
     next();
 });

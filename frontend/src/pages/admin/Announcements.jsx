@@ -28,7 +28,7 @@ const Announcements = () => {
         toast.error("Failed to load announcements");
       }
     }
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     fetchAnnouncements();
@@ -54,7 +54,7 @@ const Announcements = () => {
     } finally {
       setLoading({ type: null, id: null });
     }
-  }, [formData, token, fetchAnnouncements]);
+  }, [formData, fetchAnnouncements]);
 
   // Generic field toggle handler
   const handleToggleField = useCallback(async (id, endpointSuffix, fieldKey, successMessage) => {
@@ -82,7 +82,7 @@ const Announcements = () => {
     } finally {
       setLoading({ type: null, id: null });
     }
-  }, [token, fetchAnnouncements]);
+  }, [fetchAnnouncements]);
 
   // Toggle Announcement Status
   const toggleStatus = useCallback(async (id) => {
@@ -104,7 +104,7 @@ const Announcements = () => {
     } finally {
       setLoading({ type: null, id: null });
     }
-  }, [token, fetchAnnouncements]);
+  }, [fetchAnnouncements]);
 
   // Toggle Pin Status
   const togglePin = useCallback(async (id) => {
@@ -154,7 +154,7 @@ const Announcements = () => {
     } finally {
       setLoading({ type: null, id: null });
     }
-  }, [editingId, editData, token, cancelEdit]);
+  }, [editingId, editData, cancelEdit]);
 
   return (
     <div>

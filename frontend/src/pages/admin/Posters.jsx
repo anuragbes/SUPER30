@@ -26,7 +26,7 @@ const Posters = () => {
         toast.error("Failed to load posters");
       }
     }
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     fetchPosters();
@@ -71,7 +71,7 @@ const Posters = () => {
         fileInputRef.current.value = "";
       }
     }
-  }, [token, fetchPosters]);
+  }, [fetchPosters]);
 
   // Toggle Status
   const toggleStatus = useCallback(async (id) => {
@@ -95,7 +95,7 @@ const Posters = () => {
     } finally {
       setLoading({ type: null, id: null });
     }
-  }, [token, fetchPosters]);
+  }, [fetchPosters]);
 
   // Delete Poster
   const deletePoster = useCallback(async (id) => {
@@ -112,7 +112,7 @@ const Posters = () => {
     } finally {
       setLoading({ type: null, id: null });
     }
-  }, [token, fetchPosters]);
+  }, [fetchPosters]);
 
   // Move Poster Up/Down
   const movePoster = useCallback(async (index, direction) => {
@@ -139,7 +139,7 @@ const Posters = () => {
       toast.error("Failed to reorder posters");
       fetchPosters();
     }
-  }, [posters, token, fetchPosters]);
+  }, [posters, fetchPosters]);
 
   return (
     <div>

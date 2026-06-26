@@ -17,9 +17,9 @@ import { generateRequestId } from './utils/requestId.js';
 // initialise express app
 const app = express();
 
-// Trust the first proxy (Render, Vercel, Nginx, etc.)
-// Without this, the rate limiter thinks all requests come from the same proxy IP
-app.set("trust proxy", 1);
+// Trust the proxy (Render, Vercel, Nginx, etc.)
+// Without this, the rate limiter thinks all requests come from the same internal proxy IP
+app.set("trust proxy", "loopback, linklocal, uniquelocal");
 
 app.use(
   cors({
@@ -95,5 +95,6 @@ process.on("uncaughtException", (error) => {
 });
 
 process.on("unhandledRejection", (reason) => {
-  logError("UNHANDLED_REJECTION", reason instanceof Error ? reason : new Error(String(reason)));
+  const errorObj = reason instanceof Error ? reason : new Error(typeof reason === "object" ? JSON.stringify(reason) : String(reason));
+  logError("UNHANDLED_REJECTION", errorObj);
 });
