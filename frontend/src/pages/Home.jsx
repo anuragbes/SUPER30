@@ -294,7 +294,7 @@ export default function Home() {
                   text: (
                     <>
                       {/* To Be Announced */}
-                      09:00 AM - 11:00 AM • Offline (At Center)
+                      09:00 AM • Offline (At Center)
                       {/* <br />
                         <span className="text-sm text-muted-foreground">
                           Reporting Time: 09:00 AM
