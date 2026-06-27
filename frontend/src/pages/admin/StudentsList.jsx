@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { axiosInstance } from "@/lib/axios";
 
 import { toast } from "sonner";
-import { CheckCheck, FileText, Mail, Search, Trash } from "lucide-react";
+import { CheckCheck, FileText, Mail, RotateCcw, Search, Trash } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,7 @@ export default function StudentsList() {
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [loadingGenerate, setLoadingGenerate] = useState(false);
   const [loadingSend, setLoadingSend] = useState(false);
+  const [loadingReset, setLoadingReset] = useState(false);
   const [progressGenerate, setProgressGenerate] = useState({
     current: 0,
     total: 0,
@@ -199,6 +200,41 @@ export default function StudentsList() {
     } finally {
       setLoadingSend(false);
       setProgressSend({ current: 0, total: 0 });
+    }
+  };
+
+  // Reset Admit Cards
+  const resetAdmitCards = async () => {
+    const hasSelection = selectedStudents.length > 0;
+
+    const confirmed = window.confirm(
+      hasSelection
+        ? `This will reset the admit card status of ${selectedStudents.length} selected student(s).\n\nThey will be marked as Pending and can be regenerated and emailed again.\n\nDo you want to continue?`
+        : "No students selected. This will reset the admit card status of ALL students.\n\nThey will be marked as Pending and can be regenerated and emailed again.\n\nDo you want to continue?"
+    );
+
+    if (!confirmed) return;
+
+    setLoadingReset(true);
+
+    try {
+      const res = await axiosInstance.post(`/api/admin/reset-admit-cards`, {
+        selectedStudents: hasSelection ? selectedStudents : undefined,
+      });
+
+      if (res.data.success) {
+        toast.success(res.data.message);
+        setSelectedStudents([]);
+        fetchStudents();
+      } else {
+        toast.error(res.data.message || "Failed to reset admit cards.");
+      }
+    } catch (error) {
+      console.error("Error resetting admit cards:", error);
+      const msg = error.response?.data?.error || "Failed to reset admit cards. Please try again.";
+      toast.error(msg);
+    } finally {
+      setLoadingReset(false);
     }
   };
 
@@ -393,7 +429,7 @@ export default function StudentsList() {
           <div className="flex flex-wrap gap-3 mb-4">
             <Button
               onClick={generateAdmitCards}
-              disabled={loadingGenerate || loadingSend}
+              disabled={loadingGenerate || loadingSend || loadingReset}
               variant="default"
               className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
             >
@@ -405,7 +441,7 @@ export default function StudentsList() {
 
             <Button
               onClick={sendAdmitCardEmails}
-              disabled={loadingSend || loadingGenerate}
+              disabled={loadingSend || loadingGenerate || loadingReset}
               variant="default"
               className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
             >
@@ -413,6 +449,16 @@ export default function StudentsList() {
               {loadingSend
                 ? `Sending (${progressSend.current}/${progressSend.total})`
                 : "Send Emails"}
+            </Button>
+
+            <Button
+              onClick={resetAdmitCards}
+              disabled={loadingReset || loadingGenerate || loadingSend}
+              variant="destructive"
+              className="gap-2"
+            >
+              <RotateCcw className={`w-4 h-4 ${loadingReset ? "animate-spin" : ""}`} />
+              {loadingReset ? "Resetting..." : "Reset Admit Cards"}
             </Button>
           </div>
 

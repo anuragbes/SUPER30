@@ -2,7 +2,7 @@ import express from "express";
 import { adminLogin, adminLogout, adminMe } from "../controllers/adminAuthController.js";
 import { deleteAllStudents, deleteStudent, generateRollNumbers, getDashboardStats, getExamSettings, getSummaryStats, updateExamSettings, removeRollNumbers } from "../controllers/adminController.js";
 import { adminAuth } from "../middlewares/adminAuth.js";
-import { bulkGenerateAdmitCards, bulkSendAdmitCards } from "../controllers/bulkAdmitController.js";
+import { bulkGenerateAdmitCards, bulkSendAdmitCards, resetAdmitCards } from "../controllers/bulkAdmitController.js";
 import { createAnnouncement, deleteAnnouncement, getActiveAnnouncements, getAllAnnouncements, toggleAnnouncementPin, toggleAnnouncementStatus, updateAnnouncement } from "../controllers/announcementController.js";
 import { uploadPoster, getAllPosters, getActivePosters, togglePosterStatus, reorderPosters, deletePoster } from "../controllers/posterController.js";
 import upload from "../middlewares/upload.js";
@@ -40,6 +40,7 @@ router.delete("/clear-database", adminAuth, deleteAllStudents);
 // Generate and send Admit Card
 router.post("/bulk-generate-admit-cards", adminAuth, bulkOperationLimiter, bulkGenerateAdmitCards);
 router.post("/bulk-send-admit-cards", adminAuth, emailLimiter, bulkSendAdmitCards);
+router.post("/reset-admit-cards", adminAuth, bulkOperationLimiter, resetAdmitCards);
 
 // Dashboard Stats
 router.get("/dashboard-stats", adminAuth, getDashboardStats);

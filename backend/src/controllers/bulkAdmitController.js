@@ -203,3 +203,57 @@ export const bulkSendAdmitCards = async (req, res) => {
     });
   }
 };
+
+
+//  RESET ADMIT CARDS
+
+export const resetAdmitCards = async (req, res) => {
+  const { selectedStudents } = req.body;
+
+  try {
+    // Build filter: specific students or all
+    const filter = selectedStudents?.length
+      ? { studentId: { $in: selectedStudents } }
+      : {};
+
+    // Only reset students that actually have admit cards generated or sent
+    const resetFilter = {
+      ...filter,
+      $or: [
+        { admitCardGenerated: true },
+        { admitCardSent: true },
+      ],
+    };
+
+    const result = await Student.updateMany(resetFilter, {
+      $set: {
+        admitCardGenerated: false,
+        admitCardSent: false,
+      },
+    });
+
+    const scope = selectedStudents?.length
+      ? `${selectedStudents.length} selected student(s)`
+      : "all students";
+
+    logActivity("AdmitCardsReset", {
+      scope,
+      updatedCount: result.modifiedCount,
+      studentIds: selectedStudents || "all",
+    }, req);
+
+    return res.status(200).json({
+      success: true,
+      message: result.modifiedCount > 0
+        ? `Admit card status reset for ${result.modifiedCount} student(s).`
+        : "No students required resetting.",
+      updatedCount: result.modifiedCount,
+    });
+  } catch (error) {
+    logError("[BulkAdmitController] resetAdmitCards", error, req);
+    return res.status(500).json({
+      success: false,
+      message: "An unexpected error occurred while resetting admit cards.",
+    });
+  }
+};
