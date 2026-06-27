@@ -16,15 +16,17 @@ const storage = new CloudinaryStorage({
   params: (req, file) => {
     let folder = "super30/identity";
     let publicId = `student_${Date.now()}`;
+    let format;
 
     if (file.fieldname === "passportPhoto") {
       folder = "super30/passport";
     } else if (file.fieldname === "poster") {
       folder = "super30/posters";
       publicId = `poster_${Date.now()}`;
+      format = "webp";
     }
 
-    return { folder, public_id: publicId };
+    return { folder, public_id: publicId, ...(format && { format }) };
   },
 });
 
