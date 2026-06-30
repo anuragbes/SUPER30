@@ -7,7 +7,7 @@ import path from "path";
 import { logError, logActivity } from "../utils/logger.js";
 import { rejectRequest } from "../utils/rejectRequest.js";
 
-const bannerPath = path.resolve("assets/banner1.png"); 
+const bannerPath = path.resolve("assets/banner1.PNG"); 
 const addTextWatermark = (doc, text = "UDAAN") => {       // blueprint for the watermark
   const { width, height } = doc.page;
 
