@@ -197,6 +197,20 @@ export const getSummaryStats = async (req, res) => {
     const class10Count = await Student.countDocuments({ classMoving: "Class 10" });
     const admitCardGenerated = await Student.countDocuments({ admitCardGenerated: true });
     const admitCardSent = await Student.countDocuments({ admitCardSent: true });
+    const sentViaBrevo = await Student.countDocuments({ admitCardProvider: "brevo" });
+    const sentViaResend = await Student.countDocuments({ admitCardProvider: "resend" });
+
+    const settings = await Settings.findOne();
+    
+    const today = new Date().toISOString().split('T')[0];
+    
+    const brevoDailyCount = settings?.brevoLastResetDate === today 
+      ? (settings?.brevoDailyCount || 0) 
+      : 0;
+      
+    const resendDailyCount = settings?.resendLastResetDate === today 
+      ? (settings?.resendDailyCount || 0) 
+      : 0;
 
     res.status(200).json({
       totalStudents,
@@ -207,6 +221,10 @@ export const getSummaryStats = async (req, res) => {
       class10Count,
       admitCardGenerated,
       admitCardSent,
+      sentViaBrevo,
+      sentViaResend,
+      brevoDailyCount,
+      resendDailyCount,
     });
   } catch (error) {
     logError("[AdminController] getSummaryStats", error, req);

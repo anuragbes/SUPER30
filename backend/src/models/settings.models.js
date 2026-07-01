@@ -27,7 +27,14 @@ const settingsSchema = new mongoose.Schema({
   brevoLastResetDate: {
     type: String, // format: "YYYY-MM-DD"
     default: ""
+  },
+  resendDailyCount: {
+    type: Number,
+    default: 0
+  },
+  resendLastResetDate: {
+    type: String, // YYYY-MM-DD
   }
-});
+}, { timestamps: true });
 
 export default mongoose.model("Settings", settingsSchema);

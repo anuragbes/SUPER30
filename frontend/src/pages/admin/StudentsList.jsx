@@ -37,6 +37,16 @@ export default function StudentsList() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [formMode, setFormMode] = useState("senior");
+  const [stats, setStats] = useState({ sentViaBrevo: 0, sentViaResend: 0, admitCardSent: 0 });
+
+  const fetchStats = async () => {
+    try {
+      const res = await axiosInstance.get(`/api/admin/summary-stats`);
+      setStats(res.data);
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+    }
+  };
 
 
 
@@ -87,6 +97,7 @@ export default function StudentsList() {
       }
     };
     fetchSettings();
+    fetchStats();
   }, []);
 
   useEffect(() => {
@@ -209,6 +220,7 @@ export default function StudentsList() {
       }
       
       fetchStudents();
+      fetchStats();
     } catch (error) {
       console.error("Error sending emails:", error);
       toast.error("Error sending some admit cards");
@@ -241,6 +253,7 @@ export default function StudentsList() {
         toast.success(res.data.message);
         setSelectedStudents([]);
         fetchStudents();
+        fetchStats();
       } else {
         toast.error(res.data.message || "Failed to reset admit cards.");
       }
@@ -321,13 +334,55 @@ export default function StudentsList() {
     <div>
       <div className="w-full min-h-dvh bg-background p-4 sm:p-6 md:p-8 pb-8">
         <div className="w-full max-w-7xl mx-auto space-y-6">
-          <div className="space-y-2">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground tracking-tight">
-              Student Management
-            </h1>
-            <p className="text-sm sm:text-base text-muted-foreground">
-              Generate and track Admit Card status
-            </p>
+          <div className="space-y-2 flex flex-col sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground tracking-tight">
+                Student Management
+              </h1>
+              <p className="text-sm sm:text-base text-muted-foreground mt-1">
+                Generate and track Admit Card status
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-3 bg-muted/30 p-3 rounded-xl border border-border mt-4 sm:mt-0 shadow-sm">
+              <div className="flex flex-col">
+                <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Total Sent</span>
+                <span className="text-lg font-bold text-foreground leading-none">{stats.admitCardSent || 0}</span>
+              </div>
+              <div className="h-8 w-px bg-border mx-2"></div>
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center gap-2 text-xs font-medium">
+                  <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                  <span className="text-muted-foreground">Brevo:</span>
+                  <span className="text-foreground">{stats.sentViaBrevo || 0}</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs font-medium">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                  <span className="text-muted-foreground">Resend:</span>
+                  <span className="text-foreground">{stats.sentViaResend || 0}</span>
+                </div>
+              </div>
+              <div className="h-8 w-px bg-border mx-2"></div>
+              <div className="flex flex-col">
+                <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Brevo Limit</span>
+                <div className="flex items-end gap-1">
+                  <span className={`text-lg font-bold leading-none ${stats.brevoDailyCount >= 300 ? 'text-destructive' : 'text-foreground'}`}>
+                    {stats.brevoDailyCount || 0}
+                  </span>
+                  <span className="text-xs text-muted-foreground mb-0.5">/ 300</span>
+                </div>
+              </div>
+              <div className="h-8 w-px bg-border mx-2"></div>
+              <div className="flex flex-col">
+                <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Resend Limit</span>
+                <div className="flex items-end gap-1">
+                  <span className={`text-lg font-bold leading-none ${stats.resendDailyCount >= 100 ? 'text-destructive' : 'text-foreground'}`}>
+                    {stats.resendDailyCount || 0}
+                  </span>
+                  <span className="text-xs text-muted-foreground mb-0.5">/ 100</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* ================= Search Bar ================= */}

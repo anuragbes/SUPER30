@@ -450,7 +450,18 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-foreground">{summary.admitCardSent || 0}</p>
-                    <h3 className="text-sm font-medium text-muted-foreground mt-1">Admit Cards Sent</h3>
+                    <h3 className="text-sm font-medium text-muted-foreground mt-1 mb-2">Admit Cards Sent</h3>
+                    
+                    {/* <div className="flex items-center gap-3 text-xs text-muted-foreground bg-muted/30 p-2 rounded-lg border border-border">
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                        <span>Brevo: <strong className="text-foreground">{summary.sentViaBrevo || 0}</strong></span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                        <span>Resend: <strong className="text-foreground">{summary.sentViaResend || 0}</strong></span>
+                      </div>
+                    </div> */}
                   </div>
                 </div>
               </div>

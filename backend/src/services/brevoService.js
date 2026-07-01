@@ -44,7 +44,7 @@ export const sendWithBrevo = async (emailData) => {
 
   // Fetch current to avoid race conditions with multiple parallel requests as much as possible
   const currentSettings = await Settings.findOne();
-  if (currentSettings && currentSettings.brevoDailyCount >= 290) {
+  if (currentSettings && currentSettings.brevoDailyCount >= 300) {
     const error = new Error("Daily Brevo limit reached");
     error.code = "quota_exceeded"; // This will trigger isFallbackError in emailService.js
     throw error;
