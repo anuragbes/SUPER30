@@ -174,25 +174,40 @@ export default function StudentsList() {
     setProgressSend({ current: 0, total: selectedStudents.length });
 
     try {
+      let totalSent = 0;
+      let totalSkipped = 0;
+
       for (let i = 0; i < selectedStudents.length; i++) {
         const studentId = selectedStudents[i];
         setProgressSend({ current: i + 1, total: selectedStudents.length });
 
-        await axiosInstance.post(
+        const res = await axiosInstance.post(
           `/api/admin/bulk-send-admit-cards`,
           { selectedStudents: [studentId] }
         );
 
-        setStudents((prev) =>
-          prev.map((s) =>
-            s.studentId === studentId ? { ...s, admitCardSent: true } : s,
-          ),
-        );
+        if (res.data.skippedList && res.data.skippedList.length > 0) {
+          totalSkipped += 1;
+        } else {
+          totalSent += 1;
+          setStudents((prev) =>
+            prev.map((s) =>
+              s.studentId === studentId ? { ...s, admitCardSent: true } : s,
+            ),
+          );
+        }
 
         await new Promise((r) => setTimeout(r, 300));
       }
 
-      toast.success("📩 All admit cards emailed successfully!");
+      if (totalSkipped > 0 && totalSent === 0) {
+        toast.info(`Skipped ${totalSkipped} students (already sent)`);
+      } else if (totalSkipped > 0) {
+        toast.success(`Sent ${totalSent} emails (Skipped ${totalSkipped} already sent)`);
+      } else {
+        toast.success(`All ${totalSent} admit cards emailed successfully!`);
+      }
+      
       fetchStudents();
     } catch (error) {
       console.error("Error sending emails:", error);
@@ -533,19 +548,13 @@ export default function StudentsList() {
                     students.map((student) => (
                       <tr key={student._id}>
                         <td className="text-center">
-                          {student.admitCardSent ? (
-                            <span className="text-primary font-semibold inline-flex items-center gap-1">
-                              <CheckCheck className="w-4 h-4" />
-                            </span>
-                          ) : (
-                            <Checkbox
-                              onChange={() => toggleStudent(student.studentId)}
-                              checked={selectedStudents.includes(
-                                student.studentId,
-                              )}
-                              className="h-4 w-4"
-                            />
-                          )}
+                          <Checkbox
+                            onChange={() => toggleStudent(student.studentId)}
+                            checked={selectedStudents.includes(
+                              student.studentId,
+                            )}
+                            className="h-4 w-4"
+                          />
                         </td>
 
                         <td className="px-6 py-4 text-sm font-medium text-foreground">

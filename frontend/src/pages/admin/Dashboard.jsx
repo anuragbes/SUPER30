@@ -26,7 +26,8 @@ import {
   Settings,
   Shield,
   GraduationCap,
-  Image
+  Image,
+  Send
 } from "lucide-react";
 import ActionCard from "@/components/ActionCard";
 import { SkeletonStatCard, SkeletonChart } from "@/components/SkeletonCard";
@@ -340,11 +341,11 @@ export default function Dashboard() {
           <div>
             <h2 className="text-lg font-semibold text-foreground mb-4">Statistics</h2>
             {loading ? (
-              <div className={`grid grid-cols-1 sm:grid-cols-2 ${formMode === "junior" ? "lg:grid-cols-5" : "lg:grid-cols-4"} gap-4`}>
-                {Array(formMode === "junior" ? 5 : 4).fill(0).map((_, i) => <SkeletonStatCard key={i} />)}
+              <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 ${formMode === "junior" ? "lg:grid-cols-6" : "lg:grid-cols-5"} gap-4`}>
+                {Array(formMode === "junior" ? 6 : 5).fill(0).map((_, i) => <SkeletonStatCard key={i} />)}
               </div>
             ) : summary ? (
-              <div className={`grid grid-cols-1 sm:grid-cols-2 ${formMode === "junior" ? "lg:grid-cols-5" : "lg:grid-cols-4"} gap-4`}>
+              <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 ${formMode === "junior" ? "lg:grid-cols-6" : "lg:grid-cols-5"} gap-4`}>
                 <div className="bg-card p-5 rounded-2xl shadow-sm border border-border flex flex-col gap-4 hover:shadow-md transition group">
                   <div className="flex justify-between items-start">
                     <div className="p-2.5 bg-primary/10 rounded-xl group-hover:bg-primary/20 transition-colors">
@@ -437,6 +438,19 @@ export default function Dashboard() {
                   <div>
                     <p className="text-2xl font-bold text-foreground">{summary.admitCardGenerated}</p>
                     <h3 className="text-sm font-medium text-muted-foreground mt-1">Admit Cards Generated</h3>
+                  </div>
+                </div>
+
+                <div className="bg-card p-5 rounded-2xl shadow-sm border border-border flex flex-col gap-4 hover:shadow-md transition group">
+                  <div className="flex justify-between items-start">
+                    <div className="p-2.5 bg-primary/10 rounded-xl group-hover:bg-primary/20 transition-colors">
+                      <Send className="w-5 h-5 text-primary" />
+                    </div>
+                    <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-1 rounded-md">Sent</span>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-foreground">{summary.admitCardSent || 0}</p>
+                    <h3 className="text-sm font-medium text-muted-foreground mt-1">Admit Cards Sent</h3>
                   </div>
                 </div>
               </div>

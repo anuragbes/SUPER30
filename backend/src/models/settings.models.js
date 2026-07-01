@@ -17,10 +17,17 @@ const settingsSchema = new mongoose.Schema({
     type: String 
   }, 
   registrationOpen: {
-  type: Boolean,
-  default: true
-}
-
+    type: Boolean,
+    default: true
+  },
+  brevoDailyCount: {
+    type: Number,
+    default: 0
+  },
+  brevoLastResetDate: {
+    type: String, // format: "YYYY-MM-DD"
+    default: ""
+  }
 });
 
 export default mongoose.model("Settings", settingsSchema);

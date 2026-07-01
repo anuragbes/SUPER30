@@ -196,6 +196,7 @@ export const getSummaryStats = async (req, res) => {
     const class9Count = await Student.countDocuments({ classMoving: "Class 9" });
     const class10Count = await Student.countDocuments({ classMoving: "Class 10" });
     const admitCardGenerated = await Student.countDocuments({ admitCardGenerated: true });
+    const admitCardSent = await Student.countDocuments({ admitCardSent: true });
 
     res.status(200).json({
       totalStudents,
@@ -205,6 +206,7 @@ export const getSummaryStats = async (req, res) => {
       class9Count,
       class10Count,
       admitCardGenerated,
+      admitCardSent,
     });
   } catch (error) {
     logError("[AdminController] getSummaryStats", error, req);
