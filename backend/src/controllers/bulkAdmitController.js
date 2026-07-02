@@ -65,7 +65,7 @@ export const bulkGenerateAdmitCards = async (req, res) => {
 //  SEND ADMIT CARDS
 
 export const bulkSendAdmitCards = async (req, res) => {
-  const { selectedStudents } = req.body;
+  const { selectedStudents, provider = "brevo" } = req.body;
   
   if (!selectedStudents?.length) {
     return rejectRequest(req, res, 400, "no_students_selected", "No students selected");
@@ -80,6 +80,38 @@ export const bulkSendAdmitCards = async (req, res) => {
     if (!students.length) {
       return rejectRequest(req, res, 404, "no_matching_students", "No matching students found.");
     }
+
+    // --- Quota Pre-check ---
+    let remainingQuota = 0;
+    if (provider === "brevo") {
+      const today = new Date().toISOString().split('T')[0];
+      remainingQuota = settings?.brevo?.date === today ? 300 - (settings?.brevo?.count || 0) : 300;
+    } else if (provider === "resend") {
+      if (!settings?.resend?.windowStart) {
+        remainingQuota = 100;
+      } else {
+        const windowStartTime = new Date(settings.resend.windowStart).getTime();
+        if (Date.now() - windowStartTime >= 24 * 60 * 60 * 1000) {
+          remainingQuota = 100;
+        } else {
+          remainingQuota = 100 - (settings.resend.count || 0);
+        }
+      }
+    }
+
+    // Filter students who actually need an email (has email and not sent yet)
+    const studentsToProcess = students.filter(s => s.email && !s.admitCardSent);
+    
+    if (studentsToProcess.length > remainingQuota) {
+      return rejectRequest(
+        req, 
+        res, 
+        429, 
+        "quota_exceeded", 
+        `Cannot send ${studentsToProcess.length} emails. Only ${remainingQuota} remaining for ${provider} in the current window.`
+      );
+    }
+    // ----------------------
 
     const sentList = [];
     const skippedList = [];
@@ -136,13 +168,14 @@ export const bulkSendAdmitCards = async (req, res) => {
                 contentType: "application/pdf",
               },
             ],
-          }, student.studentId); // Pass studentId for operational logging
+          }, student.studentId, provider); // Pass studentId for operational logging and chosen provider
 
           // Mark as sent in database with failure recovery
           try {
             student.admitCardSent = true;
             student.admitCardGenerated = true;
             student.admitCardProvider = emailResult.provider;
+            student.admitCardSentAt = new Date();
             await student.save();
           } catch (dbError) {
             // Email succeeded but DB failed. Do NOT throw error or it will trigger a resend/skip.
@@ -231,6 +264,7 @@ export const resetAdmitCards = async (req, res) => {
         admitCardGenerated: false,
         admitCardSent: false,
         admitCardProvider: null,
+        admitCardSentAt: null,
       },
     });
 

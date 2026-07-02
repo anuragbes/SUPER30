@@ -33,6 +33,6 @@
     "nodemailer": "^7.0.10",
     "pdfkit": "^0.17.2",
     "qr-image": "^3.2.0",
-    "resend": "^6.4.2"
+    "resend": "^6.16.0"
   }
 }

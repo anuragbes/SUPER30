@@ -20,20 +20,13 @@ const settingsSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
-  brevoDailyCount: {
-    type: Number,
-    default: 0
+  brevo: {
+    count: { type: Number, default: 0 },
+    date: { type: String, default: "" }
   },
-  brevoLastResetDate: {
-    type: String, // format: "YYYY-MM-DD"
-    default: ""
-  },
-  resendDailyCount: {
-    type: Number,
-    default: 0
-  },
-  resendLastResetDate: {
-    type: String, // YYYY-MM-DD
+  resend: {
+    count: { type: Number, default: 0 },
+    windowStart: { type: String, default: null } // ISO timestamp
   }
 }, { timestamps: true });
 

@@ -38,6 +38,13 @@ export default function StudentsList() {
   const [totalPages, setTotalPages] = useState(1);
   const [formMode, setFormMode] = useState("senior");
   const [stats, setStats] = useState({ sentViaBrevo: 0, sentViaResend: 0, admitCardSent: 0 });
+  const [emailProvider, setEmailProvider] = useState("brevo");
+
+  const currentProviderLimit = emailProvider === "brevo" 
+    ? Math.max(0, (stats.brevo?.limit || 300) - (stats.brevo?.used || 0))
+    : Math.max(0, (stats.resend?.limit || 100) - (stats.resend?.used || 0));
+
+  const isQuotaExceeded = selectedStudents.length > currentProviderLimit;
 
   const fetchStats = async () => {
     try {
@@ -104,9 +111,6 @@ export default function StudentsList() {
     fetchStudents();
   }, [search, filterStream, filterClass, filterTarget, filterStatus, page, formMode]);
 
-  const handleFilter = () => {
-    fetchStudents();
-  };
 
   const toggleStudent = (studentId) => {
     setSelectedStudents((prev) =>
@@ -117,7 +121,7 @@ export default function StudentsList() {
   };
 
   const toggleSelectAll = () => {
-    if (selectedStudents.length === students.length) {
+    if (selectedStudents.length === students.length && students.length > 0) {
       setSelectedStudents([]);
     } else {
       setSelectedStudents(students.map((s) => s.studentId));
@@ -194,7 +198,7 @@ export default function StudentsList() {
 
         const res = await axiosInstance.post(
           `/api/admin/bulk-send-admit-cards`,
-          { selectedStudents: [studentId] }
+          { selectedStudents: [studentId], provider: emailProvider }
         );
 
         if (res.data.skippedList && res.data.skippedList.length > 0) {
@@ -366,21 +370,31 @@ export default function StudentsList() {
               <div className="flex flex-col">
                 <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Brevo Limit</span>
                 <div className="flex items-end gap-1">
-                  <span className={`text-lg font-bold leading-none ${stats.brevoDailyCount >= 300 ? 'text-destructive' : 'text-foreground'}`}>
-                    {stats.brevoDailyCount || 0}
+                  <span className={`text-lg font-bold leading-none ${(stats.brevo?.used || 0) >= (stats.brevo?.limit || 300) ? 'text-destructive' : 'text-foreground'}`}>
+                    {stats.brevo?.used || 0}
                   </span>
-                  <span className="text-xs text-muted-foreground mb-0.5">/ 300</span>
+                  <span className="text-xs text-muted-foreground mb-0.5">/ {stats.brevo?.limit || 300}</span>
                 </div>
+                {stats.brevo?.nextReset && (
+                  <span className="text-[10px] text-muted-foreground mt-0.5 whitespace-nowrap">
+                    Resets: {new Date(stats.brevo.nextReset).toLocaleString("en-IN", { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                )}
               </div>
               <div className="h-8 w-px bg-border mx-2"></div>
               <div className="flex flex-col">
                 <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Resend Limit</span>
                 <div className="flex items-end gap-1">
-                  <span className={`text-lg font-bold leading-none ${stats.resendDailyCount >= 100 ? 'text-destructive' : 'text-foreground'}`}>
-                    {stats.resendDailyCount || 0}
+                  <span className={`text-lg font-bold leading-none ${(stats.resend?.used || 0) >= (stats.resend?.limit || 100) ? 'text-destructive' : 'text-foreground'}`}>
+                    {stats.resend?.used || 0}
                   </span>
-                  <span className="text-xs text-muted-foreground mb-0.5">/ 100</span>
+                  <span className="text-xs text-muted-foreground mb-0.5">/ {stats.resend?.limit || 100}</span>
                 </div>
+                {stats.resend?.nextReset && (
+                  <span className="text-[10px] text-muted-foreground mt-0.5 whitespace-nowrap">
+                    Resets: {new Date(stats.resend.nextReset).toLocaleString("en-IN", { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -496,8 +510,11 @@ export default function StudentsList() {
           </div>
 
           {/* ================= Action Buttons ================= */}
-          <div className="flex flex-wrap gap-3 mb-4">
-            <Button
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
+            
+            {/* Left: Action Buttons */}
+            <div className="flex flex-wrap items-center gap-3">
+              <Button
               onClick={generateAdmitCards}
               disabled={loadingGenerate || loadingSend || loadingReset}
               variant="default"
@@ -510,8 +527,18 @@ export default function StudentsList() {
             </Button>
 
             <Button
+              onClick={resetAdmitCards}
+              disabled={loadingReset || loadingGenerate || loadingSend}
+              variant="destructive"
+              className="gap-2"
+            >
+              <RotateCcw className={`w-4 h-4 ${loadingReset ? "animate-spin" : ""}`} />
+              {loadingReset ? "Resetting..." : "Reset Admit Cards"}
+            </Button>
+
+            <Button
               onClick={sendAdmitCardEmails}
-              disabled={loadingSend || loadingGenerate || loadingReset}
+              disabled={loadingSend || loadingGenerate || loadingReset || isQuotaExceeded}
               variant="default"
               className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
             >
@@ -521,15 +548,50 @@ export default function StudentsList() {
                 : "Send Emails"}
             </Button>
 
-            <Button
-              onClick={resetAdmitCards}
-              disabled={loadingReset || loadingGenerate || loadingSend}
-              variant="destructive"
-              className="gap-2"
-            >
-              <RotateCcw className={`w-4 h-4 ${loadingReset ? "animate-spin" : ""}`} />
-              {loadingReset ? "Resetting..." : "Reset Admit Cards"}
-            </Button>
+            <div className="flex items-center bg-muted/50 p-1 rounded-md border border-border">
+              <Button
+                variant={emailProvider === "brevo" ? "default" : "ghost"}
+                size="sm"
+                className={`h-8 px-3 text-xs ${emailProvider === "brevo" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                onClick={() => setEmailProvider("brevo")}
+                disabled={loadingSend}
+              >
+                Brevo
+              </Button>
+              <Button
+                variant={emailProvider === "resend" ? "default" : "ghost"}
+                size="sm"
+                className={`h-8 px-3 text-xs ${emailProvider === "resend" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                onClick={() => setEmailProvider("resend")}
+                disabled={loadingSend}
+              >
+                Resend
+              </Button>
+            </div>
+            </div>
+
+            {/* Right: Selected Count & Quota Warning */}
+            <div className={`flex items-center gap-3 px-4 py-2 rounded-lg border ${isQuotaExceeded ? 'bg-destructive/10 border-destructive/30' : 'bg-muted/40 border-border'}`}>
+              <span className={`text-sm font-medium whitespace-nowrap ${isQuotaExceeded ? 'text-destructive' : ''}`}>
+                Selected: <span className="font-bold">{selectedStudents.length}</span> / {currentProviderLimit}
+              </span>
+              {isQuotaExceeded && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {
+                    setSelectedStudents((prev) => prev.slice(0, currentProviderLimit));
+                    toast.success(`Selection reduced to ${currentProviderLimit}`);
+                  }} 
+                  className="h-7 text-xs px-2 border-destructive/30 text-destructive hover:bg-destructive/10 whitespace-nowrap"
+                >
+                  Reduce to {currentProviderLimit}
+                </Button>
+              )}
+              {selectedStudents.length > 0 && !isQuotaExceeded && (
+                <Button variant="ghost" size="sm" onClick={() => setSelectedStudents([])} className="h-7 text-xs px-2 text-muted-foreground hover:text-foreground">Clear</Button>
+              )}
+            </div>
           </div>
 
           {/* ================= Progress Bars ================= */}
@@ -629,19 +691,31 @@ export default function StudentsList() {
                         </td>
 
                         <td className="px-6 py-4 text-sm">
-                          {student.admitCardSent ? (
-                            <Badge className="bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 shadow-none border border-emerald-200">
-                              Sent
-                            </Badge>
-                          ) : student.admitCardGenerated ? (
-                            <Badge className="bg-primary/10 text-primary hover:bg-primary/20 shadow-none border border-primary/20">
-                              Generated
-                            </Badge>
-                          ) : (
-                            <Badge className="bg-muted text-muted-foreground hover:bg-muted/80 shadow-none border border-border">
-                              Pending
-                            </Badge>
-                          )}
+                          <div className="flex flex-col items-start gap-1">
+                            {student.admitCardSent ? (
+                              <Badge className="bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 shadow-none border border-emerald-200">
+                                Sent
+                              </Badge>
+                            ) : student.admitCardGenerated ? (
+                              <Badge className="bg-primary/10 text-primary hover:bg-primary/20 shadow-none border border-primary/20">
+                                Generated
+                              </Badge>
+                            ) : (
+                              <Badge className="bg-muted text-muted-foreground hover:bg-muted/80 shadow-none border border-border">
+                                Pending
+                              </Badge>
+                            )}
+                            {student.admitCardSent && (
+                              <div className="text-[10px] text-muted-foreground whitespace-nowrap mt-1 flex flex-col gap-0.5">
+                                {student.admitCardProvider && (
+                                  <span className="flex items-center gap-1">
+                                    <span className="font-semibold text-slate-500">Provider:</span> 
+                                    <span className="capitalize">{student.admitCardProvider}</span>
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </td>
 
                         <td className="px-6 py-4 flex items-center gap-3">

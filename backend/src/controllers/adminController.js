@@ -202,15 +202,17 @@ export const getSummaryStats = async (req, res) => {
 
     const settings = await Settings.findOne();
     
+    // Compute effective usage (reset to 0 for UI if window has passed)
     const today = new Date().toISOString().split('T')[0];
+    const brevoUsed = settings?.brevo?.date === today ? (settings.brevo.count || 0) : 0;
     
-    const brevoDailyCount = settings?.brevoLastResetDate === today 
-      ? (settings?.brevoDailyCount || 0) 
-      : 0;
-      
-    const resendDailyCount = settings?.resendLastResetDate === today 
-      ? (settings?.resendDailyCount || 0) 
-      : 0;
+    let resendUsed = settings?.resend?.count || 0;
+    if (settings?.resend?.windowStart) {
+      const windowStartTime = new Date(settings.resend.windowStart).getTime();
+      if (Date.now() - windowStartTime >= 24 * 60 * 60 * 1000) {
+        resendUsed = 0;
+      }
+    }
 
     res.status(200).json({
       totalStudents,
@@ -223,8 +225,24 @@ export const getSummaryStats = async (req, res) => {
       admitCardSent,
       sentViaBrevo,
       sentViaResend,
-      brevoDailyCount,
-      resendDailyCount,
+      activeProvider: "brevo",
+      brevo: {
+        used: brevoUsed,
+        limit: 300,
+        remaining: 300 - brevoUsed,
+        resetType: "daily",
+        nextReset: new Date(new Date().setUTCHours(24, 0, 0, 0)).toISOString()
+      },
+      resend: {
+        used: resendUsed,
+        limit: 100,
+        remaining: 100 - resendUsed,
+        resetType: "rolling_24h",
+        windowStart: settings?.resend?.windowStart || null,
+        nextReset: settings?.resend?.windowStart
+          ? new Date(new Date(settings.resend.windowStart).getTime() + 86400000).toISOString()
+          : null
+      }
     });
   } catch (error) {
     logError("[AdminController] getSummaryStats", error, req);

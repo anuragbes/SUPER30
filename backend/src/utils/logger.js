@@ -14,6 +14,7 @@ const REDACTED_FIELDS = new Set([
   "studentName", "parentMobile", "studentMobile", "whatsappMobile",
   "title", "content", "posterName", "identityPhotoURL", "passportPhotoURL",
   "fatherName", "motherName", "permanentAddress", "presentAddress",
+  "parentEmail",
   // Security
   "password", "token", "accessToken", "refreshToken", "otp", "secret", "authorization",
 ]);
@@ -132,5 +133,32 @@ export const logSecurity = (event, data = {}, req = null) => {
     console.log(`[SECURITY] [${event}] timestamp=${timestamp} ${ridPart}${dataString} ${meta}`.trim());
   } catch (err) {
     console.error(`[ERROR] [LoggerError] logSecurity failed: ${err?.message || "unknown"}`);
+  }
+};
+
+/**
+ * Email operation logger.
+ * Use for all email-related events: sends, quota checks, resets, and provider failures.
+ * Provides a single grep-able log stream for debugging email quota issues.
+ *
+ * Events:
+ *   EMAIL_SENT        - Provider accepted the email
+ *   EMAIL_FAILED      - Provider rejected the email
+ *   QUOTA_RESET       - Daily/window quota counter was reset
+ *   QUOTA_EXCEEDED    - Send blocked because quota is full
+ *   QUOTA_INCREMENT   - Counter incremented after successful send
+ */
+export const logEmail = (event, data = {}, req = null) => {
+  try {
+    const timestamp = new Date().toISOString();
+    const actor = getActor(req);
+    const requestId = req?.requestId || "";
+
+    const dataString = formatLogData(data);
+    const ridPart = requestId ? `requestId=${requestId} ` : "";
+
+    console.log(`[EMAIL] [${event}] timestamp=${timestamp} ${ridPart}${dataString} actor=${actor}`.trim());
+  } catch (err) {
+    console.error(`[ERROR] [LoggerError] logEmail failed: ${err?.message || "unknown"}`);
   }
 };

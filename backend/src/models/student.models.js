@@ -137,6 +137,10 @@ const studentSchema = new mongoose.Schema({
         enum: ["brevo", "resend", null],
         default: null
     },
+    admitCardSentAt: {
+        type: Date,
+        default: null
+    },
     submittedAt: {
         type: Date,
         default: Date.now

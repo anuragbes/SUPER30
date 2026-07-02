@@ -1,62 +1,76 @@
-import { Resend } from "resend";
-import Settings from "../models/settings.models.js";
+import { Resend } from 'resend';
+import { logError, logEmail } from '../utils/logger.js';
+import Settings from '../models/settings.models.js';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const sendWithResend = async (emailData) => {
-  const payload = {
-    from: emailData.from,
-    to: emailData.to,
-    subject: emailData.subject,
-    html: emailData.html,
-  };
-
-  if (emailData.attachments && emailData.attachments.length > 0) {
-    payload.attachments = emailData.attachments.map(att => ({
-      filename: att.filename,
-      content: att.content,
-      type: att.contentType,
-      disposition: "attachment"
-    }));
-  }
-
-  const today = new Date().toISOString().split('T')[0];
-  
-  // Upsert settings to ensure document exists
-  const settings = await Settings.findOneAndUpdate(
-    {},
-    { $setOnInsert: { resendLastResetDate: today } },
-    { upsert: true, new: true }
-  );
-
-  // Reset daily counter if it's a new UTC day
-  if (settings.resendLastResetDate !== today) {
-    await Settings.updateOne({}, { $set: { resendDailyCount: 0, resendLastResetDate: today } });
-  }
-
-  // Fetch current to avoid race conditions
-  const currentSettings = await Settings.findOne();
-  if (currentSettings && currentSettings.resendDailyCount >= 100) {
-    const error = new Error("Daily Resend limit reached");
-    error.code = "quota_exceeded";
-    throw error;
-  }
-
   try {
-    const result = await resend.emails.send(payload);
+    let settings = await Settings.findOne();
     
-    if (result.error) {
-      throw result.error;
+    // Enforce limits before even calling Resend
+    if (settings) {
+      let needsReset = false;
+      if (!settings.resend?.windowStart) {
+        needsReset = true;
+      } else {
+        const windowStartTime = new Date(settings.resend.windowStart).getTime();
+        const now = Date.now();
+        if (now - windowStartTime >= 24 * 60 * 60 * 1000) {
+          needsReset = true;
+        }
+      }
+
+      if (needsReset) {
+        const oldWindowStart = settings.resend?.windowStart;
+        const updateResult = await Settings.findOneAndUpdate(
+          { "resend.windowStart": oldWindowStart },
+          { $set: { "resend.count": 0, "resend.windowStart": new Date().toISOString() } },
+          { new: true }
+        );
+        
+        // If updateResult is null, another request already performed the reset
+        if (!updateResult) {
+          settings = await Settings.findOne();
+        } else {
+          settings = updateResult;
+          logEmail("QUOTA_RESET", { provider: "resend", previousWindowStart: oldWindowStart, newWindowStart: settings.resend.windowStart });
+        }
+      }
+      
+      if (settings.resend.count >= 100) {
+        logEmail("QUOTA_EXCEEDED", { provider: "resend", count: settings.resend.count, limit: 100, windowStart: settings.resend.windowStart });
+        const error = new Error("Resend daily limit of 100 emails reached");
+        error.name = "RateLimitError";
+        error.status = 429;
+        throw error;
+      }
     }
 
-    await Settings.updateOne({}, { $inc: { resendDailyCount: 1 } });
+    const { data, error } = await resend.emails.send({
+      from: emailData.from,
+      to: emailData.to,
+      subject: emailData.subject,
+      html: emailData.html,
+      attachments: emailData.attachments?.map((attachment) => ({
+        filename: attachment.filename,
+        content: attachment.content,
+      })) || [],
+    });
 
-    return {
-      provider: "resend",
-      messageId: result.data?.id || "unknown",
-      fallback: true
-    };
+    if (error) {
+      throw error;
+    }
+
+    // Increment counter atomically on success to prevent race conditions
+    await Settings.updateOne({}, { $inc: { "resend.count": 1 } });
+
+    logEmail("EMAIL_SENT", { provider: "resend", to: emailData.to, messageId: data?.id });
+
+    return { success: true, provider: "resend", data };
   } catch (error) {
+    logEmail("EMAIL_FAILED", { provider: "resend", to: emailData.to, error: error.message });
+    logError("[resendService] Failed to send email", error);
     throw error;
   }
 };
