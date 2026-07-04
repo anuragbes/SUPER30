@@ -95,9 +95,7 @@ export default function RegisterStudent() {
     setFormData((prev) => ({
       ...prev,
       classMoving: prev.classMoving || (formMode === "junior" ? "Class 8" : "10th to 11th"),
-      testCentre: formMode === "senior" 
-        ? "British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)" 
-        : (prev.testCentre || ""),
+      testCentre: prev.testCentre || "",
       email,
     }));
   }, [user, formMode]);
@@ -172,7 +170,7 @@ export default function RegisterStudent() {
         presentAddress: "",
         studentMobile: "",
         classMoving: formMode === "junior" ? "Class 8" : "10th to 11th",
-        testCentre: formMode === "junior" ? "" : "British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)",
+        testCentre: "",
         email,
       });
 
@@ -269,11 +267,6 @@ export default function RegisterStudent() {
       const form = new FormData();
 
       form.append("previousSchool", finalPreviousSchool);
-
-      // Forcefully correct testCentre for senior mode just before submission
-      if (formMode === "senior") {
-        formData.testCentre = "British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)";
-      }
 
       Object.keys(formData).forEach((key) => {
         if (key !== "previousSchool") {
@@ -868,9 +861,12 @@ export default function RegisterStudent() {
                     </SelectContent>
                   </Select>
                 ) : (
-                  <Select value="British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)" disabled>
-                    <SelectTrigger className="bg-gray-100 cursor-not-allowed text-slate-700 border border-slate-200 rounded-lg opacity-70 w-full text-left" style={{ whiteSpace: "normal", lineHeight: "1.3" }} >
-                      <SelectValue />
+                  <Select
+                    value={formData.testCentre || ""}
+                    onValueChange={(value) => setFormData({ ...formData, testCentre: value })}
+                  >
+                    <SelectTrigger className="border border-slate-200 rounded-lg bg-white w-full text-left" style={{ whiteSpace: "normal", lineHeight: "1.3" }}>
+                      <SelectValue placeholder="Select Test Centre" />
                     </SelectTrigger>
                     <SelectContent className="max-w-[90vw] sm:max-w-none w-[var(--radix-select-trigger-width)]">
                       <SelectItem className="whitespace-normal break-words py-2 text-left" value="British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)">

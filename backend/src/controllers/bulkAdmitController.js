@@ -36,7 +36,8 @@ export const bulkGenerateAdmitCards = async (req, res) => {
     for (const student of students) {
       if (student.admitCardGenerated) continue;
 
-      await createAdmitCardBuffer(student, examDate);
+      // We no longer generate the PDF buffer here because it is generated on the fly 
+      // during download or email sending. Generating it here just wastes CPU and memory.
 
       student.admitCardGenerated = true;
       await student.save();

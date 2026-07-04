@@ -20,9 +20,11 @@ export const registerStudent = async (req, res) => {
     const duplicateConditions = [];
 
     if (req.body?.studentName && req.body?.fatherName && req.body?.dateOfBirth) {
+      const escapeRegex = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      
       duplicateConditions.push({
-        studentName: { $regex: new RegExp(`^${req.body.studentName.trim()}$`, "i") },
-        fatherName: { $regex: new RegExp(`^${req.body.fatherName.trim()}$`, "i") },
+        studentName: { $regex: new RegExp(`^${escapeRegex(req.body.studentName.trim())}$`, "i") },
+        fatherName: { $regex: new RegExp(`^${escapeRegex(req.body.fatherName.trim())}$`, "i") },
         dateOfBirth: new Date(req.body.dateOfBirth)
       });
     }

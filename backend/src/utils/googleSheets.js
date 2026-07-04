@@ -225,10 +225,7 @@ export const updatePCMAndPCB = async () => {
 
     // Junior mode: Class 8, Class 9, Class 10
     for (const cls of ["Class 8", "Class 9", "Class 10"]) {
-      const count = await Student.countDocuments({ classMoving: cls, stream: null });
-      if (count > 0) {
-        await updateSheetForGroup(cls, { classMoving: cls, stream: null });
-      }
+      await updateSheetForGroup(cls, { classMoving: cls, stream: null });
     }
 
     console.log("🟢 All sheets updated");

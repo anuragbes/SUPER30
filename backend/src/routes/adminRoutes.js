@@ -52,7 +52,7 @@ router.post("/exam-settings", adminAuth, updateExamSettings);
 
 // Announcement
 router.post("/announcements", adminAuth, createAnnouncement);
-router.get("/announcements", adminAuth, getAllAnnouncements);
+router.get("/announcements/all", adminAuth, getAllAnnouncements);
 router.patch("/announcements/:id", adminAuth, updateAnnouncement);
 router.patch("/announcements/:id/toggle", adminAuth, toggleAnnouncementStatus);
 router.patch("/announcements/:id/pin", adminAuth, toggleAnnouncementPin);

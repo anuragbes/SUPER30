@@ -9,12 +9,13 @@ import { rejectRequest } from "../utils/rejectRequest.js";
 import { verifyClerkToken } from "../middlewares/authMiddleware.js";
 import Student from "../models/student.models.js";
 import { registrationLimiter } from "../middlewares/rateLimiter.js";
+import { adminAuth } from "../middlewares/adminAuth.js";
 
 const router = express.Router();
 
-router.get("/all", getAllStudents);
+router.get("/all", adminAuth, getAllStudents);
 router.get("/my-registrations", verifyClerkToken, getMyRegistrations);
-router.get("/admit-card/:studentId", generateAdmitCard);
+router.get("/admit-card/:studentId", adminAuth, generateAdmitCard);
 
 // Multer error handler — wraps the upload middleware so file errors return clean JSON
 const handleUpload = (req, res, next) => {
@@ -51,6 +52,6 @@ router.post(
 );
 
 // Reset Counter Route
-router.post("/reset-id-counter", resetStudentIdCounter);
+router.post("/reset-id-counter", adminAuth, resetStudentIdCounter);
 
 export default router;

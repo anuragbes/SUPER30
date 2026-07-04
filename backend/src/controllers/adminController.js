@@ -148,6 +148,9 @@ export const deleteAllStudents = async (req, res) => {
     // Reset roll number counters
     await Counter.findOneAndUpdate({ id: "pcmRoll" }, { seq: 0 }, { upsert: true });
     await Counter.findOneAndUpdate({ id: "pcbRoll" }, { seq: 0 }, { upsert: true });
+    await Counter.findOneAndUpdate({ id: "class8Roll" }, { seq: 0 }, { upsert: true });
+    await Counter.findOneAndUpdate({ id: "class9Roll" }, { seq: 0 }, { upsert: true });
+    await Counter.findOneAndUpdate({ id: "class10Roll" }, { seq: 0 }, { upsert: true });
     await updatePCMAndPCB();
 
     logActivity("DatabaseCleared", {}, req);

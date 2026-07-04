@@ -18,7 +18,7 @@ const Announcements = () => {
   // Fetch All Announcements
   const fetchAnnouncements = useCallback(async () => {
     try {
-      const res = await axiosInstance.get(`/api/admin/announcements`);
+      const res = await axiosInstance.get(`/api/admin/announcements/all`);
       if (res.data && res.data.data) {
         setAnnouncements(res.data.data);
       }
