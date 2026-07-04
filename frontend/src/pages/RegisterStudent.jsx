@@ -34,6 +34,7 @@ export default function RegisterStudent() {
 
   const [customSchool, setCustomSchool] = useState(draft?.customSchool || "");
   const [formMode, setFormMode] = useState("senior");
+  const [isFetchingFormMode, setIsFetchingFormMode] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isSubmittingRef = useRef(false);
   const [formData, setFormData] = useState(draft?.formData || {
@@ -79,6 +80,8 @@ export default function RegisterStudent() {
         setFormMode(mode);
       } catch (error) {
         console.error("Failed to fetch form mode:", error);
+      } finally {
+        setIsFetchingFormMode(false);
       }
     };
     fetchFormMode();
@@ -92,7 +95,9 @@ export default function RegisterStudent() {
     setFormData((prev) => ({
       ...prev,
       classMoving: prev.classMoving || (formMode === "junior" ? "Class 8" : "10th to 11th"),
-      testCentre: prev.testCentre || (formMode === "junior" ? "" : "British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)"),
+      testCentre: formMode === "senior" 
+        ? "British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)" 
+        : (prev.testCentre || ""),
       email,
     }));
   }, [user, formMode]);
@@ -265,8 +270,14 @@ export default function RegisterStudent() {
 
       form.append("previousSchool", finalPreviousSchool);
 
+      // Forcefully correct testCentre for senior mode just before submission
+      if (formMode === "senior") {
+        formData.testCentre = "British School Gurukul, Near Chopra Agencies, South Bisar Tank, Gaya (Bihar)";
+      }
+
       Object.keys(formData).forEach((key) => {
         if (key !== "previousSchool") {
+          if (formMode === "junior" && key === "stream") return;
           form.append(key, formData[key]);
         }
       });
@@ -314,6 +325,14 @@ export default function RegisterStudent() {
     }
   };
 
+  if (isFetchingFormMode) {
+    return (
+      <main className="min-h-dvh flex flex-col items-center justify-center bg-slate-50 gap-4">
+        <Spinner className="w-8 h-8 text-primary" />
+        <p className="text-muted-foreground animate-pulse text-sm">Loading Registration Form...</p>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-dvh bg-linear-to-br from-slate-50 to-slate-100 py-4 sm:py-8 px-4 sm:px-6 lg:px-8">

@@ -20,6 +20,7 @@ import { SkeletonTableRow } from "@/components/SkeletonCard";
 export default function StudentsList() {
   const [students, setStudents] = useState([]);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filterStream, setFilterStream] = useState("");
   const [filterClass, setFilterClass] = useState("");
   const [filterTarget, setFilterTarget] = useState("");
@@ -63,7 +64,7 @@ export default function StudentsList() {
       setLoading(true);
       const res = await axiosInstance.get(`/api/students/all`, {
         params: {
-          search,
+          search: debouncedSearch,
           stream: formMode === "senior" ? filterStream : "",
           classMoving: formMode === "junior" ? filterClass : "",
           target: filterTarget,
@@ -108,8 +109,18 @@ export default function StudentsList() {
   }, []);
 
   useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 400);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [search]);
+
+  useEffect(() => {
     fetchStudents();
-  }, [search, filterStream, filterClass, filterTarget, filterStatus, page, formMode]);
+  }, [debouncedSearch, filterStream, filterClass, filterTarget, filterStatus, page, formMode]);
 
 
   const toggleStudent = (studentId) => {
