@@ -8,6 +8,46 @@ import { uploadBufferToCloudinary } from "../middlewares/upload.js";
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID;
 
+// Fields a student is allowed to submit during registration. Anything else on
+// the Student schema (rollNo, admitCardGenerated, admitCardSent,
+// admitCardProvider, admitCardSentAt, studentId, submittedAt, clerkUserId, ...)
+// is system/admin-managed and must never come from client input. New schema
+// fields are excluded by default unless explicitly added here.
+export const STUDENT_ALLOWED_FIELDS = [
+  "studentName",
+  "gender",
+  "classMoving",
+  "dateOfBirth",
+  "stream",
+  "target",
+  "fatherName",
+  "motherName",
+  "email",
+  "permanentAddress",
+  "presentAddress",
+  "parentMobile",
+  "studentMobile",
+  "whatsappMobile",
+  "previousSchool",
+  "previousResultPercentage",
+  "testCentre",
+  "studyCentre",
+  "scholarshipOffered",
+  "scholarshipDetails",
+];
+
+// Builds a new object containing only the allow-listed keys present on `source`.
+// Iterating the allow-list (not `source`'s own keys) means unexpected keys
+// (e.g. `rollNo`, `__proto__`) can never end up on the result.
+export const pickAllowedFields = (source = {}, allowedFields) => {
+  const picked = {};
+  for (const field of allowedFields) {
+    if (source[field] !== undefined) {
+      picked[field] = source[field];
+    }
+  }
+  return picked;
+};
 
 export const registerStudent = async (req, res) => {
   try {
@@ -42,7 +82,7 @@ export const registerStudent = async (req, res) => {
       }
     }
     const newStudent = new Student({
-      ...req.body,
+      ...pickAllowedFields(req.body, STUDENT_ALLOWED_FIELDS),
       clerkUserId,
     });
 
