@@ -75,9 +75,6 @@ export default function StudentsList() {
 
       const data = res.data.data || [];
 
-      setStudents(data);
-      setTotalPages(res.data.totalPages || 1);
-
       data.sort((a, b) => {
         const na = parseInt((a.studentId || "").replace(/\D/g, "")) || 0;
         const nb = parseInt((b.studentId || "").replace(/\D/g, "")) || 0;
@@ -85,6 +82,7 @@ export default function StudentsList() {
       });
 
       setStudents(data);
+      setTotalPages(res.data.totalPages || 1);
     } catch (error) {
       console.error("Error fetching students:", error);
       if (error.response?.status !== 401) {
@@ -294,6 +292,13 @@ export default function StudentsList() {
       const blob = new Blob([res.data], { type: "application/pdf" });
       const url = window.URL.createObjectURL(blob);
       window.open(url, "_blank");
+
+      // Deferred, not immediate: the new tab's PDF viewer fetches the blob's
+      // bytes asynchronously after window.open() returns, so revoking right
+      // away can invalidate the URL before that fetch happens, breaking the
+      // PDF load. 1s is comfortably longer than that (non-network, in-memory)
+      // fetch takes, while still freeing the blob promptly afterward.
+      setTimeout(() => window.URL.revokeObjectURL(url), 1000);
 
       setStudents((prev) =>
         prev.map((s) =>

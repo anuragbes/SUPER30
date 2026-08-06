@@ -4,7 +4,8 @@ import Counter from "../models/counter.models.js";
 import { appendToGoogleSheet } from "../utils/googleSheets.js";
 import { logError, logActivity } from "../utils/logger.js";
 import { rejectRequest } from "../utils/rejectRequest.js";
-import { uploadBufferToCloudinary } from "../middlewares/upload.js";
+import { uploadBufferToCloudinary, cloudinary } from "../middlewares/upload.js";
+import { retryWithBackoff } from "../utils/retryWithBackoff.js";
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID;
 
@@ -74,7 +75,7 @@ export const registerStudent = async (req, res) => {
     }
 
     if (duplicateConditions.length > 0) {
-      const existingStudent = await Student.findOne({ $or: duplicateConditions });
+      const existingStudent = await Student.findOne({ $or: duplicateConditions }).lean();
       if (existingStudent) {
         logActivity("DUPLICATE_REGISTRATION_ATTEMPT", {
           requestId: req.requestId,
@@ -94,23 +95,73 @@ export const registerStudent = async (req, res) => {
       newStudent.previousSchool = req.body.customSchool;
     }
 
-    if (req.files?.passportPhoto?.[0]?.buffer) {
-      const result = await uploadBufferToCloudinary(req.files.passportPhoto[0].buffer, "super30/passport");
-      newStudent.passportPhotoURL = result.secure_url;
+    // The two uploads read different buffers, write different fields, and
+    // share no state -- safe to run concurrently instead of one after the
+    // other. Promise.allSettled (not Promise.all) is deliberate: it lets us
+    // observe BOTH outcomes even when one rejects, so that if one upload
+    // succeeded while the other failed, the successful asset can be deleted
+    // before the error propagates -- otherwise it would be orphaned on
+    // Cloudinary with nothing that will ever reference it.
+    const [passportOutcome, identityOutcome] = await Promise.allSettled([
+      req.files?.passportPhoto?.[0]?.buffer
+        ? uploadBufferToCloudinary(req.files.passportPhoto[0].buffer, "super30/passport")
+        : null,
+      req.files?.identityPhoto?.[0]?.buffer
+        ? uploadBufferToCloudinary(req.files.identityPhoto[0].buffer, "super30/identity")
+        : null,
+    ]);
+
+    const passportFailed = passportOutcome.status === "rejected";
+    const identityFailed = identityOutcome.status === "rejected";
+
+    if (passportFailed || identityFailed) {
+      // Delete whichever upload actually succeeded (value is truthy only
+      // when a real upload happened, not when no file was provided at all).
+      // Deletion failures are logged, not rethrown -- the same
+      // best-effort-cleanup contract already used by deletePoster's
+      // Cloudinary cleanup -- so the response the client sees is always the
+      // original upload failure, never a cleanup failure.
+      if (!passportFailed && passportOutcome.value) {
+        try {
+          await retryWithBackoff(() => cloudinary.uploader.destroy(passportOutcome.value.public_id));
+        } catch (cleanupError) {
+          logError("[StudentController] registerStudent - Cloudinary cleanup (passport)", cleanupError, req);
+        }
+      }
+      if (!identityFailed && identityOutcome.value) {
+        try {
+          await retryWithBackoff(() => cloudinary.uploader.destroy(identityOutcome.value.public_id));
+        } catch (cleanupError) {
+          logError("[StudentController] registerStudent - Cloudinary cleanup (identity)", cleanupError, req);
+        }
+      }
+      // Preserves the original sequential ordering's error priority: passport
+      // was always attempted/thrown first, so if both failed, its error wins.
+      throw passportFailed ? passportOutcome.reason : identityOutcome.reason;
+    }
+
+    const passportUpload = passportOutcome.value;
+    const identityUpload = identityOutcome.value;
+
+    if (passportUpload) {
+      newStudent.passportPhotoURL = passportUpload.secure_url;
     } else if (req.files?.passportPhoto?.[0]?.path) {
       // Fallback in case memoryStorage wasn't used correctly
       newStudent.passportPhotoURL = req.files.passportPhoto[0].path;
     }
 
-    if (req.files?.identityPhoto?.[0]?.buffer) {
-      const result = await uploadBufferToCloudinary(req.files.identityPhoto[0].buffer, "super30/identity");
-      newStudent.identityPhotoURL = result.secure_url;
+    if (identityUpload) {
+      newStudent.identityPhotoURL = identityUpload.secure_url;
     } else if (req.files?.identityPhoto?.[0]?.path) {
       newStudent.identityPhotoURL = req.files.identityPhoto[0].path;
     }
 
     await newStudent.save();
-    await appendToGoogleSheet(newStudent);
+    // Best-effort background sync: appendToGoogleSheet fully catches and logs
+    // its own errors and its result is never used here, so awaiting it only
+    // added Google API round-trip latency to every registration response
+    // for no observable benefit.
+    appendToGoogleSheet(newStudent);
 
     logActivity("REGISTER_SUCCESS", {
       requestId: req.requestId,
@@ -182,7 +233,8 @@ export const getAllStudents = async (req, res) => {
     const students = await Student.find(query)
       .sort({ studentId: 1 })
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .lean();
 
     res.status(200).json({
       success: true,
@@ -222,7 +274,7 @@ export const getMyRegistrations = async (req, res) => {
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
-    const students = await Student.find({ clerkUserId }).sort({ createdAt: -1 });
+    const students = await Student.find({ clerkUserId }).sort({ createdAt: -1 }).lean();
 
     res.status(200).json({
       success: true,

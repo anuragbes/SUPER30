@@ -5,6 +5,7 @@ dotenv.config({ path: '.env' })
 import express from 'express';
 import morgan from 'morgan';
 import helmet from 'helmet';
+import compression from 'compression';
 import mongoose from 'mongoose';
 import { globalErrorHandler } from './middlewares/globalErrorHandler.js';
 import studentRoutes from './routes/studentRoutes.js';
@@ -52,6 +53,17 @@ app.use(
     crossOriginResourcePolicy: { policy: "cross-origin" },
   })
 );
+
+// Compresses response bodies. Left entirely on defaults deliberately: the
+// default filter consults mime-db, which already marks application/json as
+// compressible and application/pdf as NOT compressible -- so the one PDF
+// route (admit-card download) is skipped automatically, with no custom
+// filter needed. The default 1KB threshold already skips tiny responses
+// (e.g. small {"error": "..."} bodies) where compression overhead wouldn't
+// pay off. This backend serves no images/binary bytes (uploads go straight
+// to Cloudinary; only URLs come back in JSON), so there's nothing else here
+// that would need excluding.
+app.use(compression());
 
 // Connect Database
 connectDB()

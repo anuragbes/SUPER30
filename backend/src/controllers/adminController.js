@@ -30,7 +30,7 @@ export const generateRollNumbers = async (req, res) => {
         return await Student.aggregate([{ $match: query }, { $sample: { size: total } }]);
       }
 
-      return await Student.find(query).sort({ studentName: 1 });
+      return await Student.find(query).sort({ studentName: 1 }).lean();
     };
 
     const bulkOps = [];
@@ -173,15 +173,17 @@ export const getDashboardStats = async (req, res) => {
       return data.map((d) => ({ name: d._id || "N/A", count: d.count }));
     };
 
-    const stats = {
-      gender: await groupBy("gender"),
-      stream: await groupBy("stream"),
-      target: await groupBy("target"),
-      classMoving: await groupBy("classMoving"),
-      testCentre: await groupBy("testCentre"),
-      studyCentre: await groupBy("studyCentre"),
-      scholarship: await groupBy("scholarshipOffered"),
-    };
+    const [gender, stream, target, classMoving, testCentre, studyCentre, scholarship] = await Promise.all([
+      groupBy("gender"),
+      groupBy("stream"),
+      groupBy("target"),
+      groupBy("classMoving"),
+      groupBy("testCentre"),
+      groupBy("studyCentre"),
+      groupBy("scholarshipOffered"),
+    ]);
+
+    const stats = { gender, stream, target, classMoving, testCentre, studyCentre, scholarship };
 
     res.status(200).json(stats);
   } catch (error) {
@@ -192,18 +194,31 @@ export const getDashboardStats = async (req, res) => {
 
 export const getSummaryStats = async (req, res) => {
   try {
-    const totalStudents = await Student.countDocuments();
-    const pcmCount = await Student.countDocuments({ stream: "PCM" });
-    const pcbCount = await Student.countDocuments({ stream: "PCB" });
-    const class8Count = await Student.countDocuments({ classMoving: "Class 8" });
-    const class9Count = await Student.countDocuments({ classMoving: "Class 9" });
-    const class10Count = await Student.countDocuments({ classMoving: "Class 10" });
-    const admitCardGenerated = await Student.countDocuments({ admitCardGenerated: true });
-    const admitCardSent = await Student.countDocuments({ admitCardSent: true });
-    const sentViaBrevo = await Student.countDocuments({ admitCardProvider: "brevo" });
-    const sentViaResend = await Student.countDocuments({ admitCardProvider: "resend" });
-
-    const settings = await Settings.findOne();
+    const [
+      totalStudents,
+      pcmCount,
+      pcbCount,
+      class8Count,
+      class9Count,
+      class10Count,
+      admitCardGenerated,
+      admitCardSent,
+      sentViaBrevo,
+      sentViaResend,
+      settings,
+    ] = await Promise.all([
+      Student.countDocuments(),
+      Student.countDocuments({ stream: "PCM" }),
+      Student.countDocuments({ stream: "PCB" }),
+      Student.countDocuments({ classMoving: "Class 8" }),
+      Student.countDocuments({ classMoving: "Class 9" }),
+      Student.countDocuments({ classMoving: "Class 10" }),
+      Student.countDocuments({ admitCardGenerated: true }),
+      Student.countDocuments({ admitCardSent: true }),
+      Student.countDocuments({ admitCardProvider: "brevo" }),
+      Student.countDocuments({ admitCardProvider: "resend" }),
+      Settings.findOne(),
+    ]);
     
     // Compute effective usage (reset to 0 for UI if window has passed)
     const today = new Date().toISOString().split('T')[0];
@@ -319,7 +334,7 @@ export const deleteStudent = async (req, res) => {
 
   try {
     // Delete from DB
-    const student = await Student.findOneAndDelete({ studentId });
+    const student = await Student.findOneAndDelete({ studentId }).lean();
 
     if (!student) {
       return rejectRequest(req, res, 404, "student_not_found", "Student not found");

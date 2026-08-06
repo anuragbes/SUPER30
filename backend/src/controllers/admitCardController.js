@@ -181,7 +181,7 @@ export const createAdmitCardBuffer = (student, examDate) => {
 export const generateAdmitCard = async (req, res) => {
   try {
     const { studentId } = req.params;
-    const student = await Student.findOne({ studentId });
+    const student = await Student.findOne({ studentId }).lean();
     if (!student) {
       return rejectRequest(req, res, 404, "student_not_found", "Student not found");
     }

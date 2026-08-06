@@ -16,7 +16,7 @@ export const uploadPoster = async (req, res) => {
     }
 
     // Get the highest current order value
-    const maxOrderPoster = await Poster.findOne().sort({ order: -1 });
+    const maxOrderPoster = await Poster.findOne().sort({ order: -1 }).lean();
     let nextOrder = maxOrderPoster ? maxOrderPoster.order + 1 : 0;
 
     const posters = [];
@@ -51,7 +51,7 @@ export const uploadPoster = async (req, res) => {
  */
 export const getAllPosters = async (req, res) => {
   try {
-    const posters = await Poster.find().sort({ order: 1 });
+    const posters = await Poster.find().sort({ order: 1 }).lean();
 
     res.status(200).json({
       success: true,
@@ -73,7 +73,7 @@ export const getAllPosters = async (req, res) => {
  */
 export const getActivePosters = async (req, res) => {
   try {
-    const posters = await Poster.find({ isActive: true }).sort({ order: 1 });
+    const posters = await Poster.find({ isActive: true }).sort({ order: 1 }).lean();
 
     res.status(200).json({
       success: true,
@@ -144,7 +144,7 @@ export const reorderPosters = async (req, res) => {
 
     await Poster.bulkWrite(bulkOps);
 
-    const posters = await Poster.find().sort({ order: 1 });
+    const posters = await Poster.find().sort({ order: 1 }).lean();
 
     logActivity("PostersReordered", { count: orderedIds.length }, req);
     res.status(200).json({
@@ -170,7 +170,7 @@ export const deletePoster = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const poster = await Poster.findById(id);
+    const poster = await Poster.findById(id).lean();
 
     if (!poster) {
       return rejectRequest(req, res, 404, "poster_not_found", "Poster not found");

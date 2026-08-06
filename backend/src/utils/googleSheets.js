@@ -222,7 +222,7 @@ const convertStudentToRow = (s) => [
 
 const updateSheetForGroup = async (sheetName, query) => {
   await ensureSheetExists(sheetName);
-  const students = await Student.find(query).sort({ rollNo: 1 });
+  const students = await Student.find(query).sort({ rollNo: 1 }).lean();
   // Full-tab replace -- retrying reproduces the identical end state
   // regardless of attempt count, no duplication risk.
   await retryWithBackoff(() =>
@@ -332,7 +332,7 @@ export const clearRollNumbersFromSheet = async (stream) => {
     await ensureSheetExists(sheetName);
 
     // Fetch all students from that stream
-    const students = await Student.find({ stream }).sort({ studentName: 1 });
+    const students = await Student.find({ stream }).sort({ studentName: 1 }).lean();
 
     if (students.length === 0) {
       console.log(`⚠️ No students found for stream: ${stream}`);
@@ -392,7 +392,7 @@ export const clearRollNumbersFromClassSheet = async (classGroup) => {
   try {
     await ensureSheetExists(classGroup);
 
-    const students = await Student.find({ classMoving: classGroup, stream: null }).sort({ studentName: 1 });
+    const students = await Student.find({ classMoving: classGroup, stream: null }).sort({ studentName: 1 }).lean();
 
     if (students.length === 0) {
       console.log(`⚠️ No students found for class: ${classGroup}`);

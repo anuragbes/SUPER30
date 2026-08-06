@@ -43,6 +43,7 @@ export default function Dashboard() {
   const [removeClass, setRemoveClass] = useState("Class 8");
   const [stats, setStats] = useState(null);
   const [summary, setSummary] = useState(null);
+  const [dashboardError, setDashboardError] = useState(false);
   const [examDate, setExamDate] = useState("");
   const [lastDate, setLastDate] = useState("");
   const [resultDate, setResultDate] = useState("");
@@ -100,16 +101,38 @@ export default function Dashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const res = await axiosInstance.get(`/api/admin/dashboard-stats`);
-      setStats(res.data);
+      setDashboardError(false);
+      // dashboard-stats and summary-stats are independent reads (neither
+      // depends on the other's result) -- fetch them concurrently. Each
+      // response is applied independently (allSettled, not all) so that if
+      // only one of the two fails, the other's data still reaches the UI --
+      // matching the old sequential code's partial-success behavior instead
+      // of discarding a response that already arrived successfully.
+      const [statsResult, summaryResult] = await Promise.allSettled([
+        axiosInstance.get(`/api/admin/dashboard-stats`),
+        axiosInstance.get(`/api/admin/summary-stats`),
+      ]);
 
-      const summaryRes = await axiosInstance.get(
-        `/api/admin/summary-stats`
-      );
-      setSummary(summaryRes.data);
+      if (statsResult.status === "fulfilled") {
+        setStats(statsResult.value.data);
+      }
+      if (summaryResult.status === "fulfilled") {
+        setSummary(summaryResult.value.data);
+      }
+
+      // Preserve the original single-catch error contract: report a
+      // failure the same way the old sequential await would have, checking
+      // dashboard-stats first, then summary-stats.
+      if (statsResult.status === "rejected") {
+        throw statsResult.reason;
+      }
+      if (summaryResult.status === "rejected") {
+        throw summaryResult.reason;
+      }
     } catch (error) {
       if (error.response?.status !== 401) {
         toast.error("Failed to load dashboard data");
+        setDashboardError(true);
       }
       console.error(error);
     } finally {

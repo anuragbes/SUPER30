@@ -44,7 +44,7 @@ export const getAllAnnouncements = async (req, res) => {
     const announcements = await Announcement.find().sort({
       isPinned: -1,
       createdAt: -1,
-    });
+    }).lean();
 
     res.status(200).json({
       success: true,
@@ -110,7 +110,7 @@ export const updateAnnouncement = async (req, res) => {
       id,
       { title, message },
       { new: true, runValidators: true }
-    );
+    ).lean();
 
     if (!announcement) {
       return rejectRequest(req, res, 404, "announcement_not_found", "Announcement not found");
@@ -140,7 +140,7 @@ export const deleteAnnouncement = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const announcement = await Announcement.findByIdAndDelete(id);
+    const announcement = await Announcement.findByIdAndDelete(id).lean();
 
     if (!announcement) {
       return rejectRequest(req, res, 404, "announcement_not_found", "Announcement not found");
@@ -203,7 +203,7 @@ export const getActiveAnnouncements = async (req, res) => {
     const announcements = await Announcement.find({ isActive: true }).sort({
       isPinned: -1,
       createdAt: -1,
-    });
+    }).lean();
 
     res.status(200).json({
       success: true,

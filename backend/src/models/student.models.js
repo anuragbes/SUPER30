@@ -152,6 +152,12 @@ const studentSchema = new mongoose.Schema({
     },
 }, { timestamps: true })
 
+// Supports getAllStudents' filter combinations (stream/classMoving/target and
+// admitCardGenerated/admitCardSent status filters) without changing query
+// results -- only query plan/speed.
+studentSchema.index({ stream: 1, classMoving: 1, target: 1 });
+studentSchema.index({ admitCardGenerated: 1, admitCardSent: 1 });
+
 // Makes the existing duplicate-registration check (registerStudent's
 // findOne on studentName+fatherName+dateOfBirth) atomic instead of racy.
 // Scoped to only the documents that check already applies to -- partial,
