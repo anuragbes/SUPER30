@@ -421,6 +421,7 @@ export default function StudentsList() {
             <Input
               type="text"
               placeholder="Search by Name or ID..."
+              aria-label="Search students by name or ID"
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               className="pl-10 bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20"
@@ -436,7 +437,7 @@ export default function StudentsList() {
                     value={filterClass}
                     onValueChange={(value) => { setFilterClass(value); setPage(1); }}
                   >
-                    <SelectTrigger className="bg-background border-border text-foreground w-full">
+                    <SelectTrigger aria-label="Filter by class" className="bg-background border-border text-foreground w-full">
                       <SelectValue placeholder="Select Class" />
                     </SelectTrigger>
 
@@ -451,7 +452,7 @@ export default function StudentsList() {
                     value={filterStream}
                     onValueChange={(value) => { setFilterStream(value); setPage(1); }}
                   >
-                    <SelectTrigger className="bg-background border-border text-foreground w-full">
+                    <SelectTrigger aria-label="Filter by stream" className="bg-background border-border text-foreground w-full">
                       <SelectValue placeholder="Select Stream" />
                     </SelectTrigger>
 
@@ -468,7 +469,7 @@ export default function StudentsList() {
                   value={filterTarget}
                   onValueChange={(value) => { setFilterTarget(value); setPage(1); }}
                 >
-                  <SelectTrigger className="bg-background border-border text-foreground w-full">
+                  <SelectTrigger aria-label="Filter by target" className="bg-background border-border text-foreground w-full">
                     <SelectValue placeholder="Select Target" />
                   </SelectTrigger>
 
@@ -498,7 +499,7 @@ export default function StudentsList() {
                     setPage(1);
                   }}
                 >
-                  <SelectTrigger className="bg-background border-border text-foreground w-full">
+                  <SelectTrigger aria-label="Filter by status" className="bg-background border-border text-foreground w-full">
                     <SelectValue placeholder="Select Status" />
                   </SelectTrigger>
 
@@ -648,6 +649,7 @@ export default function StudentsList() {
                           selectedStudents.length === students.length &&
                           students.length > 0
                         }
+                        aria-label="Select all students"
                         className="border-slate-300"
                       />
                     </th>
@@ -686,6 +688,7 @@ export default function StudentsList() {
                             checked={selectedStudents.includes(
                               student.studentId,
                             )}
+                            aria-label={`Select student ${student.studentId}`}
                             className="h-4 w-4"
                           />
                         </td>
@@ -725,7 +728,7 @@ export default function StudentsList() {
                               <div className="text-[10px] text-muted-foreground whitespace-nowrap mt-1 flex flex-col gap-0.5">
                                 {student.admitCardProvider && (
                                   <span className="flex items-center gap-1">
-                                    <span className="font-semibold text-slate-500">Provider:</span> 
+                                    <span className="font-semibold text-slate-500">Provider:</span>
                                     <span className="capitalize">{student.admitCardProvider}</span>
                                   </span>
                                 )}
@@ -758,9 +761,18 @@ export default function StudentsList() {
                           {/* Delete */}
                           <Trash
                             className="w-5 h-5 text-destructive/80 cursor-pointer hover:text-destructive transition"
+                            role="button"
+                            tabIndex={0}
+                            aria-label="Delete student"
                             onClick={() =>
                               handleDeleteStudent(student.studentId)
                             }
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                handleDeleteStudent(student.studentId);
+                              }
+                            }}
                           />
                         </td>
                       </tr>

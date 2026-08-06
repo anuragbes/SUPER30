@@ -260,6 +260,15 @@ export default function Dashboard() {
     );
   };
 
+  const renderDashboardError = () => (
+    <div className="flex flex-col items-center gap-3 text-center py-8 bg-card rounded-2xl border border-border">
+      <p className="text-muted-foreground text-sm">Unable to load dashboard data.</p>
+      <Button onClick={fetchDashboardData} variant="outline" size="sm" className="gap-2">
+        <RotateCcw className="w-4 h-4" /> Retry
+      </Button>
+    </div>
+  );
+
   const renderPieChart = (title, data, showLabel = true) => (
     <div className="flex flex-col bg-card rounded-2xl shadow-sm p-4 sm:p-6 border border-border hover:shadow-md transition-shadow">
       <h2 className="text-sm sm:text-base md:text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
@@ -488,6 +497,8 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
+            ) : dashboardError ? (
+              renderDashboardError()
             ) : null}
           </div>
 
@@ -550,10 +561,10 @@ export default function Dashboard() {
                     variant="default"
                     icon={<Calendar size={20} />}
                   >
-                    <label className="text-sm font-medium text-foreground block">Exam Date</label>
+                    <label htmlFor="examDate" className="text-sm font-medium text-foreground block">Exam Date</label>
                     <div className="flex gap-2 mt-1">
-                      <Input type="date" value={examDate} onChange={(e) => setExamDate(e.target.value)} className="text-sm flex-1" />
-                      <Button onClick={() => clearDate("examDate")} variant="outline" className="text-xs" title="Clear date">✕</Button>
+                      <Input id="examDate" type="date" value={examDate} onChange={(e) => setExamDate(e.target.value)} className="text-sm flex-1" />
+                      <Button onClick={() => clearDate("examDate")} variant="outline" className="text-xs" title="Clear date" aria-label="Clear exam date">✕</Button>
                     </div>
                   </ActionCard>
 
@@ -564,10 +575,10 @@ export default function Dashboard() {
                     onClick={() => updateExamSettings()}
                     icon={<Calendar size={20} />}
                   >
-                    <label className="text-sm font-medium block">Last Date</label>
+                    <label htmlFor="lastDate" className="text-sm font-medium block">Last Date</label>
                     <div className="flex gap-2 mt-1">
-                      <Input type="date" value={lastDate} onChange={(e) => setLastDate(e.target.value)} className="text-sm flex-1" />
-                      <Button onClick={() => clearDate("lastDate")} variant="outline" className="text-xs" title="Clear date">✕</Button>
+                      <Input id="lastDate" type="date" value={lastDate} onChange={(e) => setLastDate(e.target.value)} className="text-sm flex-1" />
+                      <Button onClick={() => clearDate("lastDate")} variant="outline" className="text-xs" title="Clear date" aria-label="Clear last registration date">✕</Button>
                     </div>
                   </ActionCard>
 
@@ -578,10 +589,10 @@ export default function Dashboard() {
                     onClick={() => updateExamSettings()}
                     icon={<Calendar size={20} />}
                   >
-                    <label className="text-sm font-medium block">Result Date</label>
+                    <label htmlFor="resultDate" className="text-sm font-medium block">Result Date</label>
                     <div className="flex gap-2 mt-1">
-                      <Input type="date" value={resultDate} onChange={(e) => setResultDate(e.target.value)} className="text-sm flex-1" />
-                      <Button onClick={() => clearDate("resultDate")} variant="outline" className="text-xs" title="Clear date">✕</Button>
+                      <Input id="resultDate" type="date" value={resultDate} onChange={(e) => setResultDate(e.target.value)} className="text-sm flex-1" />
+                      <Button onClick={() => clearDate("resultDate")} variant="outline" className="text-xs" title="Clear date" aria-label="Clear result date">✕</Button>
                     </div>
                   </ActionCard>
                 </div>
@@ -602,8 +613,9 @@ export default function Dashboard() {
                     variant="default"
                     icon={<Shuffle size={20} />}
                   >
-                    <label className="text-sm font-medium text-foreground block">Select Order</label>
+                    <label htmlFor="rollNumberOrder" className="text-sm font-medium text-foreground block">Select Order</label>
                     <select
+                      id="rollNumberOrder"
                       value={order}
                       onChange={(e) => setOrder(e.target.value)}
                       className="border border-input bg-background rounded-md p-2 w-full mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -622,11 +634,12 @@ export default function Dashboard() {
                     variant="destructive"
                     icon={<X size={20} />}
                   >
-                    <label className="text-sm font-medium text-foreground block">
+                    <label htmlFor="removeRollGroup" className="text-sm font-medium text-foreground block">
                       {formMode === "junior" ? "Select Class" : "Select Stream"}
                     </label>
                     {formMode === "junior" ? (
                       <select
+                        id="removeRollGroup"
                         value={removeClass}
                         onChange={(e) => setRemoveClass(e.target.value)}
                         className="border border-input bg-background rounded-md p-2 w-full mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -637,6 +650,7 @@ export default function Dashboard() {
                       </select>
                     ) : (
                       <select
+                        id="removeRollGroup"
                         value={removeStream}
                         onChange={(e) => setRemoveStream(e.target.value)}
                         className="border border-input bg-background rounded-md p-2 w-full mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -712,6 +726,8 @@ export default function Dashboard() {
                   {renderPieChart("Study Centre", stats.studyCentre, false)}
                   {renderPieChart("Scholarship Offered", stats.scholarship, true)}
                 </div>
+              ) : dashboardError ? (
+                renderDashboardError()
               ) : (
                 <p className="text-muted-foreground text-center py-8 bg-card rounded-2xl border border-border">No analytics data available</p>
               )}

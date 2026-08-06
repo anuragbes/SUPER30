@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { Upload } from "lucide-react";
 
-export function FileUpload({ name, accept = "image/jpeg,image/jpg,image/png,image/webp", onFileSelect, file }) {
+export function FileUpload({ id, name, accept = "image/jpeg,image/jpg,image/png,image/webp", onFileSelect, file }) {
   const [isDragging, setIsDragging] = useState(false);
 
   // Derive the display name purely from the prop
@@ -46,6 +46,7 @@ export function FileUpload({ name, accept = "image/jpeg,image/jpg,image/png,imag
     >
       <input
         type="file"
+        id={id}
         name={name}
         accept={accept}
         onChange={handleFileChange}

@@ -171,8 +171,9 @@ const Announcements = () => {
 
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-foreground block mb-2">Announcement Title</label>
+                <label htmlFor="announcementTitle" className="text-sm font-medium text-foreground block mb-2">Announcement Title</label>
                 <Input
+                  id="announcementTitle"
                   placeholder="Enter announcement title"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
@@ -181,8 +182,9 @@ const Announcements = () => {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-foreground block mb-2">Message</label>
+                <label htmlFor="announcementMessage" className="text-sm font-medium text-foreground block mb-2">Message</label>
                 <textarea
+                  id="announcementMessage"
                   className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#00afd0]/50 focus:border-transparent"
                   rows="4"
                   placeholder="Enter announcement message"
@@ -191,8 +193,8 @@ const Announcements = () => {
                 />
               </div>
 
-              <Button 
-                onClick={handleCreate} 
+              <Button
+                onClick={handleCreate}
                 disabled={loading.type === "create" || !formData.title || !formData.message}
                 className="w-full bg-[#00afd0] hover:bg-[#0295b3] text-white font-semibold"
               >
@@ -220,8 +222,9 @@ const Announcements = () => {
                           <h3 className="text-lg font-semibold text-foreground">Edit Announcement</h3>
                         </div>
                         <div>
-                          <label className="text-sm font-medium text-foreground block mb-2">Title</label>
+                          <label htmlFor="editAnnouncementTitle" className="text-sm font-medium text-foreground block mb-2">Title</label>
                           <Input
+                            id="editAnnouncementTitle"
                             placeholder="Enter announcement title"
                             value={editData.title}
                             onChange={(e) => setEditData({ ...editData, title: e.target.value })}
@@ -229,8 +232,9 @@ const Announcements = () => {
                           />
                         </div>
                         <div>
-                          <label className="text-sm font-medium text-foreground block mb-2">Message</label>
+                          <label htmlFor="editAnnouncementMessage" className="text-sm font-medium text-foreground block mb-2">Message</label>
                           <textarea
+                            id="editAnnouncementMessage"
                             className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#00afd0]/50 focus:border-transparent"
                             rows="4"
                             placeholder="Enter announcement message"
@@ -288,6 +292,7 @@ const Announcements = () => {
                               variant="outline"
                               onClick={() => openEdit(a)}
                               className="px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium"
+                              aria-label="Edit announcement"
                             >
                               <Edit2 size={16} className="mr-1 sm:mr-0" />
                               <span className="sm:hidden">Edit</span>
@@ -298,6 +303,7 @@ const Announcements = () => {
                               disabled={loading.id === a._id && loading.type === "pin"}
                               className="px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium"
                               title={a.isPinned ? "Unpin" : "Pin"}
+                              aria-label={a.isPinned ? "Unpin announcement" : "Pin announcement"}
                             >
                               {loading.id === a._id && loading.type === "pin" ? "..." : <Pin size={16} className={a.isPinned ? "fill-yellow-500 text-yellow-500" : ""} />}
                             </Button>
@@ -314,6 +320,7 @@ const Announcements = () => {
                               onClick={() => deleteAnnouncement(a._id)}
                               disabled={loading.id === a._id && loading.type === "delete"}
                               className="px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium"
+                              aria-label="Delete announcement"
                             >
                               {loading.id === a._id && loading.type === "delete" ? "..." : <Trash2 size={16} />}
                             </Button>

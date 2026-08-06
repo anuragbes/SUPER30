@@ -13,6 +13,13 @@ import { FileUpload } from "@/components/FileUpload";
 import { useUser, useAuth } from "@clerk/clerk-react";
 import { compressPassport, compressIdentity } from "../utils/imageCompression";
 
+// Drafts are scoped per Clerk user (not one shared global key) so one
+// user's in-progress data can never surface in another user's session on a
+// shared device, and expire after DRAFT_TTL_MS so stale PII doesn't linger
+// in localStorage indefinitely.
+const DRAFT_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const getDraftKey = (userId) => `studentRegistrationDraft:${userId}`;
+
 export default function RegisterStudent() {
   const navigate = useNavigate();
 
@@ -21,9 +28,16 @@ export default function RegisterStudent() {
 
   // Load draft from local storage
   const getInitialDraft = () => {
+    if (!user?.id) return null;
     try {
-      const saved = localStorage.getItem("studentRegistrationDraft");
-      return saved ? JSON.parse(saved) : null;
+      const saved = localStorage.getItem(getDraftKey(user.id));
+      if (!saved) return null;
+      const parsed = JSON.parse(saved);
+      if (!parsed.savedAt || Date.now() - parsed.savedAt > DRAFT_TTL_MS) {
+        localStorage.removeItem(getDraftKey(user.id));
+        return null;
+      }
+      return parsed;
     } catch (e) {
       console.error("Failed to parse saved draft", e);
       return null;
@@ -102,14 +116,16 @@ export default function RegisterStudent() {
 
   // Auto-save draft to local storage whenever data changes
   useEffect(() => {
+    if (!user?.id) return;
     const draftData = {
       formData,
       customSchool,
       scholarship,
-      sameAsPermanent
+      sameAsPermanent,
+      savedAt: Date.now(),
     };
-    localStorage.setItem("studentRegistrationDraft", JSON.stringify(draftData));
-  }, [formData, customSchool, scholarship, sameAsPermanent]);
+    localStorage.setItem(getDraftKey(user.id), JSON.stringify(draftData));
+  }, [user?.id, formData, customSchool, scholarship, sameAsPermanent]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -157,7 +173,7 @@ export default function RegisterStudent() {
 
   const handleClearForm = () => {
     if (window.confirm("Are you sure you want to clear the form? All entered data will be lost.")) {
-      localStorage.removeItem("studentRegistrationDraft");
+      if (user?.id) localStorage.removeItem(getDraftKey(user.id));
       setCustomSchool("");
       setScholarship(false);
       setSameAsPermanent(false);
@@ -206,6 +222,27 @@ export default function RegisterStudent() {
         toast.error(`Please provide ${field.label}.`);
         return;
       }
+    }
+
+    // Mirrors the backend schema's exact match: /^[0-9]{10}$/ on
+    // parentMobile/studentMobile/whatsappMobile (student.models.js). Optional
+    // fields are only checked when non-empty, matching Mongoose's own
+    // behavior of skipping the match validator on an empty string.
+    const MOBILE_REGEX = /^[0-9]{10}$/;
+
+    if (!MOBILE_REGEX.test(formData.parentMobile)) {
+      toast.error("Please enter a valid 10-digit Parent Mobile Number.");
+      return;
+    }
+
+    if (!MOBILE_REGEX.test(formData.studentMobile)) {
+      toast.error("Please enter a valid 10-digit Student Mobile Number.");
+      return;
+    }
+
+    if (formData.whatsappMobile && !MOBILE_REGEX.test(formData.whatsappMobile)) {
+      toast.error("Please enter a valid 10-digit WhatsApp Number.");
+      return;
     }
 
     if (formMode !== "junior" && !formData.stream) {
@@ -294,7 +331,7 @@ export default function RegisterStudent() {
       );
 
       // Clear the draft once submission is successful
-      localStorage.removeItem("studentRegistrationDraft");
+      if (user?.id) localStorage.removeItem(getDraftKey(user.id));
 
       toast.success("Registration Successful!", {
         description: `Student ID: ${res.data.studentId}`,
@@ -372,10 +409,11 @@ export default function RegisterStudent() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
               <Field>
-                <FieldLabel className="block text-sm font-medium text-foreground mb-0.5">
+                <FieldLabel htmlFor="studentName" className="block text-sm font-medium text-foreground mb-0.5">
                   Student Name<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <Input className="border border-slate-200 rounded-lg bg-white w-full"
+                  id="studentName"
                   name="studentName"
                   placeholder="Enter Your Full Name"
                   value={formData.studentName || ""}
@@ -385,11 +423,12 @@ export default function RegisterStudent() {
               </Field>
 
               <Field>
-                <FieldLabel className="block text-sm font-medium text-foreground mb-0.5">
+                <FieldLabel htmlFor="dateOfBirth" className="block text-sm font-medium text-foreground mb-0.5">
                   Date of Birth<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <Input className="border border-slate-200 rounded-lg bg-white w-full"
                   type="date"
+                  id="dateOfBirth"
                   name="dateOfBirth"
                   value={formData.dateOfBirth || ""}
                   onChange={handleChange}
@@ -398,12 +437,12 @@ export default function RegisterStudent() {
               </Field>
 
               <Field>
-                <FieldLabel className="block text-sm font-medium text-foreground mb-0.5">
+                <FieldLabel htmlFor="gender" className="block text-sm font-medium text-foreground mb-0.5">
                   Gender<span className="text-red-500"> *</span>
                 </FieldLabel>
 
                 <Select value={formData.gender || ""} name="gender" onValueChange={(value) => handleChange({ target: { name: "gender", value } })} required>
-                  <SelectTrigger className="border border-slate-200 rounded-lg bg-white w-full">
+                  <SelectTrigger id="gender" className="border border-slate-200 rounded-lg bg-white w-full">
                     <SelectValue placeholder="Select Gender" />
                   </SelectTrigger>
 
@@ -415,12 +454,13 @@ export default function RegisterStudent() {
               </Field>
 
               <Field>
-                <FieldLabel className="block text-sm font-medium text-foreground mb-0.5">
+                <FieldLabel htmlFor="email" className="block text-sm font-medium text-foreground mb-0.5">
                   Email Address<span className="text-red-500"> *</span> <span className="text-xs text-gray-500 ml-1">(Admit Card will be sent to this email)</span>
                 </FieldLabel>
                 <Input
                   className="border border-slate-200 rounded-lg bg-white w-full"
                   type="email"
+                  id="email"
                   name="email"
                   value={formData.email || ""}
                   readOnly
@@ -436,10 +476,11 @@ export default function RegisterStudent() {
 
               {/* Father Name */}
               <Field>
-                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
+                <FieldLabel htmlFor="fatherName" className="text-sm font-medium text-foreground mb-0.5">
                   Father Name<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <Input
+                  id="fatherName"
                   name="fatherName"
                   placeholder="Enter Father's Full Name"
                   value={formData.fatherName || ""}
@@ -451,10 +492,11 @@ export default function RegisterStudent() {
 
               {/* Mother Name */}
               <Field>
-                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
+                <FieldLabel htmlFor="motherName" className="text-sm font-medium text-foreground mb-0.5">
                   Mother Name<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <Input
+                  id="motherName"
                   name="motherName"
                   placeholder="Enter Mother's Full Name"
                   value={formData.motherName || ""}
@@ -466,7 +508,7 @@ export default function RegisterStudent() {
 
               {/* Parent Mobile */}
               <Field>
-                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
+                <FieldLabel htmlFor="parentMobile" className="text-sm font-medium text-foreground mb-0.5">
                   Parent Mobile No.<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <div className="flex items-center w-full">
@@ -476,6 +518,7 @@ export default function RegisterStudent() {
                   <Input
                     className="h-10 bg-white border border-slate-200/60 border-l-0 rounded-l-none rounded-r-lg shadow-sm w-full"
                     type="tel"
+                    id="parentMobile"
                     name="parentMobile"
                     placeholder="Enter Mobile Number"
                     value={formData.parentMobile || ""}
@@ -488,7 +531,7 @@ export default function RegisterStudent() {
 
               {/* WhatsApp Number */}
               <Field>
-                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
+                <FieldLabel htmlFor="whatsappMobile" className="text-sm font-medium text-foreground mb-0.5">
                   WhatsApp Number
                 </FieldLabel>
                 <div className="flex items-center w-full">
@@ -498,6 +541,7 @@ export default function RegisterStudent() {
                   <Input
                     className="h-10 bg-white border border-slate-200/60 border-l-0 rounded-l-none rounded-r-lg shadow-sm w-full"
                     type="tel"
+                    id="whatsappMobile"
                     name="whatsappMobile"
                     placeholder="Enter WhatsApp Number"
                     value={formData.whatsappMobile || ""}
@@ -509,7 +553,7 @@ export default function RegisterStudent() {
 
               {/* Student Mobile */}
               <Field>
-                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
+                <FieldLabel htmlFor="studentMobile" className="text-sm font-medium text-foreground mb-0.5">
                   Student Mobile No.<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <div className="flex items-center w-full">
@@ -519,6 +563,7 @@ export default function RegisterStudent() {
                   <Input
                     className="h-10 bg-slate-100 border border-slate-200/60 border-l-0 rounded-l-none rounded-r-lg shadow-sm w-full"
                     type="tel"
+                    id="studentMobile"
                     name="studentMobile"
                     placeholder="Enter Mobile Number"
                     value={formData.studentMobile || ""}
@@ -536,10 +581,11 @@ export default function RegisterStudent() {
             <div className="space-y-4">
 
               <Field className="col-span-2">
-                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
+                <FieldLabel htmlFor="permanentAddress" className="text-sm font-medium text-foreground mb-0.5">
                   Permanent Address<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <textarea
+                  id="permanentAddress"
                   name="permanentAddress"
                   value={formData.permanentAddress}
                   onChange={(e) => {
@@ -584,10 +630,11 @@ export default function RegisterStudent() {
               </div>
 
               <Field className="col-span-2">
-                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
+                <FieldLabel htmlFor="presentAddress" className="text-sm font-medium text-foreground mb-0.5">
                   Present Address<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <textarea
+                  id="presentAddress"
                   name="presentAddress"
                   value={formData.presentAddress}
                   onChange={(e) =>
@@ -615,14 +662,14 @@ export default function RegisterStudent() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
               <Field>
-                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
+                <FieldLabel htmlFor="classMoving" className="text-sm font-medium text-foreground mb-0.5">
                   {formMode === "junior" ? "Class" : "Class Moving To"}<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <Select
                   value={formData.classMoving || ""}
                   onValueChange={(value) => setFormData({ ...formData, classMoving: value })}
                 >
-                  <SelectTrigger className="bg-gray-100 border border-slate-200 text-black w-full">
+                  <SelectTrigger id="classMoving" className="bg-gray-100 border border-slate-200 text-black w-full">
                     <SelectValue placeholder="Select Class" />
                   </SelectTrigger>
                   <SelectContent>
@@ -644,14 +691,14 @@ export default function RegisterStudent() {
 
               {formMode !== "junior" && (
                 <Field>
-                  <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
+                  <FieldLabel htmlFor="stream" className="text-sm font-medium text-foreground mb-0.5">
                     Select Stream<span className="text-red-500"> *</span>
                   </FieldLabel>
                   <Select
                     value={formData.stream || ""}
                     onValueChange={(value) => setFormData({ ...formData, stream: value })}
                   >
-                    <SelectTrigger className="border border-slate-200 rounded-lg bg-white w-full">
+                    <SelectTrigger id="stream" className="border border-slate-200 rounded-lg bg-white w-full">
                       <SelectValue placeholder="Select Stream" />
                     </SelectTrigger>
 
@@ -664,14 +711,14 @@ export default function RegisterStudent() {
               )}
 
               <Field>
-                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
+                <FieldLabel htmlFor="target" className="text-sm font-medium text-foreground mb-0.5">
                   Target<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <Select
                   value={formData.target || ""}
                   onValueChange={(value) => setFormData({ ...formData, target: value })}
                 >
-                  <SelectTrigger className="border border-slate-200 rounded-lg bg-white w-full">
+                  <SelectTrigger id="target" className="border border-slate-200 rounded-lg bg-white w-full">
                     <SelectValue placeholder="Select Target" />
                   </SelectTrigger>
 
@@ -694,10 +741,11 @@ export default function RegisterStudent() {
               </Field>
 
               <Field>
-                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
+                <FieldLabel htmlFor="previousResultPercentage" className="text-sm font-medium text-foreground mb-0.5">
                   Student's Previous Result (In Percentage)<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <Input
+                  id="previousResultPercentage"
                   name="previousResultPercentage"
                   placeholder="Enter Percentage"
                   value={formData.previousResultPercentage || ""}
@@ -711,7 +759,7 @@ export default function RegisterStudent() {
               </Field>
 
               <Field>
-                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
+                <FieldLabel htmlFor="previousSchool" className="text-sm font-medium text-foreground mb-0.5">
                   {formMode === "junior" ? "Current School Name" : "Previous School Name"}<span className="text-red-500"> *</span>
                 </FieldLabel>
 
@@ -722,7 +770,7 @@ export default function RegisterStudent() {
                     if (value !== "Other") setCustomSchool(""); // clear custom input
                   }}
                 >
-                  <SelectTrigger className="border border-slate-200 rounded-lg bg-white w-full">
+                  <SelectTrigger id="previousSchool" className="border border-slate-200 rounded-lg bg-white w-full">
                     <SelectValue placeholder="Select Current School" />
                   </SelectTrigger>
 
@@ -830,6 +878,7 @@ export default function RegisterStudent() {
                   <Input
                     className="mt-3 border border-slate-300 rounded-lg bg-white"
                     placeholder="Enter Your School Name"
+                    aria-label="Custom school name"
                     value={customSchool}
                     onChange={(e) => {
                       setCustomSchool(e.target.value);  // ONLY update customSchool
@@ -840,7 +889,7 @@ export default function RegisterStudent() {
 
 
               <Field>
-                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
+                <FieldLabel htmlFor="testCentre" className="text-sm font-medium text-foreground mb-0.5">
                   Test Centre<span className="text-red-500"> *</span>
                 </FieldLabel>
                 {formMode === "junior" ? (
@@ -848,7 +897,7 @@ export default function RegisterStudent() {
                     value={formData.testCentre || ""}
                     onValueChange={(value) => setFormData({ ...formData, testCentre: value })}
                   >
-                    <SelectTrigger className="border border-slate-200 rounded-lg bg-white w-full text-left" style={{ whiteSpace: "normal", lineHeight: "1.3" }}>
+                    <SelectTrigger id="testCentre" className="border border-slate-200 rounded-lg bg-white w-full text-left" style={{ whiteSpace: "normal", lineHeight: "1.3" }}>
                       <SelectValue placeholder="Select Test Centre" />
                     </SelectTrigger>
                     <SelectContent className="max-w-[90vw] sm:max-w-none w-[var(--radix-select-trigger-width)]">
@@ -865,7 +914,7 @@ export default function RegisterStudent() {
                     value={formData.testCentre || ""}
                     onValueChange={(value) => setFormData({ ...formData, testCentre: value })}
                   >
-                    <SelectTrigger className="border border-slate-200 rounded-lg bg-white w-full text-left" style={{ whiteSpace: "normal", lineHeight: "1.3" }}>
+                    <SelectTrigger id="testCentre" className="border border-slate-200 rounded-lg bg-white w-full text-left" style={{ whiteSpace: "normal", lineHeight: "1.3" }}>
                       <SelectValue placeholder="Select Test Centre" />
                     </SelectTrigger>
                     <SelectContent className="max-w-[90vw] sm:max-w-none w-[var(--radix-select-trigger-width)]">
@@ -879,14 +928,14 @@ export default function RegisterStudent() {
 
               {formMode === "junior" && (
                 <Field>
-                  <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
+                  <FieldLabel htmlFor="studyCentre" className="text-sm font-medium text-foreground mb-0.5">
                     Study Centre<span className="text-red-500"> *</span>
                   </FieldLabel>
                   <Select
                     value={formData.studyCentre || ""}
                     onValueChange={(value) => setFormData({ ...formData, studyCentre: value })}
                   >
-                    <SelectTrigger className="border border-slate-200 rounded-lg bg-white w-full text-left" style={{ whiteSpace: "normal", lineHeight: "1.3" }}>
+                    <SelectTrigger id="studyCentre" className="border border-slate-200 rounded-lg bg-white w-full text-left" style={{ whiteSpace: "normal", lineHeight: "1.3" }}>
                       <SelectValue placeholder="Select Study Centre" />
                     </SelectTrigger>
                     <SelectContent className="max-w-[90vw] sm:max-w-none w-[var(--radix-select-trigger-width)]">
@@ -908,7 +957,7 @@ export default function RegisterStudent() {
             <div className="space-y-4">
 
               <Field>
-                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
+                <FieldLabel htmlFor="scholarshipOffered" className="text-sm font-medium text-foreground mb-0.5">
                   Scholarship Offered Anywhere Else?<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <Select
@@ -919,7 +968,7 @@ export default function RegisterStudent() {
                     setFormData({ ...formData, scholarshipOffered: boolValue });
                   }}
                 >
-                  <SelectTrigger className="border border-slate-200 rounded-lg bg-white w-full">
+                  <SelectTrigger id="scholarshipOffered" className="border border-slate-200 rounded-lg bg-white w-full">
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
 
@@ -931,11 +980,12 @@ export default function RegisterStudent() {
               </Field>
 
               <Field className="col-span-2">
-                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">Scholarship Details</FieldLabel>
+                <FieldLabel htmlFor="scholarshipDetails" className="text-sm font-medium text-foreground mb-0.5">Scholarship Details</FieldLabel>
                 <p className="text-[13px] text-muted-foreground mb-1">
                   If Yes, mention the scholarship name, provider, and amount/percentage of fee waived (e.g., Govt Merit Scholarship – 50% tuition fee)
                 </p>
                 <textarea
+                  id="scholarshipDetails"
                   name="scholarshipDetails"
                   placeholder="Enter Scholarship Details"
                   value={formData.scholarshipDetails || ""}
@@ -953,10 +1003,11 @@ export default function RegisterStudent() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
               <Field>
-                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
+                <FieldLabel htmlFor="passportPhoto" className="text-sm font-medium text-foreground mb-0.5">
                   Recent Passport Size Photo<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <FileUpload
+                  id="passportPhoto"
                   name="passportPhoto"
                   accept="image/jpeg,image/jpg,image/png,image/webp"
                   file={passportPhoto}
@@ -965,10 +1016,11 @@ export default function RegisterStudent() {
               </Field>
 
               <Field>
-                <FieldLabel className="text-sm font-medium text-foreground mb-0.5">
+                <FieldLabel htmlFor="identityPhoto" className="text-sm font-medium text-foreground mb-0.5">
                   School ID Card / Identity Proof (Aadhar Card)<span className="text-red-500"> *</span>
                 </FieldLabel>
                 <FileUpload
+                  id="identityPhoto"
                   name="identityPhoto"
                   accept="image/jpeg,image/jpg,image/png,image/webp"
                   file={identityPhoto}
