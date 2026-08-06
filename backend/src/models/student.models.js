@@ -198,16 +198,24 @@ studentSchema.pre("save", function (next) {
     next();
 });
 
+// Reserves the next sequential student ID atomically via the Counter
+// collection. Exported (rather than inlined in the hook below) so it's
+// independently testable -- pre-save hooks only run as part of a real
+// Mongoose document.save(), which needs a live DB connection to complete.
+export const generateNextStudentId = async () => {
+    const counter = await Counter.findOneAndUpdate(
+        { id: "studentId" },
+        { $inc: { seq: 1 } },
+        { new: true, upsert: true }
+    );
+    return "STU" + counter.seq.toString().padStart(4, "0");
+};
+
 // Auto-increment studentID before saving (using Counter collection for unique IDs)
 studentSchema.pre("save", async function (next) {
     if (this.isNew) {                                     // checks if the student is new
         try {
-            const counter = await Counter.findOneAndUpdate(
-                { id: "studentId" },
-                { $inc: { seq: 1 } },
-                { new: true, upsert: true }
-            );
-            this.studentId = "STU" + counter.seq.toString().padStart(4, "0");
+            this.studentId = await generateNextStudentId();
         } catch (error) {
             return next(error);
         }

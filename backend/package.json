@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
-    "test": "node --test test/*.test.js"
+    "test": "node --experimental-test-module-mocks --test test/*.test.js"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
