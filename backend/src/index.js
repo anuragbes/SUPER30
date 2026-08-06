@@ -4,6 +4,7 @@ dotenv.config({ path: '.env' })
 
 import express from 'express';
 import morgan from 'morgan';
+import helmet from 'helmet';
 import studentRoutes from './routes/studentRoutes.js';
 import connectDB from './db/index.js'
 import cors from "cors";
@@ -12,6 +13,7 @@ import cookieParser from "cookie-parser";
 import { apiLimiter } from './middlewares/rateLimiter.js';
 import { logError } from './utils/logger.js';
 import { generateRequestId } from './utils/requestId.js';
+import { sanitizeRequest } from './middlewares/sanitizeRequest.js';
 
 
 // initialise express app
@@ -35,6 +37,17 @@ app.use(
   })
 );
 
+// Standard security headers. Cross-Origin-Resource-Policy is explicitly set
+// to "cross-origin" (Helmet defaults to "same-origin") because the frontend
+// (Vercel) and this API (Render) are on different origins by design -- the
+// default would fight the CORS config above. Every other Helmet default is
+// safe as-is: this backend never serves HTML/templates (verified), so
+// Content-Security-Policy and friends are inert on its JSON/PDF responses.
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
 
 // Connect Database
 connectDB()
@@ -43,6 +56,7 @@ connectDB()
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(sanitizeRequest);
 
 // Assign a unique requestId to every incoming request
 app.use((req, res, next) => {

@@ -34,7 +34,7 @@ export const sendWithBrevo = async (emailData) => {
   // Upsert settings to ensure document exists
   const settings = await Settings.findOneAndUpdate(
     {},
-    { $setOnInsert: { "brevo.date": today } },
+    { $setOnInsert: { "brevo.date": today, singleton: true } },
     { upsert: true, new: true }
   );
 
@@ -49,10 +49,19 @@ export const sendWithBrevo = async (emailData) => {
     }
   }
 
-  // Fetch current to avoid race conditions with multiple parallel requests as much as possible
-  const currentSettings = await Settings.findOne();
-  if (currentSettings && currentSettings.brevo?.count >= 300) {
-    logEmail("QUOTA_EXCEEDED", { provider: "brevo", count: currentSettings.brevo.count, limit: 300 });
+  // Atomically reserve a send slot before calling the provider -- closes the
+  // check-then-act race where two concurrent sends could both read count<300
+  // before either increments. Rolled back below if the send itself fails, so
+  // the counter still only reflects confirmed sends, same as before.
+  const reserved = await Settings.findOneAndUpdate(
+    { "brevo.date": today, "brevo.count": { $lt: 300 } },
+    { $inc: { "brevo.count": 1 } },
+    { new: true }
+  );
+
+  if (!reserved) {
+    const current = await Settings.findOne();
+    logEmail("QUOTA_EXCEEDED", { provider: "brevo", count: current?.brevo?.count, limit: 300 });
     const error = new Error("Daily Brevo limit reached");
     error.code = "quota_exceeded";
     throw error;
@@ -60,9 +69,6 @@ export const sendWithBrevo = async (emailData) => {
 
   try {
     const result = await brevo.transactionalEmails.sendTransacEmail(payload);
-    
-    // Increment counter successfully
-    await Settings.updateOne({}, { $inc: { "brevo.count": 1 } });
 
     const messageId = result.body?.messageId || result.messageId || "unknown";
     logEmail("EMAIL_SENT", { provider: "brevo", to: emailData.to, messageId });
@@ -73,6 +79,9 @@ export const sendWithBrevo = async (emailData) => {
       fallback: false
     };
   } catch (error) {
+    // Send failed after we reserved a slot -- release it so the counter
+    // still only reflects confirmed sends.
+    await Settings.updateOne({}, { $inc: { "brevo.count": -1 } });
     logEmail("EMAIL_FAILED", { provider: "brevo", to: emailData.to, error: error.message });
     throw error;
   }

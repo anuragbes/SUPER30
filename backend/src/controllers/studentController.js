@@ -49,6 +49,12 @@ export const pickAllowedFields = (source = {}, allowedFields) => {
   return picked;
 };
 
+// Escapes regex metacharacters so a string can be safely used as a literal
+// substring inside a MongoDB $regex query, instead of being interpreted as a
+// regex pattern. Used both for the duplicate-registration check below and
+// for the admin search in getAllStudents.
+export const escapeRegex = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 export const registerStudent = async (req, res) => {
   try {
     const clerkUserId = req.clerkUserId;
@@ -60,8 +66,6 @@ export const registerStudent = async (req, res) => {
     const duplicateConditions = [];
 
     if (req.body?.studentName && req.body?.fatherName && req.body?.dateOfBirth) {
-      const escapeRegex = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      
       duplicateConditions.push({
         studentName: { $regex: new RegExp(`^${escapeRegex(req.body.studentName.trim())}$`, "i") },
         fatherName: { $regex: new RegExp(`^${escapeRegex(req.body.fatherName.trim())}$`, "i") },
@@ -144,9 +148,10 @@ export const getAllStudents = async (req, res) => {
 
     // Search
     if (search) {
+      const escapedSearch = escapeRegex(search);
       query.$or = [
-        { studentName: { $regex: search, $options: "i" } },
-        { studentId: { $regex: search, $options: "i" } },
+        { studentName: { $regex: escapedSearch, $options: "i" } },
+        { studentId: { $regex: escapedSearch, $options: "i" } },
       ];
     }
 

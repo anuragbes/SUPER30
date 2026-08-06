@@ -152,6 +152,25 @@ const studentSchema = new mongoose.Schema({
     },
 }, { timestamps: true })
 
+// Makes the existing duplicate-registration check (registerStudent's
+// findOne on studentName+fatherName+dateOfBirth) atomic instead of racy.
+// Scoped to only the documents that check already applies to -- partial,
+// not a plain unique index -- since dateOfBirth is optional on this schema
+// and a non-partial unique index would treat every document missing it as
+// colliding with every other one. studentName/fatherName are both already
+// `required: true`, so in practice this only gates on dateOfBirth being set.
+studentSchema.index(
+  { studentName: 1, fatherName: 1, dateOfBirth: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      studentName: { $exists: true },
+      fatherName: { $exists: true },
+      dateOfBirth: { $exists: true },
+    },
+  }
+);
+
 
 studentSchema.pre("save", function (next) {
     const fieldsToTitleCase = [

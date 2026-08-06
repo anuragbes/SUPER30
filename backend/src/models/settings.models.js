@@ -1,6 +1,16 @@
 import mongoose from "mongoose";
 
 const settingsSchema = new mongoose.Schema({
+  // Enforces the existing "one Settings document" convention at the database
+  // level. Every call site already reads/writes via findOne()/empty-filter
+  // upserts assuming a single document -- this field + its unique index just
+  // makes MongoDB reject a second one, instead of relying on that convention
+  // never being violated by a future bug or race.
+  singleton: {
+    type: Boolean,
+    default: true,
+    unique: true,
+  },
   formMode: {
     type: String,
     enum: ["junior", "senior"],

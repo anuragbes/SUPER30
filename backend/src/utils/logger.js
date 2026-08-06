@@ -14,7 +14,7 @@ const REDACTED_FIELDS = new Set([
   "studentName", "parentMobile", "studentMobile", "whatsappMobile",
   "title", "content", "posterName", "identityPhotoURL", "passportPhotoURL",
   "fatherName", "motherName", "permanentAddress", "presentAddress",
-  "parentEmail",
+  "parentEmail", "email", "to",
   // Security
   "password", "token", "accessToken", "refreshToken", "otp", "secret", "authorization",
 ]);

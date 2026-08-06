@@ -294,7 +294,7 @@ export const updateExamSettings = async (req, res) => {
 
     const updated = await Settings.findOneAndUpdate(
       {},
-      updateData,
+      { $set: updateData, $setOnInsert: { singleton: true } },
       { new: true, upsert: true }
     );
 

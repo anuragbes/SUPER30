@@ -5,6 +5,7 @@ import Settings from '../models/settings.models.js';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export const sendWithResend = async (emailData) => {
+  let reservedSlot = false;
   try {
     let settings = await Settings.findOne();
     
@@ -38,13 +39,24 @@ export const sendWithResend = async (emailData) => {
         }
       }
       
-      if (settings.resend.count >= 100) {
+      // Atomically reserve a send slot before calling the provider -- closes
+      // the check-then-act race where two concurrent sends could both read
+      // count<100 before either increments. Rolled back below if the send
+      // itself fails, so the counter still only reflects confirmed sends.
+      const reserved = await Settings.findOneAndUpdate(
+        { "resend.windowStart": settings.resend.windowStart, "resend.count": { $lt: 100 } },
+        { $inc: { "resend.count": 1 } },
+        { new: true }
+      );
+
+      if (!reserved) {
         logEmail("QUOTA_EXCEEDED", { provider: "resend", count: settings.resend.count, limit: 100, windowStart: settings.resend.windowStart });
         const error = new Error("Resend daily limit of 100 emails reached");
         error.name = "RateLimitError";
         error.status = 429;
         throw error;
       }
+      reservedSlot = true;
     }
 
     const { data, error } = await resend.emails.send({
@@ -62,13 +74,15 @@ export const sendWithResend = async (emailData) => {
       throw error;
     }
 
-    // Increment counter atomically on success to prevent race conditions
-    await Settings.updateOne({}, { $inc: { "resend.count": 1 } });
-
     logEmail("EMAIL_SENT", { provider: "resend", to: emailData.to, messageId: data?.id });
 
     return { success: true, provider: "resend", data };
   } catch (error) {
+    if (reservedSlot) {
+      // Send failed after we reserved a slot -- release it so the counter
+      // still only reflects confirmed sends.
+      await Settings.updateOne({}, { $inc: { "resend.count": -1 } });
+    }
     logEmail("EMAIL_FAILED", { provider: "resend", to: emailData.to, error: error.message });
     logError("[resendService] Failed to send email", error);
     throw error;
