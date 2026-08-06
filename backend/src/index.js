@@ -5,6 +5,8 @@ dotenv.config({ path: '.env' })
 import express from 'express';
 import morgan from 'morgan';
 import helmet from 'helmet';
+import mongoose from 'mongoose';
+import { globalErrorHandler } from './middlewares/globalErrorHandler.js';
 import studentRoutes from './routes/studentRoutes.js';
 import connectDB from './db/index.js'
 import cors from "cors";
@@ -14,6 +16,8 @@ import { apiLimiter } from './middlewares/rateLimiter.js';
 import { logError } from './utils/logger.js';
 import { generateRequestId } from './utils/requestId.js';
 import { sanitizeRequest } from './middlewares/sanitizeRequest.js';
+import { createGracefulShutdown } from './utils/gracefulShutdown.js';
+import { getHealthStatus } from './utils/healthCheck.js';
 
 
 // initialise express app
@@ -85,20 +89,16 @@ app.get("/", (req, res) => {
 });
 
 app.get("/health", (req, res) => {
-  res.status(200).json({ status: "OK" });
+  const { httpStatus, body } = getHealthStatus(mongoose.connection.readyState);
+  res.status(httpStatus).json(body);
 });
 
 // Global error handler
-app.use((err, req, res, next) => {
-  logError(`GlobalErrorHandler ${req.method} ${req.path}`, err, req);
-  res.status(err.status || 500).json({
-    error: err.message || "An unexpected server error occurred.",
-  });
-});
+app.use(globalErrorHandler);
 
 const PORT = process.env.PORT || 8000;
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server started on http://localhost:${PORT}`);
 });
 
@@ -112,3 +112,16 @@ process.on("unhandledRejection", (reason) => {
   const errorObj = reason instanceof Error ? reason : new Error(typeof reason === "object" ? JSON.stringify(reason) : String(reason));
   logError("UNHANDLED_REJECTION", errorObj);
 });
+
+// Graceful shutdown — on SIGTERM (sent by Render/most PaaS platforms on
+// deploy/restart) or SIGINT (Ctrl+C), stop accepting new connections, let
+// in-flight requests finish, then close the Mongo connection before exiting.
+// Without this, the default Node behavior is immediate termination, abruptly
+// severing in-flight requests and the DB connection.
+const gracefulShutdown = createGracefulShutdown({
+  server,
+  closeDb: () => mongoose.connection.close(),
+});
+
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));

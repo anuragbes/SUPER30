@@ -4,6 +4,7 @@ dotenv.config();
 import multer from "multer";
 import { v2 as cloudinary } from "cloudinary";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
+import { retryWithBackoff } from "../utils/retryWithBackoff.js";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -64,7 +65,7 @@ export const memoryUpload = multer({
   fileFilter,
 });
 
-export const uploadBufferToCloudinary = (buffer, folder) => {
+const uploadOnce = (buffer, folder) => {
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       { folder },
@@ -75,6 +76,16 @@ export const uploadBufferToCloudinary = (buffer, folder) => {
     );
     uploadStream.end(buffer);
   });
+};
+
+// Retried on transient failures only (network blips, rate limits, 5xx) --
+// no public_id is set above, so Cloudinary assigns a fresh unique one on
+// every call, meaning a retry can only ever create an additional,
+// independent asset, never overwrite or corrupt an existing one. `buffer`
+// is a plain in-memory Buffer, safe to reuse across retry attempts (unlike
+// a single-use stream).
+export const uploadBufferToCloudinary = (buffer, folder) => {
+  return retryWithBackoff(() => uploadOnce(buffer, folder));
 };
 
 export default upload;

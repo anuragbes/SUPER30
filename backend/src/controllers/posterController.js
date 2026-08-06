@@ -2,6 +2,7 @@ import Poster from "../models/poster.models.js";
 import { cloudinary } from "../middlewares/upload.js";
 import { logError, logActivity } from "../utils/logger.js";
 import { rejectRequest } from "../utils/rejectRequest.js";
+import { retryWithBackoff } from "../utils/retryWithBackoff.js";
 
 /**
  * @desc    Upload one or more posters (Admin)
@@ -175,9 +176,11 @@ export const deletePoster = async (req, res) => {
       return rejectRequest(req, res, 404, "poster_not_found", "Poster not found");
     }
 
-    // Delete from Cloudinary
+    // Delete from Cloudinary (retried on transient failures -- deletion is
+    // idempotent, so retrying an already-deleted/nonexistent asset is a safe
+    // no-op, not a duplication risk)
     try {
-      await cloudinary.uploader.destroy(poster.publicId);
+      await retryWithBackoff(() => cloudinary.uploader.destroy(poster.publicId));
     } catch (cloudErr) {
       logError("[PosterController] deletePoster - Cloudinary", cloudErr, req);
       // Continue with DB deletion even if Cloudinary fails

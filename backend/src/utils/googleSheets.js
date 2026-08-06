@@ -1,6 +1,7 @@
 import { google } from "googleapis";
 import Student from "../models/student.models.js";
 import { logError } from "./logger.js";
+import { retryWithBackoff } from "./retryWithBackoff.js";
 
 // Format DD/MM/YYYY
 export const formatDateDDMMYYYY = (dateString) => {
@@ -76,35 +77,43 @@ export const headers = [
 --------------------------------------------------------- */
 export const ensureSheetExists = async (sheetName) => {
   try {
-    const sheetInfo = await sheets.spreadsheets.get({
-      spreadsheetId: SHEET_ID,
+    // Retried as one whole unit (read-check-then-create), not as separate
+    // calls: a retry re-verifies existence first, so if a prior attempt's
+    // create secretly succeeded, the retry's own `if (exists) return;`
+    // correctly no-ops instead of attempting to recreate the tab (which the
+    // Sheets API would reject anyway, since duplicate tab names aren't
+    // allowed -- a second layer of protection against duplication).
+    await retryWithBackoff(async () => {
+      const sheetInfo = await sheets.spreadsheets.get({
+        spreadsheetId: SHEET_ID,
+      });
+
+      const exists = sheetInfo.data.sheets?.some(
+        (sh) => sh.properties.title === sheetName
+      );
+
+      if (exists) return; // already exists
+
+      // Create new sheet
+      await sheets.spreadsheets.batchUpdate({
+        spreadsheetId: SHEET_ID,
+        requestBody: {
+          requests: [
+            { addSheet: { properties: { title: sheetName } } }
+          ],
+        },
+      });
+
+      // Add headers
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: SHEET_ID,
+        range: `${sheetName}!A1`,
+        valueInputOption: "RAW",
+        requestBody: { values: [headers] },
+      });
+
+      console.log(`🆕 Created sheet: ${sheetName}`);
     });
-
-    const exists = sheetInfo.data.sheets?.some(
-      (sh) => sh.properties.title === sheetName
-    );
-
-    if (exists) return; // already exists
-
-    // Create new sheet
-    await sheets.spreadsheets.batchUpdate({
-      spreadsheetId: SHEET_ID,
-      requestBody: {
-        requests: [
-          { addSheet: { properties: { title: sheetName } } }
-        ],
-      },
-    });
-
-    // Add headers
-    await sheets.spreadsheets.values.update({
-      spreadsheetId: SHEET_ID,
-      range: `${sheetName}!A1`,
-      valueInputOption: "RAW",
-      requestBody: { values: [headers] },
-    });
-
-    console.log(`🆕 Created sheet: ${sheetName}`);
   } catch (err) {
     logError("[GoogleSheets] ensureSheetExists", err);
   }
@@ -158,7 +167,12 @@ export const appendToGoogleSheet = async (student) => {
       student.identityPhotoURL || "",
     ];
 
-    // Append row
+    // Append row -- deliberately NOT retried. Unlike the other Sheets
+    // operations in this file, `append` has no dedup mechanism: if a first
+    // attempt's request actually reached Google and succeeded but the
+    // acknowledgment was lost, a retry would submit this row a second time,
+    // creating a genuine duplicate registration row. Left exactly as
+    // reliable/unreliable as it was before this change.
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
       range: `${targetSheet}!A1`,
@@ -209,12 +223,16 @@ const convertStudentToRow = (s) => [
 const updateSheetForGroup = async (sheetName, query) => {
   await ensureSheetExists(sheetName);
   const students = await Student.find(query).sort({ rollNo: 1 });
-  await sheets.spreadsheets.values.update({
-    spreadsheetId: SHEET_ID,
-    range: `${sheetName}!A1`,
-    valueInputOption: "RAW",
-    requestBody: { values: [headers, ...students.map(convertStudentToRow)] },
-  });
+  // Full-tab replace -- retrying reproduces the identical end state
+  // regardless of attempt count, no duplication risk.
+  await retryWithBackoff(() =>
+    sheets.spreadsheets.values.update({
+      spreadsheetId: SHEET_ID,
+      range: `${sheetName}!A1`,
+      valueInputOption: "RAW",
+      requestBody: { values: [headers, ...students.map(convertStudentToRow)] },
+    })
+  );
 };
 
 export const updatePCMAndPCB = async () => {
@@ -246,48 +264,56 @@ export const deleteStudentFromSheet = async (studentId, stream, classMoving) => 
     // Ensure sheet exists
     await ensureSheetExists(sheetName);
 
-    // Read all rows
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: SHEET_ID,
-      range: `${sheetName}!A:Z`,
-    });
+    // Retried as one whole unit (read rows -> find row -> delete row), not
+    // as a standalone retry on just the final delete call: a retry re-reads
+    // current rows first, so if a prior attempt secretly succeeded, the
+    // fresh read correctly finds the row already gone (rowIndex === -1) and
+    // no-ops -- instead of deleting whatever row has since shifted into that
+    // now-stale index.
+    await retryWithBackoff(async () => {
+      // Read all rows
+      const response = await sheets.spreadsheets.values.get({
+        spreadsheetId: SHEET_ID,
+        range: `${sheetName}!A:Z`,
+      });
 
-    const rows = response.data.values || [];
-    if (rows.length <= 1) {
-      console.log(`⚠ No data found in sheet: ${sheetName}`);
-      return;
-    }
+      const rows = response.data.values || [];
+      if (rows.length <= 1) {
+        console.log(`⚠ No data found in sheet: ${sheetName}`);
+        return;
+      }
 
-    // Student ID is column C → index 2
-    const rowIndex = rows.findIndex((row) => row[2] === studentId);
+      // Student ID is column C → index 2
+      const rowIndex = rows.findIndex((row) => row[2] === studentId);
 
-    if (rowIndex === -1) {
-      console.log(`⚠ Student ID ${studentId} not found in ${sheetName}`);
-      return;
-    }
+      if (rowIndex === -1) {
+        console.log(`⚠ Student ID ${studentId} not found in ${sheetName}`);
+        return;
+      }
 
-    // Get the actual sheetId
-    const sheetId = await getSheetIdByName(sheetName);
+      // Get the actual sheetId
+      const sheetId = await getSheetIdByName(sheetName);
 
-    await sheets.spreadsheets.batchUpdate({
-      spreadsheetId: SHEET_ID,
-      requestBody: {
-        requests: [
-          {
-            deleteDimension: {
-              range: {
-                sheetId,
-                dimension: "ROWS",
-                startIndex: rowIndex,
-                endIndex: rowIndex + 1,
+      await sheets.spreadsheets.batchUpdate({
+        spreadsheetId: SHEET_ID,
+        requestBody: {
+          requests: [
+            {
+              deleteDimension: {
+                range: {
+                  sheetId,
+                  dimension: "ROWS",
+                  startIndex: rowIndex,
+                  endIndex: rowIndex + 1,
+                },
               },
             },
-          },
-        ],
-      },
-    });
+          ],
+        },
+      });
 
-    console.log(`🗑️ Deleted student ${studentId} from sheet ${sheetName}`);
+      console.log(`🗑️ Deleted student ${studentId} from sheet ${sheetName}`);
+    });
 
   } catch (error) {
     logError("[GoogleSheets] deleteStudentFromSheet", error);
@@ -342,13 +368,16 @@ export const clearRollNumbersFromSheet = async (stream) => {
       s.identityPhotoURL || "",
     ];
 
-    // Update the sheet with cleared roll numbers
-    await sheets.spreadsheets.values.update({
-      spreadsheetId: SHEET_ID,
-      range: `${sheetName}!A1`,
-      valueInputOption: "RAW",
-      requestBody: { values: [headers, ...students.map(convertCleared)] },
-    });
+    // Update the sheet with cleared roll numbers (full-tab replace --
+    // retrying reproduces the identical end state, no duplication risk)
+    await retryWithBackoff(() =>
+      sheets.spreadsheets.values.update({
+        spreadsheetId: SHEET_ID,
+        range: `${sheetName}!A1`,
+        valueInputOption: "RAW",
+        requestBody: { values: [headers, ...students.map(convertCleared)] },
+      })
+    );
 
     console.log(`🟢 Cleared roll numbers for ${stream} stream in Google Sheet`);
   } catch (error) {
@@ -398,12 +427,16 @@ export const clearRollNumbersFromClassSheet = async (classGroup) => {
       s.identityPhotoURL || "",
     ];
 
-    await sheets.spreadsheets.values.update({
-      spreadsheetId: SHEET_ID,
-      range: `${classGroup}!A1`,
-      valueInputOption: "RAW",
-      requestBody: { values: [headers, ...students.map(convertCleared)] },
-    });
+    // Full-tab replace -- retrying reproduces the identical end state, no
+    // duplication risk.
+    await retryWithBackoff(() =>
+      sheets.spreadsheets.values.update({
+        spreadsheetId: SHEET_ID,
+        range: `${classGroup}!A1`,
+        valueInputOption: "RAW",
+        requestBody: { values: [headers, ...students.map(convertCleared)] },
+      })
+    );
 
     console.log(`🟢 Cleared roll numbers for ${classGroup} in Google Sheet`);
   } catch (error) {
