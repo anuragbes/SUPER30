@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend (install, test, audit)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      # Report-only: does not fail the workflow. Backend already carries a
+      # small set of known, deliberately-deferred advisories (Clerk SDK and
+      # Cloudinary both require a major/breaking version bump to resolve --
+      # see the project's dependency-hardening notes). This step exists so
+      # any NEW vulnerability introduced by a future dependency change is
+      # visible in every run, without permanently red-flagging CI over
+      # already-triaged, already-deferred issues.
+      - name: Audit dependencies (report only)
+        run: npm audit
+        continue-on-error: true
+
+  frontend:
+    name: Frontend (install, lint, build, audit)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Report-only: does not fail the workflow. The frontend currently has
+      # 9 pre-existing lint errors unrelated to any hardening work -- fixing
+      # them is out of scope here (no unrelated refactoring). This step
+      # keeps lint status visible on every run rather than hiding it, so it
+      # can be cleaned up and promoted to a blocking step later.
+      - name: Lint (report only)
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Build
+        run: npm run build
+
+      # Report-only, for the same reason as the backend audit step above --
+      # react-router-dom currently carries one advisory with no non-major
+      # fix published yet (see the project's dependency-hardening notes).
+      - name: Audit dependencies (report only)
+        run: npm audit
+        continue-on-error: true
