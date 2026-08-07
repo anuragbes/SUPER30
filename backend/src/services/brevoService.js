@@ -2,7 +2,23 @@ import { BrevoClient } from '@getbrevo/brevo';
 import Settings from '../models/settings.models.js';
 import { logEmail } from '../utils/logger.js';
 
-const brevo = new BrevoClient({ apiKey: process.env.BREVO_API_KEY });
+// Built lazily, on first actual send, instead of at module import time --
+// same rationale and pattern as getSheets() in utils/googleSheets.js and
+// getResendClient() in resendService.js. BrevoClient's constructor doesn't
+// currently throw on a missing BREVO_API_KEY (verified empirically), but
+// it's still eager module-scope client construction with no benefit to
+// being eager, and matching the same lazy/memoized shape as every other
+// provider client in this codebase keeps the pattern predictable and
+// doesn't depend on that constructor leniency continuing to hold across
+// SDK versions. Memoized so repeated sends reuse the same client.
+let brevoClient = null;
+
+const getBrevoClient = () => {
+  if (!brevoClient) {
+    brevoClient = new BrevoClient({ apiKey: process.env.BREVO_API_KEY });
+  }
+  return brevoClient;
+};
 
 export const sendWithBrevo = async (emailData) => {
   let senderName = undefined;
@@ -68,7 +84,7 @@ export const sendWithBrevo = async (emailData) => {
   }
 
   try {
-    const result = await brevo.transactionalEmails.sendTransacEmail(payload);
+    const result = await getBrevoClient().transactionalEmails.sendTransacEmail(payload);
 
     const messageId = result.body?.messageId || result.messageId || "unknown";
     logEmail("EMAIL_SENT", { provider: "brevo", to: emailData.to, messageId });

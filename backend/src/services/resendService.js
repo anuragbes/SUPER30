@@ -2,7 +2,21 @@ import { Resend } from 'resend';
 import { logError, logEmail } from '../utils/logger.js';
 import Settings from '../models/settings.models.js';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Built lazily, on first actual send, instead of at module import time --
+// same rationale and pattern as getSheets() in utils/googleSheets.js. The
+// Resend constructor throws synchronously when RESEND_API_KEY is missing
+// ("Missing API key..."), so eager construction here would crash any import
+// of this module (directly, or transitively via emailService.js /
+// bulkAdmitController.js) in an environment that hasn't configured Resend --
+// CI, for one. Memoized so repeated sends reuse the same client.
+let resendClient = null;
+
+const getResendClient = () => {
+  if (!resendClient) {
+    resendClient = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resendClient;
+};
 
 export const sendWithResend = async (emailData) => {
   let reservedSlot = false;
@@ -59,7 +73,7 @@ export const sendWithResend = async (emailData) => {
       reservedSlot = true;
     }
 
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResendClient().emails.send({
       from: emailData.from,
       to: emailData.to,
       subject: emailData.subject,
