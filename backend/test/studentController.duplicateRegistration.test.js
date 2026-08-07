@@ -19,6 +19,7 @@ mock.module("../src/utils/googleSheets.js", {
 
 const { registerStudent } = await import("../src/controllers/studentController.js");
 const { default: Student } = await import("../src/models/student.models.js");
+const { default: Settings } = await import("../src/models/settings.models.js");
 
 // Minimal fake Express req/res -- matches the makeReq/makeRes pattern already
 // used in adminController.dashboardStats.test.js.
@@ -34,6 +35,14 @@ const makeRes = () => {
 // value, matching the real chainable-Query shape being called.
 const mockFindOne = (t, resolveValue) =>
   t.mock.method(Student, "findOne", () => ({ lean: () => Promise.resolve(resolveValue) }));
+
+// registerStudent now gates on Settings.formMode before anything else
+// (registration-mode enforcement). makeReq()'s body is senior-shaped
+// (classMoving: "10th to 11th"), so every test here mocks the active mode as
+// "senior" to keep exercising the exact same duplicate-registration behavior
+// as before this gate existed, without the new check interfering.
+const mockActiveMode = (t, formMode = "senior") =>
+  t.mock.method(Settings, "findOne", () => ({ lean: () => Promise.resolve({ formMode }) }));
 
 const makeReq = (overrides = {}) => ({
   requestId: "test-req-id",
@@ -64,6 +73,7 @@ const makeReq = (overrides = {}) => ({
 describe("registerStudent duplicate-registration protection (Module 1.1 / Module 8)", () => {
   test("happy path: no existing student, save succeeds -> 201 with studentId (existing behavior unchanged)", async (t) => {
     appendToGoogleSheetMock.mock.resetCalls();
+    mockActiveMode(t);
     mockFindOne(t, null);
     t.mock.method(Student.prototype, "save", async function () {
       this.studentId = "STU0042";
@@ -80,6 +90,7 @@ describe("registerStudent duplicate-registration protection (Module 1.1 / Module
 
   test("identical registration (same studentName+fatherName+dateOfBirth) is rejected before any write", async (t) => {
     appendToGoogleSheetMock.mock.resetCalls();
+    mockActiveMode(t);
     mockFindOne(t, { _id: "existing-doc-id", studentId: "STU0001" });
     const saveMock = t.mock.method(Student.prototype, "save", async function () {
       this.studentId = "STU9999";
@@ -102,6 +113,7 @@ describe("registerStudent duplicate-registration protection (Module 1.1 / Module
     // findOne runs before the other one has committed, so it sees no
     // duplicate yet -- exactly the race the partial unique index (1.1) exists
     // to close.
+    mockActiveMode(t);
     mockFindOne(t, null);
     t.mock.method(Student.prototype, "save", async function () {
       const err = new Error("E11000 duplicate key error collection: test.students index: studentName_1_fatherName_1_dateOfBirth_1");
@@ -122,6 +134,7 @@ describe("registerStudent duplicate-registration protection (Module 1.1 / Module
 
   test("regression: missing dateOfBirth skips the duplicate check entirely (pre-existing behavior, unchanged)", async (t) => {
     appendToGoogleSheetMock.mock.resetCalls();
+    mockActiveMode(t);
     const findOneMock = t.mock.method(Student, "findOne", async () => null);
     t.mock.method(Student.prototype, "save", async function () {
       this.studentId = "STU0043";

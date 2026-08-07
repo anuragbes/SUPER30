@@ -5,6 +5,7 @@ import { adminAuth } from "../middlewares/adminAuth.js";
 import { bulkGenerateAdmitCards, bulkSendAdmitCards, resetAdmitCards } from "../controllers/bulkAdmitController.js";
 import { createAnnouncement, deleteAnnouncement, getActiveAnnouncements, getAllAnnouncements, toggleAnnouncementPin, toggleAnnouncementStatus, updateAnnouncement } from "../controllers/announcementController.js";
 import { uploadPoster, getAllPosters, getActivePosters, togglePosterStatus, reorderPosters, deletePoster } from "../controllers/posterController.js";
+import { getAuditLogs } from "../controllers/auditLogController.js";
 import upload from "../middlewares/upload.js";
 import { loginLimiter, bulkOperationLimiter, emailLimiter } from "../middlewares/rateLimiter.js";
 
@@ -45,6 +46,9 @@ router.post("/reset-admit-cards", adminAuth, bulkOperationLimiter, resetAdmitCar
 // Dashboard Stats
 router.get("/dashboard-stats", adminAuth, getDashboardStats);
 router.get("/summary-stats", adminAuth, getSummaryStats);
+
+// Audit Log (read-only)
+router.get("/audit-logs", adminAuth, getAuditLogs);
 
 // Update Exam Settings (Protected)
 router.post("/exam-settings", adminAuth, updateExamSettings);

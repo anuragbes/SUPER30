@@ -20,6 +20,13 @@ const { generateRollNumbers } = await import("../src/controllers/adminController
 const { default: Student } = await import("../src/models/student.models.js");
 const { default: Counter } = await import("../src/models/counter.models.js");
 const { default: Settings } = await import("../src/models/settings.models.js");
+const { default: AuditLog } = await import("../src/models/auditLog.models.js");
+
+// generateRollNumbers now awaits recordAuditLog() (audit durability), which
+// calls AuditLog.create() -- mocked here so it resolves immediately instead
+// of hitting Mongoose's real (10s) buffering timeout with no live DB
+// connection in this unit-test environment.
+const mockAuditLogCreate = (t) => t.mock.method(AuditLog, "create", async () => {});
 
 const makeRes = () => {
   const res = { statusCode: null, body: null };
@@ -59,6 +66,7 @@ describe("generateRollNumbers (Module 8 -- atomic roll-number counter coverage)"
   test("senior mode: PCM and PCB roll numbers are assigned uniquely and in ascending order from each group's base offset", async (t) => {
     updatePCMAndPCBMock.mock.resetCalls();
     t.mock.method(Settings, "findOne", async () => ({ formMode: "senior" }));
+    mockAuditLogCreate(t);
     mockFind(t, (query) => {
       if (query.stream === "PCM") return [{ _id: "pcm-1" }, { _id: "pcm-2" }, { _id: "pcm-3" }];
       if (query.stream === "PCB") return [{ _id: "pcb-1" }, { _id: "pcb-2" }];
@@ -98,6 +106,7 @@ describe("generateRollNumbers (Module 8 -- atomic roll-number counter coverage)"
   test("junior mode: Class 8/9/10 roll numbers are assigned uniquely per class, using each class's own base offset", async (t) => {
     updatePCMAndPCBMock.mock.resetCalls();
     t.mock.method(Settings, "findOne", async () => ({ formMode: "junior" }));
+    mockAuditLogCreate(t);
     mockFind(t, (query) => {
       if (query.classMoving === "Class 8") return [{ _id: "c8-1" }, { _id: "c8-2" }];
       if (query.classMoving === "Class 9") return [{ _id: "c9-1" }];
@@ -132,6 +141,7 @@ describe("generateRollNumbers (Module 8 -- atomic roll-number counter coverage)"
   test("concurrent calls to generateRollNumbers never assign overlapping PCM roll numbers", async (t) => {
     updatePCMAndPCBMock.mock.resetCalls();
     t.mock.method(Settings, "findOne", async () => ({ formMode: "senior" }));
+    mockAuditLogCreate(t);
 
     // Two concurrent admin requests, each picking up a different (disjoint)
     // batch of students still missing a roll number -- exactly what the
@@ -169,6 +179,7 @@ describe("generateRollNumbers (Module 8 -- atomic roll-number counter coverage)"
   test("regression: a group with zero unassigned students is skipped entirely -- no Counter call, no bulkWrite ops for it", async (t) => {
     updatePCMAndPCBMock.mock.resetCalls();
     t.mock.method(Settings, "findOne", async () => ({ formMode: "senior" }));
+    mockAuditLogCreate(t);
     mockFind(t, (query) => {
       if (query.stream === "PCM") return [{ _id: "pcm-1" }];
       return []; // PCB has nobody waiting for a roll number

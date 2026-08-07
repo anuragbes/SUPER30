@@ -4,6 +4,7 @@ import Settings from "../models/settings.models.js";
 import { updatePCMAndPCB, deleteStudentFromSheet, clearRollNumbersFromSheet, clearRollNumbersFromClassSheet } from "../utils/googleSheets.js";
 import { logError, logActivity } from "../utils/logger.js";
 import { rejectRequest } from "../utils/rejectRequest.js";
+import { recordAuditLog } from "../utils/auditLog.js";
 
 export const generateRollNumbers = async (req, res) => {
   try {
@@ -121,6 +122,14 @@ export const generateRollNumbers = async (req, res) => {
     await updatePCMAndPCB();
 
     logActivity("RollNumbersGenerated", { order, assigned }, req);
+    await recordAuditLog({
+      req,
+      action: "ROLL_NUMBERS_GENERATED",
+      resourceType: "Student",
+      summary: `Generated roll numbers (order: ${order})`,
+      success: true,
+      metadata: { order, assigned },
+    });
 
     return res.json({
       success: true,
@@ -138,7 +147,7 @@ export const generateRollNumbers = async (req, res) => {
 // delete all students from database
 export const deleteAllStudents = async (req, res) => {
   try {
-    await Student.deleteMany({}); // deletes all student records
+    const { deletedCount } = await Student.deleteMany({}); // deletes all student records
     await Counter.findOneAndUpdate(
       { id: "studentId" },
       { seq: 0 }, // reset student ID counter
@@ -154,7 +163,15 @@ export const deleteAllStudents = async (req, res) => {
     await updatePCMAndPCB();
 
     logActivity("DatabaseCleared", {}, req);
-    
+    await recordAuditLog({
+      req,
+      action: "DATABASE_CLEARED",
+      resourceType: "Student",
+      summary: `Deleted all students (${deletedCount} record(s)) and reset all counters`,
+      success: true,
+      metadata: { deletedCount },
+    });
+
     return res.json({ message: "All student data cleared successfully" });
   } catch (error) {
     logError("[AdminController] deleteAllStudents", error, req);
@@ -314,6 +331,24 @@ export const updateExamSettings = async (req, res) => {
     );
 
     logActivity("ExamSettingsUpdated", { updatedFields: Object.keys(updateData) }, req);
+
+    const changedFields = Object.keys(updateData);
+    const before = {};
+    const after = {};
+    for (const field of changedFields) {
+      before[field] = settings?.[field] ?? null;
+      after[field] = updateData[field];
+    }
+    await recordAuditLog({
+      req,
+      action: "EXAM_SETTINGS_UPDATED",
+      resourceType: "Settings",
+      resourceId: updated._id,
+      summary: `Updated exam settings (${changedFields.join(", ") || "no fields"})`,
+      success: true,
+      metadata: { before, after },
+    });
+
     res.status(200).json({
       success: true,
       message: "Exam settings updated successfully",
@@ -344,6 +379,16 @@ export const deleteStudent = async (req, res) => {
     await deleteStudentFromSheet(studentId, student.stream, student.classMoving);
 
     logActivity("StudentDeleted", { studentId }, req);
+    await recordAuditLog({
+      req,
+      action: "STUDENT_DELETED",
+      resourceType: "Student",
+      resourceId: studentId,
+      summary: `Deleted student ${studentId}`,
+      success: true,
+      metadata: { studentId, stream: student.stream, classMoving: student.classMoving },
+    });
+
     return res.json({
       success: true,
       message: "Student deleted from database & Google Sheet",
@@ -377,6 +422,14 @@ export const removeRollNumbers = async (req, res) => {
       );
 
       logActivity("RollNumbersCleared", { classGroup, count: result.modifiedCount }, req);
+      await recordAuditLog({
+        req,
+        action: "ROLL_NUMBERS_CLEARED",
+        resourceType: "Student",
+        summary: `Cleared roll numbers for ${classGroup} (${result.modifiedCount} student(s))`,
+        success: true,
+        metadata: { classGroup, count: result.modifiedCount },
+      });
 
       const counterMap = { "Class 8": "class8Roll", "Class 9": "class9Roll", "Class 10": "class10Roll" };
       await Counter.findOneAndUpdate({ id: counterMap[classGroup] }, { seq: 0 }, { upsert: true });
@@ -401,6 +454,14 @@ export const removeRollNumbers = async (req, res) => {
     );
 
     logActivity("RollNumbersCleared", { stream, count: result.modifiedCount }, req);
+    await recordAuditLog({
+      req,
+      action: "ROLL_NUMBERS_CLEARED",
+      resourceType: "Student",
+      summary: `Cleared roll numbers for ${stream} (${result.modifiedCount} student(s))`,
+      success: true,
+      metadata: { stream, count: result.modifiedCount },
+    });
 
     const counterId = stream === "PCM" ? "pcmRoll" : "pcbRoll";
     await Counter.findOneAndUpdate({ id: counterId }, { seq: 0 }, { upsert: true });

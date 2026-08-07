@@ -3,6 +3,7 @@ import { cloudinary } from "../middlewares/upload.js";
 import { logError, logActivity } from "../utils/logger.js";
 import { rejectRequest } from "../utils/rejectRequest.js";
 import { retryWithBackoff } from "../utils/retryWithBackoff.js";
+import { recordAuditLog } from "../utils/auditLog.js";
 
 /**
  * @desc    Upload one or more posters (Admin)
@@ -30,6 +31,14 @@ export const uploadPoster = async (req, res) => {
     }
 
     logActivity("PostersUploaded", { count: posters.length, posterIds: posters.map(p => p._id) }, req);
+    await recordAuditLog({
+      req,
+      action: "POSTERS_UPLOADED",
+      resourceType: "Poster",
+      summary: `Uploaded ${posters.length} poster(s)`,
+      success: true,
+      metadata: { count: posters.length },
+    });
     res.status(201).json({
       success: true,
       message: `${posters.length} poster(s) uploaded successfully`,
@@ -107,6 +116,15 @@ export const togglePosterStatus = async (req, res) => {
     await poster.save();
 
     logActivity("PosterStatusToggled", { posterId: id, isActive: poster.isActive }, req);
+    await recordAuditLog({
+      req,
+      action: "POSTER_STATUS_TOGGLED",
+      resourceType: "Poster",
+      resourceId: id,
+      summary: `${poster.isActive ? "Activated" : "Deactivated"} poster ${id}`,
+      success: true,
+      metadata: { isActive: poster.isActive },
+    });
     res.status(200).json({
       success: true,
       message: `Poster ${poster.isActive ? "activated" : "deactivated"} successfully`,
@@ -147,6 +165,14 @@ export const reorderPosters = async (req, res) => {
     const posters = await Poster.find().sort({ order: 1 }).lean();
 
     logActivity("PostersReordered", { count: orderedIds.length }, req);
+    await recordAuditLog({
+      req,
+      action: "POSTERS_REORDERED",
+      resourceType: "Poster",
+      summary: `Reordered ${orderedIds.length} poster(s)`,
+      success: true,
+      metadata: { count: orderedIds.length },
+    });
     res.status(200).json({
       success: true,
       message: "Posters reordered successfully",
@@ -189,6 +215,14 @@ export const deletePoster = async (req, res) => {
     await Poster.findByIdAndDelete(id);
 
     logActivity("PosterDeleted", { posterId: id }, req);
+    await recordAuditLog({
+      req,
+      action: "POSTER_DELETED",
+      resourceType: "Poster",
+      resourceId: id,
+      summary: `Deleted poster ${id}`,
+      success: true,
+    });
     res.status(200).json({
       success: true,
       message: "Poster deleted successfully",

@@ -1,11 +1,14 @@
 import "dotenv/config";
 import Student from "../models/student.models.js";
 import Counter from "../models/counter.models.js";
+import Settings from "../models/settings.models.js";
 import { appendToGoogleSheet } from "../utils/googleSheets.js";
 import { logError, logActivity } from "../utils/logger.js";
 import { rejectRequest } from "../utils/rejectRequest.js";
 import { uploadBufferToCloudinary, cloudinary } from "../middlewares/upload.js";
 import { retryWithBackoff } from "../utils/retryWithBackoff.js";
+import { getSubmissionMode } from "../constants/registrationMode.js";
+import { recordAuditLog } from "../utils/auditLog.js";
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID;
 
@@ -62,6 +65,41 @@ export const registerStudent = async (req, res) => {
 
     if (!clerkUserId) {
       return rejectRequest(req, res, 401, "missing_clerk_user_id", "Unauthorized");
+    }
+
+    // Registration-mode gate: the frontend is not trusted to decide which
+    // form is allowed. It can be stale (page left open across an admin's
+    // mode switch), it can fail to fetch the current mode and fall back to
+    // a hardcoded default, or a client could bypass it entirely (Postman,
+    // a modified request, a replayed payload). The database's current
+    // Settings.formMode is the only source of truth, checked fresh on every
+    // submission, before any file upload or write happens.
+    const settings = await Settings.findOne().lean();
+    const activeMode = settings?.formMode;
+
+    if (activeMode !== "junior" && activeMode !== "senior") {
+      // Settings document missing or its formMode is unset/corrupted --
+      // fail closed rather than silently allowing an unverifiable
+      // submission through, which is the exact failure mode that caused
+      // the incident this check exists to prevent.
+      logError("[StudentController] registerStudent - registration mode unavailable",
+        new Error(`Settings.formMode is not "junior" or "senior" (got: ${JSON.stringify(activeMode)})`), req);
+      return res.status(500).json({ error: "Registration is temporarily unavailable. Please try again shortly." });
+    }
+
+    const submissionMode = getSubmissionMode(req.body?.classMoving);
+
+    if (submissionMode && submissionMode !== activeMode) {
+      logActivity("REGISTRATION_MODE_MISMATCH", {
+        requestId: req.requestId,
+        activeMode,
+        submittedClassMoving: req.body?.classMoving,
+        clerkUserId,
+      }, req);
+      return rejectRequest(req, res, 400, "registration_mode_mismatch",
+        activeMode === "junior"
+          ? "Junior registrations are currently open."
+          : "Senior registrations are currently open.");
     }
 
     const duplicateConditions = [];
@@ -259,6 +297,15 @@ export const resetStudentIdCounter = async (req, res) => {
       { $set: { seq: 0 } },
       { upsert: true }
     );
+
+    await recordAuditLog({
+      req,
+      action: "STUDENT_ID_COUNTER_RESET",
+      resourceType: "Counter",
+      resourceId: "studentId",
+      summary: "Reset student ID counter to STU0001",
+      success: true,
+    });
 
     res.status(200).json({ message: "Student ID counter has been reset to STU0001" });
   } catch (error) {

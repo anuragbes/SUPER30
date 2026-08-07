@@ -6,6 +6,7 @@ import { formatDateDDMMYYYY } from "../utils/googleSheets.js";
 import path from "path";
 import { logError, logActivity } from "../utils/logger.js";
 import { rejectRequest } from "../utils/rejectRequest.js";
+import { recordAuditLog } from "../utils/auditLog.js";
 
 const bannerPath = path.resolve("assets/banner1.PNG"); 
 const addTextWatermark = (doc, text = "UDAAN") => {       // blueprint for the watermark
@@ -194,6 +195,15 @@ export const generateAdmitCard = async (req, res) => {
     await Student.updateOne({ studentId }, { admitCardGenerated: true });
 
     logActivity("AdmitCardGenerated", { studentId }, req);
+    await recordAuditLog({
+      req,
+      action: "ADMIT_CARD_GENERATED",
+      resourceType: "Student",
+      resourceId: studentId,
+      summary: `Generated admit card for ${studentId}`,
+      success: true,
+      metadata: { studentId },
+    });
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(

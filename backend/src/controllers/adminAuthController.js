@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { logError, logSecurity } from "../utils/logger.js";
 import { rejectRequest } from "../utils/rejectRequest.js";
+import { recordAuditLog } from "../utils/auditLog.js";
 
 export const adminLogin = async (req, res) => {
   try {
@@ -12,12 +13,33 @@ export const adminLogin = async (req, res) => {
     const admin = await Admin.findOne({ username });
     if (!admin) {
       logSecurity("LOGIN_FAILED", { reason: "InvalidCredentials", userAgent }, req);
+      await recordAuditLog({
+        req,
+        action: "ADMIN_LOGIN",
+        resourceType: "Admin",
+        summary: `Failed login attempt for username "${username}"`,
+        success: false,
+        adminId: null,
+        adminUsername: username || "unknown",
+        metadata: { reason: "invalid_credentials" },
+      });
       return rejectRequest(req, res, 401, "invalid_credentials", "Invalid credentials");
     }
 
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) {
       logSecurity("LOGIN_FAILED", { reason: "InvalidCredentials", userAgent }, req);
+      await recordAuditLog({
+        req,
+        action: "ADMIN_LOGIN",
+        resourceType: "Admin",
+        resourceId: admin._id,
+        summary: `Failed login attempt for username "${username}"`,
+        success: false,
+        adminId: null,
+        adminUsername: username || "unknown",
+        metadata: { reason: "invalid_credentials" },
+      });
       return rejectRequest(req, res, 401, "invalid_credentials", "Invalid credentials");
     }
 
@@ -30,6 +52,16 @@ export const adminLogin = async (req, res) => {
 req.admin = { adminId: admin._id };
 
 logSecurity("LOGIN_SUCCESS", { userAgent }, req);
+await recordAuditLog({
+  req,
+  action: "ADMIN_LOGIN",
+  resourceType: "Admin",
+  resourceId: admin._id,
+  summary: `Admin "${admin.username}" logged in`,
+  success: true,
+  adminId: admin._id,
+  adminUsername: admin.username,
+});
 
 res.cookie("adminToken", token, {
   httpOnly: true,
@@ -52,7 +84,15 @@ return res.json({
   }
 };
 
-export const adminLogout = (req, res) => {
+export const adminLogout = async (req, res) => {
+  await recordAuditLog({
+    req,
+    action: "ADMIN_LOGOUT",
+    resourceType: "Admin",
+    summary: `Admin logged out`,
+    success: true,
+  });
+
   res.clearCookie("adminToken", {
   secure: true,
   sameSite: "none",

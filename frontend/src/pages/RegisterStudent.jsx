@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { RotateCcw } from "lucide-react";
 import "../App.css";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FileUpload } from "@/components/FileUpload";
 import { useUser, useAuth } from "@clerk/clerk-react";
 import { compressPassport, compressIdentity } from "../utils/imageCompression";
+import { useRegistrationMode, REGISTRATION_MODE_STATUS } from "@/hooks/useRegistrationMode";
 
 // Drafts are scoped per Clerk user (not one shared global key) so one
 // user's in-progress data can never surface in another user's session on a
@@ -47,8 +49,6 @@ export default function RegisterStudent() {
   const draft = getInitialDraft();
 
   const [customSchool, setCustomSchool] = useState(draft?.customSchool || "");
-  const [formMode, setFormMode] = useState("senior");
-  const [isFetchingFormMode, setIsFetchingFormMode] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isSubmittingRef = useRef(false);
   const [formData, setFormData] = useState(draft?.formData || {
@@ -63,6 +63,8 @@ export default function RegisterStudent() {
   const [registeredStudents, setRegisteredStudents] = useState([]);
 
   const backendURL = import.meta.env.VITE_BACKEND_URL;
+
+  const { status: formModeStatus, formMode, retry: retryFormMode } = useRegistrationMode(backendURL);
 
   useEffect(() => {
     if (user === null) {
@@ -85,21 +87,6 @@ export default function RegisterStudent() {
     };
     fetchRegistrations();
   }, [user, getToken, backendURL]);
-
-  useEffect(() => {
-    const fetchFormMode = async () => {
-      try {
-        const res = await axios.get(`${backendURL}/api/admin/exam-settings`);
-        const mode = res.data.formMode || "senior";
-        setFormMode(mode);
-      } catch (error) {
-        console.error("Failed to fetch form mode:", error);
-      } finally {
-        setIsFetchingFormMode(false);
-      }
-    };
-    fetchFormMode();
-  }, [backendURL]);
 
   useEffect(() => {
     if (!user) return;
@@ -355,11 +342,30 @@ export default function RegisterStudent() {
     }
   };
 
-  if (isFetchingFormMode) {
+  if (formModeStatus === REGISTRATION_MODE_STATUS.LOADING) {
     return (
       <main className="min-h-dvh flex flex-col items-center justify-center bg-slate-50 gap-4">
         <Spinner className="w-8 h-8 text-primary" />
         <p className="text-muted-foreground animate-pulse text-sm">Loading Registration Form...</p>
+      </main>
+    );
+  }
+
+  // The active registration mode could not be determined (even after
+  // retrying). Neither form is rendered here -- guessing which one to show
+  // is exactly the bug this state exists to prevent.
+  if (formModeStatus === REGISTRATION_MODE_STATUS.ERROR) {
+    return (
+      <main className="min-h-dvh flex flex-col items-center justify-center bg-slate-50 gap-4 px-4 text-center">
+        <p className="text-foreground font-medium">
+          Unable to determine which registration is currently open.
+        </p>
+        <p className="text-muted-foreground text-sm max-w-sm">
+          Please check your connection and try again.
+        </p>
+        <Button onClick={retryFormMode} variant="outline" className="gap-2">
+          <RotateCcw className="w-4 h-4" /> Retry
+        </Button>
       </main>
     );
   }

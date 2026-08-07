@@ -5,6 +5,7 @@ import { formatDateDDMMYYYY } from "../utils/googleSheets.js";
 import { sendEmail } from "../services/emailService.js";
 import { logError, logActivity } from "../utils/logger.js";
 import { rejectRequest } from "../utils/rejectRequest.js";
+import { recordAuditLog } from "../utils/auditLog.js";
 
 
 //  GENERATE ADMIT CARDS
@@ -45,6 +46,14 @@ export const bulkGenerateAdmitCards = async (req, res) => {
     }
 
     logActivity("BulkAdmitCardsGenerated", { count: generatedStudents.length, studentIds: generatedStudents }, req);
+    await recordAuditLog({
+      req,
+      action: "BULK_ADMIT_CARDS_GENERATED",
+      resourceType: "Student",
+      summary: `Bulk-generated admit cards for ${generatedStudents.length} of ${selectedStudents.length} selected student(s)`,
+      success: true,
+      metadata: { requested: selectedStudents.length, generated: generatedStudents.length },
+    });
     return res.status(200).json({
       success: true,
       message:
@@ -217,6 +226,24 @@ export const bulkSendAdmitCards = async (req, res) => {
       }
     }
 
+    // One summary record for the whole bulk send, not one per email -- an
+    // audited action is the admin operation as a whole, not each
+    // individual message it happens to loop over.
+    await recordAuditLog({
+      req,
+      action: "BULK_ADMIT_CARDS_SENT",
+      resourceType: "Student",
+      summary: `Bulk-sent admit card emails via ${provider}: ${sentList.length} sent, ${skippedList.length} skipped, ${reconciliationList.length} need reconciliation`,
+      success: true,
+      metadata: {
+        provider,
+        total: students.length,
+        sent: sentList.length,
+        skipped: skippedList.length,
+        reconciliation: reconciliationList.length,
+      },
+    });
+
     res.status(200).json({
       success: true,
       message: `Batch processed. ${sentList.length} fully successful, ${skippedList.length} skipped, ${reconciliationList.length} need reconciliation.`,
@@ -278,6 +305,14 @@ export const resetAdmitCards = async (req, res) => {
       updatedCount: result.modifiedCount,
       studentIds: selectedStudents || "all",
     }, req);
+    await recordAuditLog({
+      req,
+      action: "ADMIT_CARDS_RESET",
+      resourceType: "Student",
+      summary: `Reset admit card status for ${scope} (${result.modifiedCount} updated)`,
+      success: true,
+      metadata: { scope, updatedCount: result.modifiedCount },
+    });
 
     return res.status(200).json({
       success: true,

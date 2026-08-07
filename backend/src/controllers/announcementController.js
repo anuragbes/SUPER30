@@ -1,6 +1,7 @@
 import Announcement from "../models/announcement.models.js";
 import { logError, logActivity } from "../utils/logger.js";
 import { rejectRequest } from "../utils/rejectRequest.js";
+import { recordAuditLog } from "../utils/auditLog.js";
 
 /**
  * @desc    Create a new announcement (Admin)
@@ -21,6 +22,14 @@ export const createAnnouncement = async (req, res) => {
     });
 
     logActivity("AnnouncementCreated", { announcementId: announcement._id }, req);
+    await recordAuditLog({
+      req,
+      action: "ANNOUNCEMENT_CREATED",
+      resourceType: "Announcement",
+      resourceId: announcement._id,
+      summary: `Created announcement "${title}"`,
+      success: true,
+    });
     res.status(201).json({
       success: true,
       message: "Announcement created successfully",
@@ -78,6 +87,15 @@ export const toggleAnnouncementStatus = async (req, res) => {
     await announcement.save();
 
     logActivity("AnnouncementToggled", { announcementId: id, isActive: announcement.isActive }, req);
+    await recordAuditLog({
+      req,
+      action: "ANNOUNCEMENT_TOGGLED",
+      resourceType: "Announcement",
+      resourceId: id,
+      summary: `${announcement.isActive ? "Activated" : "Deactivated"} announcement "${announcement.title}"`,
+      success: true,
+      metadata: { isActive: announcement.isActive },
+    });
     res.status(200).json({
       success: true,
       message: `Announcement ${announcement.isActive ? "activated" : "deactivated"} successfully`,
@@ -117,6 +135,14 @@ export const updateAnnouncement = async (req, res) => {
     }
 
     logActivity("AnnouncementUpdated", { announcementId: id }, req);
+    await recordAuditLog({
+      req,
+      action: "ANNOUNCEMENT_UPDATED",
+      resourceType: "Announcement",
+      resourceId: id,
+      summary: `Updated announcement "${title}"`,
+      success: true,
+    });
     res.status(200).json({
       success: true,
       message: "Announcement updated successfully",
@@ -147,6 +173,14 @@ export const deleteAnnouncement = async (req, res) => {
     }
 
     logActivity("AnnouncementDeleted", { announcementId: id }, req);
+    await recordAuditLog({
+      req,
+      action: "ANNOUNCEMENT_DELETED",
+      resourceType: "Announcement",
+      resourceId: id,
+      summary: `Deleted announcement "${announcement.title}"`,
+      success: true,
+    });
     res.status(200).json({
       success: true,
       message: "Announcement deleted successfully",
@@ -179,6 +213,15 @@ export const toggleAnnouncementPin = async (req, res) => {
     await announcement.save();
 
     logActivity("AnnouncementPinToggled", { announcementId: id, isPinned: announcement.isPinned }, req);
+    await recordAuditLog({
+      req,
+      action: "ANNOUNCEMENT_PIN_TOGGLED",
+      resourceType: "Announcement",
+      resourceId: id,
+      summary: `${announcement.isPinned ? "Pinned" : "Unpinned"} announcement "${announcement.title}"`,
+      success: true,
+      metadata: { isPinned: announcement.isPinned },
+    });
     res.status(200).json({
       success: true,
       message: `Announcement ${announcement.isPinned ? "pinned" : "unpinned"} successfully`,

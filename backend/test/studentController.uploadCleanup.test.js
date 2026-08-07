@@ -25,6 +25,15 @@ mock.module("../src/utils/googleSheets.js", {
 
 const { registerStudent } = await import("../src/controllers/studentController.js");
 const { default: Student } = await import("../src/models/student.models.js");
+const { default: Settings } = await import("../src/models/settings.models.js");
+
+// registerStudent now gates on Settings.formMode before anything else
+// (registration-mode enforcement). makeReq()'s body is senior-shaped
+// (classMoving: "10th to 11th"), so every test here mocks the active mode as
+// "senior" to keep exercising the exact same upload-cleanup behavior as
+// before this gate existed, without the new check interfering.
+const mockActiveMode = (t, formMode = "senior") =>
+  t.mock.method(Settings, "findOne", () => ({ lean: () => Promise.resolve({ formMode }) }));
 
 const makeRes = () => {
   const res = { statusCode: null, body: null };
@@ -74,6 +83,7 @@ const resetAll = () => {
 describe("registerStudent upload cleanup (Performance Module P4 redesign)", () => {
   test("passport upload fails, identity upload succeeds -> the orphaned identity asset is deleted before the error propagates", async (t) => {
     resetAll();
+    mockActiveMode(t);
     t.mock.method(Student, "findOne", async () => null);
     uploadBufferToCloudinaryMock.mock.mockImplementation(async (buffer, folder) => {
       if (folder === "super30/passport") throw new Error("Cloudinary upload failed: passport");
@@ -92,6 +102,7 @@ describe("registerStudent upload cleanup (Performance Module P4 redesign)", () =
 
   test("identity upload fails, passport upload succeeds -> the orphaned passport asset is deleted before the error propagates", async (t) => {
     resetAll();
+    mockActiveMode(t);
     t.mock.method(Student, "findOne", async () => null);
     uploadBufferToCloudinaryMock.mock.mockImplementation(async (buffer, folder) => {
       if (folder === "super30/identity") throw new Error("Cloudinary upload failed: identity");
@@ -109,6 +120,7 @@ describe("registerStudent upload cleanup (Performance Module P4 redesign)", () =
 
   test("both uploads fail -> nothing to clean up, no destroy call, passport's error wins (matches original sequential ordering)", async (t) => {
     resetAll();
+    mockActiveMode(t);
     t.mock.method(Student, "findOne", async () => null);
     uploadBufferToCloudinaryMock.mock.mockImplementation(async (buffer, folder) => {
       throw new Error(`Cloudinary upload failed: ${folder}`);
@@ -124,6 +136,7 @@ describe("registerStudent upload cleanup (Performance Module P4 redesign)", () =
 
   test("both uploads succeed -> no cleanup, registration proceeds exactly as before", async (t) => {
     resetAll();
+    mockActiveMode(t);
     t.mock.method(Student, "findOne", async () => null);
     t.mock.method(Student.prototype, "save", async function () {
       this.studentId = "STU0099";
@@ -145,6 +158,7 @@ describe("registerStudent upload cleanup (Performance Module P4 redesign)", () =
 
   test("cleanup itself failing does not change the response -- the original upload error still wins, not a cleanup error", async (t) => {
     resetAll();
+    mockActiveMode(t);
     t.mock.method(Student, "findOne", async () => null);
     uploadBufferToCloudinaryMock.mock.mockImplementation(async (buffer, folder) => {
       if (folder === "super30/passport") throw new Error("Cloudinary upload failed: passport");

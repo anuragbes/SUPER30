@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import Counter from "./counter.models.js";
+import { CLASS_MOVING_VALUES, SENIOR_CLASS_MOVING_VALUES } from "../constants/registrationMode.js";
 
 function toTitleCase(str) {
     if (!str) return str;
@@ -27,7 +28,7 @@ const studentSchema = new mongoose.Schema({
     },
     classMoving: {
         type: String,
-        enum: ["Class 8", "Class 9", "Class 10", "10th to 11th", "11th to 12th"],
+        enum: CLASS_MOVING_VALUES,
         required: true
     },
     dateOfBirth: {
@@ -38,7 +39,7 @@ const studentSchema = new mongoose.Schema({
         type: String,
         enum: ["PCM", "PCB"],
         required: function () {
-            return this.classMoving === "10th to 11th" || this.classMoving === "11th to 12th";
+            return SENIOR_CLASS_MOVING_VALUES.includes(this.classMoving);
         }
     },
     target: {
