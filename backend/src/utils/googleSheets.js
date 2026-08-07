@@ -17,18 +17,34 @@ export const formatDateDDMMYYYY = (dateString) => {
   }
 };
 
-// Google Auth
-const authClient = new google.auth.GoogleAuth({
-  credentials: {
-    client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-    private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
-  },
-  scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-});
+// Google Sheets client is built lazily, on first actual use, instead of at
+// module import time. Importing this module (directly or transitively --
+// four controllers pull it in, and most routes pull in one of those) must
+// not require Google credentials to be present; only code paths that
+// genuinely talk to Google Sheets should. Memoized so repeated calls, across
+// however many functions in this file invoke it per request, reuse the same
+// authenticated client instead of re-authenticating every time -- the same
+// "one client for the module's lifetime" behavior the old top-level
+// construction had, just deferred to first use instead of import.
+let sheetsClient = null;
+
+const getSheets = () => {
+  if (!sheetsClient) {
+    const authClient = new google.auth.GoogleAuth({
+      credentials: {
+        client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+        private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+      },
+      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+    });
+    sheetsClient = google.sheets({ version: "v4", auth: authClient });
+  }
+  return sheetsClient;
+};
 
 // Get Sheet ID by Sheet Name
 export const getSheetIdByName = async (sheetName) => {
-  const sheetInfo = await sheets.spreadsheets.get({
+  const sheetInfo = await getSheets().spreadsheets.get({
     spreadsheetId: SHEET_ID,
   });
 
@@ -38,8 +54,6 @@ export const getSheetIdByName = async (sheetName) => {
 
   return sheet?.properties?.sheetId;
 };
-
-const sheets = google.sheets({ version: "v4", auth: authClient });
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID;
 
@@ -84,7 +98,7 @@ export const ensureSheetExists = async (sheetName) => {
     // Sheets API would reject anyway, since duplicate tab names aren't
     // allowed -- a second layer of protection against duplication).
     await retryWithBackoff(async () => {
-      const sheetInfo = await sheets.spreadsheets.get({
+      const sheetInfo = await getSheets().spreadsheets.get({
         spreadsheetId: SHEET_ID,
       });
 
@@ -95,7 +109,7 @@ export const ensureSheetExists = async (sheetName) => {
       if (exists) return; // already exists
 
       // Create new sheet
-      await sheets.spreadsheets.batchUpdate({
+      await getSheets().spreadsheets.batchUpdate({
         spreadsheetId: SHEET_ID,
         requestBody: {
           requests: [
@@ -105,7 +119,7 @@ export const ensureSheetExists = async (sheetName) => {
       });
 
       // Add headers
-      await sheets.spreadsheets.values.update({
+      await getSheets().spreadsheets.values.update({
         spreadsheetId: SHEET_ID,
         range: `${sheetName}!A1`,
         valueInputOption: "RAW",
@@ -173,7 +187,7 @@ export const appendToGoogleSheet = async (student) => {
     // acknowledgment was lost, a retry would submit this row a second time,
     // creating a genuine duplicate registration row. Left exactly as
     // reliable/unreliable as it was before this change.
-    await sheets.spreadsheets.values.append({
+    await getSheets().spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
       range: `${targetSheet}!A1`,
       valueInputOption: "RAW",
@@ -226,7 +240,7 @@ const updateSheetForGroup = async (sheetName, query) => {
   // Full-tab replace -- retrying reproduces the identical end state
   // regardless of attempt count, no duplication risk.
   await retryWithBackoff(() =>
-    sheets.spreadsheets.values.update({
+    getSheets().spreadsheets.values.update({
       spreadsheetId: SHEET_ID,
       range: `${sheetName}!A1`,
       valueInputOption: "RAW",
@@ -272,7 +286,7 @@ export const deleteStudentFromSheet = async (studentId, stream, classMoving) => 
     // now-stale index.
     await retryWithBackoff(async () => {
       // Read all rows
-      const response = await sheets.spreadsheets.values.get({
+      const response = await getSheets().spreadsheets.values.get({
         spreadsheetId: SHEET_ID,
         range: `${sheetName}!A:Z`,
       });
@@ -294,7 +308,7 @@ export const deleteStudentFromSheet = async (studentId, stream, classMoving) => 
       // Get the actual sheetId
       const sheetId = await getSheetIdByName(sheetName);
 
-      await sheets.spreadsheets.batchUpdate({
+      await getSheets().spreadsheets.batchUpdate({
         spreadsheetId: SHEET_ID,
         requestBody: {
           requests: [
@@ -371,7 +385,7 @@ export const clearRollNumbersFromSheet = async (stream) => {
     // Update the sheet with cleared roll numbers (full-tab replace --
     // retrying reproduces the identical end state, no duplication risk)
     await retryWithBackoff(() =>
-      sheets.spreadsheets.values.update({
+      getSheets().spreadsheets.values.update({
         spreadsheetId: SHEET_ID,
         range: `${sheetName}!A1`,
         valueInputOption: "RAW",
@@ -430,7 +444,7 @@ export const clearRollNumbersFromClassSheet = async (classGroup) => {
     // Full-tab replace -- retrying reproduces the identical end state, no
     // duplication risk.
     await retryWithBackoff(() =>
-      sheets.spreadsheets.values.update({
+      getSheets().spreadsheets.values.update({
         spreadsheetId: SHEET_ID,
         range: `${classGroup}!A1`,
         valueInputOption: "RAW",
