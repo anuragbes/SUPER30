@@ -212,6 +212,7 @@ export default function UdaanAbout({ registrationOpen, loading, examDate }) {
                     openSignIn({
                       routing: "virtual",
                       signUpUrl: null,
+                      forceRedirectUrl: "/register",
                       appearance: { elements: { footerAction: "hidden" } },
                     })
                   }
